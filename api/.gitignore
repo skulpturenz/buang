@@ -198,3 +198,6 @@ dist
 .pnp.*
 
 testdata/*
+
+!db/pg/out
+!db/sqlite/out

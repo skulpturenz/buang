@@ -1,18 +1,52 @@
 version: "2"
 sql:
   - engine: "postgresql"
-    queries: "db/pg"
+    queries: "db/pg/queries"
     schema: "db/pg/schema"
     gen:
       go:
         package: "pg"
         out: "db/pg/out"
         sql_package: "pgx/v5"
+        emit_pointers_for_null_types: true
+        overrides:
+          - db_type: "timestamptz"
+            nullable: true
+            go_type:
+              import: "time"
+              type: "Time"
+              pointer: true
+          - db_type: "timestamptz"
+            go_type:
+              import: "time"
+              type: "Time"
 
   - engine: "sqlite"
-    queries: "db/sqlite"
+    queries: "db/sqlite/queries"
     schema: "db/sqlite/schema"
     gen:
       go:
         package: "sqlite"
         out: "db/sqlite/out"
+        emit_pointers_for_null_types: true
+        overrides:
+          - column: "projects.id"
+            go_type:
+              type: "int64"
+          - column: "projects.created_at"
+            go_type:
+              import: "time"
+              type: "Time"
+          - column: "projects.updated_at"
+            go_type:
+              import: "time"
+              type: "Time"
+          - column: "deployments.id"
+            go_type:
+              type: "int64"
+          - column: "deployment_logs.id"
+            go_type:
+              type: "int64"
+          - column: "deployments.status"
+            go_type:
+              type: "int16"
