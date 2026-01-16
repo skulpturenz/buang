@@ -2,6 +2,7 @@ package wrappers
 
 import (
 	pg_models "skulpture/buang/db/pg/out"
+	"time"
 )
 
 type Deployment pg_models.Deployment
@@ -24,6 +25,10 @@ func (d Deployment) GetStatus() int16 {
 
 func (d Deployment) GetSha() *string {
 	return d.Sha
+}
+
+func (d Deployment) GetDeployedAt() *time.Time {
+	return d.DeployedAt
 }
 
 func (d Deployment) Unwrap() pg_models.Deployment {

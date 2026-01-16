@@ -7,6 +7,8 @@ import (
 )
 
 type ListProjectParams struct {
+	Limit int32
+	Page  int32
 }
 
 type ListProjectsResult struct {
@@ -16,10 +18,7 @@ type ListProjectsResult struct {
 func (p ListProjectParams) Exec(ctx context.Context, s *app.ApplicationServices) (*ListProjectsResult, error) {
 	q := *s.Queries
 
-	result, err := q.SelectProjectsDesc(ctx, interfaces.SelectProjectsDescParams{
-		Limit: 1,
-		Page:  0,
-	})
+	result, err := q.SelectProjectsDesc(ctx, interfaces.SelectProjectsDescParams(p))
 	if err != nil {
 		return nil, err
 	}

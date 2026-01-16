@@ -14,18 +14,19 @@ WITH start AS (
 	SELECT MIN(id) AS min
 	FROM projects
 	ORDER BY id DESC
-	LIMIT ($1 * $2) -- limit * page
+	-- limit * (page - 1)
+	LIMIT ($1 * ($2 - 1))
 )
 
 SELECT id, repository, requires_authn, username, password, created_at, updated_at FROM projects
-WHERE id < (SELECT min FROM start)
+WHERE ($1 = 1) OR (id < (SELECT min FROM start))
 ORDER BY id DESC
 LIMIT $1
 `
 
 type SelectProjectsDescParams struct {
-	Limit   int32
-	Column2 interface{}
+	Limit   int32       `json:"limit"`
+	Column2 interface{} `json:"column_2"`
 }
 
 func (q *Queries) SelectProjectsDesc(ctx context.Context, arg SelectProjectsDescParams) ([]Project, error) {

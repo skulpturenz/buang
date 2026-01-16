@@ -4,8 +4,10 @@ CREATE TABLE IF NOT EXISTS projects (
 	requires_authn BOOLEAN NOT NULL DEFAULT 0,
 	username TEXT,
 	password TEXT,
-	created_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP,
-	updated_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP,
+	-- https://github.com/mattn/go-sqlite3/blob/master/doc.go#L24
+	created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+	-- https://github.com/mattn/go-sqlite3/blob/master/doc.go#L24
+	updated_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
 	CONSTRAINT unique_projects UNIQUE(id, repository)
 );
 

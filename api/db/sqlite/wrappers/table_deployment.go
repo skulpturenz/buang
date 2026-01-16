@@ -2,6 +2,7 @@ package wrappers
 
 import (
 	sqlite_models "skulpture/buang/db/sqlite/out"
+	"time"
 )
 
 type Deployment sqlite_models.Deployment
@@ -24,6 +25,10 @@ func (d Deployment) GetStatus() int16 {
 
 func (d Deployment) GetSha() *string {
 	return d.Sha
+}
+
+func (d Deployment) GetDeployedAt() *time.Time {
+	return d.DeployedAt
 }
 
 func (d Deployment) Unwrap() sqlite_models.Deployment {

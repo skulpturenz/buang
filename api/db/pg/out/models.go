@@ -9,25 +9,26 @@ import (
 )
 
 type Deployment struct {
-	ID           int64
-	RepositoryID int64
-	Url          *string
-	Status       int16
-	Sha          *string
+	ID           int64      `json:"id"`
+	RepositoryID int64      `json:"repository_id"`
+	Url          *string    `json:"url"`
+	Status       int16      `json:"status"`
+	Sha          *string    `json:"sha"`
+	DeployedAt   *time.Time `json:"deployed_at"`
 }
 
 type DeploymentLog struct {
-	ID           int64
-	DeploymentID int64
-	Log          *string
+	ID           int64   `json:"id"`
+	DeploymentID int64   `json:"deployment_id"`
+	Log          *string `json:"log"`
 }
 
 type Project struct {
-	ID            int64
-	Repository    string
-	RequiresAuthn bool
-	Username      *string
-	Password      *string
-	CreatedAt     time.Time
-	UpdatedAt     time.Time
+	ID            int64     `json:"id"`
+	Repository    string    `json:"repository"`
+	RequiresAuthn bool      `json:"requires_authn"`
+	Username      *string   `json:"username"`
+	Password      *string   `json:"password"`
+	CreatedAt     time.Time `json:"created_at"`
+	UpdatedAt     time.Time `json:"updated_at"`
 }

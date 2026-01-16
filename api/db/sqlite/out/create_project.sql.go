@@ -16,10 +16,10 @@ RETURNING id, repository, requires_authn, username, password, created_at, update
 `
 
 type CreateProjectParams struct {
-	Repository    string
-	RequiresAuthn bool
-	Username      *string
-	Password      *string
+	Repository    string  `json:"repository"`
+	RequiresAuthn bool    `json:"requires_authn"`
+	Username      *string `json:"username"`
+	Password      *string `json:"password"`
 }
 
 func (q *Queries) CreateProject(ctx context.Context, arg CreateProjectParams) (Project, error) {

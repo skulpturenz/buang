@@ -8,6 +8,11 @@ import (
 	"time"
 )
 
+type ListProjectRequest struct {
+	Limit int32 `schema:"limit,default:50"`
+	Page  int32 `schema:"page,default:1"`
+}
+
 type Project struct {
 	Id            int64     `json:"id"`
 	Repository    string    `json:"repository"`
@@ -20,12 +25,22 @@ type Project struct {
 
 func ListAllProjects(s app.ApplicationServices) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
-		p := projects.ListProjectParams{}
+		var req ListProjectRequest
+
+		err := s.SchemaDecoder.Decode(&req, r.URL.Query())
+		if err != nil {
+			slog.ErrorContext(r.Context(), "list all projects", "err", err.Error())
+			http.Error(w, err.Error(), http.StatusBadRequest)
+			return
+		}
+
+		p := projects.ListProjectParams(req)
 
 		res, err := p.Exec(r.Context(), &s)
 		if err != nil {
 			slog.ErrorContext(r.Context(), "list all projects", "err", err.Error())
 			http.Error(w, err.Error(), http.StatusInternalServerError)
+			return
 		}
 
 		ret := []Project{}
@@ -45,6 +60,7 @@ func ListAllProjects(s app.ApplicationServices) http.HandlerFunc {
 		if err != nil {
 			slog.ErrorContext(r.Context(), "list all projects", "err", err.Error())
 			http.Error(w, err.Error(), http.StatusInternalServerError)
+			return
 		}
 	}
 }

@@ -10,26 +10,27 @@ import (
 )
 
 const selectProjectsDesc = `-- name: SelectProjectsDesc :many
-WITH start AS (
-	SELECT MIN(id) AS min
-	FROM projects
-	ORDER BY id DESC
-	LIMIT (?1 * ?2) -- limit * page
-)
+WITH start AS (SELECT id
+		FROM projects
+		ORDER BY id DESC
+		-- limit * (page - 1)
+		LIMIT (?2 * (?1 - 1))),
+	min AS (SELECT MIN(id) AS min FROM START)
+
 
 SELECT id, repository, requires_authn, username, password, created_at, updated_at FROM projects
-WHERE id < (SELECT min FROM start)
+WHERE (?1 = 1) OR (id < (SELECT min FROM min))
 ORDER BY id DESC
-LIMIT ?1
+LIMIT ?2
 `
 
 type SelectProjectsDescParams struct {
-	Limit int64
-	Page  interface{}
+	Page  interface{} `json:"page"`
+	Limit int64       `json:"limit"`
 }
 
 func (q *Queries) SelectProjectsDesc(ctx context.Context, arg SelectProjectsDescParams) ([]Project, error) {
-	rows, err := q.db.QueryContext(ctx, selectProjectsDesc, arg.Limit, arg.Page)
+	rows, err := q.db.QueryContext(ctx, selectProjectsDesc, arg.Page, arg.Limit)
 	if err != nil {
 		return nil, err
 	}

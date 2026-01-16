@@ -13,6 +13,7 @@ import (
 	"syscall"
 
 	"github.com/go-chi/chi/v5"
+	"github.com/gorilla/schema"
 	"go.temporal.io/sdk/client"
 	"go.temporal.io/sdk/contrib/envconfig"
 	temporallog "go.temporal.io/sdk/log"
@@ -42,7 +43,9 @@ type TemporalApplication struct {
 }
 
 type ApplicationServices struct {
-	Queries *interfaces.Queries
+	Queries       *interfaces.Queries
+	SchemaDecoder *schema.Decoder
+	SchemaEncoder *schema.Encoder
 }
 
 func (a ApplicationConfig) New(ctx context.Context, chi *chi.Mux) (*Application, error) {
@@ -54,13 +57,18 @@ func (a ApplicationConfig) New(ctx context.Context, chi *chi.Mux) (*Application,
 		return nil, err
 	}
 
+	services := a.Services
+
+	services.SchemaDecoder = schema.NewDecoder()
+	services.SchemaEncoder = schema.NewEncoder()
+
 	return &Application{
 		http: HttpApplication{
 			chi:      chi,
-			Services: a.Services,
+			Services: services,
 		},
 		temporal: TemporalApplication{
-			Services: a.Services,
+			Services: services,
 			client:   &c,
 		},
 		config: a,

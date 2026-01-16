@@ -1,6 +1,7 @@
 package projects
 
 import (
+	"encoding/json"
 	"fmt"
 	"log/slog"
 	"net/http"
@@ -8,9 +9,25 @@ import (
 	"skulpture/buang/components/projects"
 )
 
+type CreateProjectRequest struct {
+	Repository    string  `json:"repository"`
+	RequiresAuthn bool    `json:"requiresAuthn"`
+	Username      *string `json:"username,omitempty"`
+	Password      *string `json:"password,omitempty"`
+}
+
 func CreateProject(s app.ApplicationServices) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
-		p := projects.CreateProjectParams{}
+		var req CreateProjectRequest
+
+		err := json.NewDecoder(r.Body).Decode(&req)
+		if err != nil {
+			http.Error(w, err.Error(), http.StatusBadRequest)
+			return
+		}
+		defer r.Body.Close()
+
+		p := projects.CreateProjectParams(req)
 
 		res, err := p.Exec(r.Context(), &s)
 		if err != nil {
