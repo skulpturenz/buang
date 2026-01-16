@@ -1,0 +1,55 @@
+# yaml-language-server: $schema=https://taskfile.dev/schema.json
+
+version: '3'
+
+tasks:
+  start:
+    desc: Run API
+    cmds:
+      - go run .
+
+  dev:
+    desc: Run development API
+    cmds:
+      - gow run .
+
+  build:
+    desc: Build API
+    cmds:
+      - go build .
+
+  create-migration:
+    desc: Create a new migration
+    cmds:
+      - migrate create -ext sql -dir db/pg/schema -seq {{.CLI_ARGS}}
+      - migrate create -ext sql -dir db/sqlite/schema -seq {{.CLI_ARGS}}
+
+  bundle-migrations:
+    desc: Bundle migrations in executable
+    cmds:
+      - go get github.com/jteeuwen/go-bindata/...
+      - go install github.com/jteeuwen/go-bindata/...
+      - cd db/pg/schema && go-bindata -pkg migrations .
+      - cd db/sqlite/schema && go-bindata -pkg migrations .
+
+  create-query:
+    desc: Create a new query
+    cmds:
+      - touch db/pg/queries/{{.CLI_ARGS}}.sql
+      - touch db/sqlite/queries/{{.CLI_ARGS}}.sql
+
+  generate-models:
+    desc: Generate DB models
+    cmds:
+      - sqlc generate
+
+  generate-swagger:
+    desc: Generate Swagger documentation
+    cmds:
+      - swag init -d ./,./handlers/projects
+      - swag fmt
+
+  run-temporal-dev:
+    desc: Run Temporal dev server
+    cmds:
+      - docker run --rm -p 7233:7233 -p 8233:8233 temporalio/temporal server start-dev --ip 0.0.0.0
