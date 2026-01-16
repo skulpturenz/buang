@@ -13,5 +13,7 @@ func Router(s app.ApplicationServices, r chi.Router) {
 
 	r.Route("/project", func(r chi.Router) {
 		r.Post("/", CreateProject(s))
+
+		r.Get("/{projectId}/deployments", ListAllDeployments(s))
 	})
 }

@@ -152,8 +152,10 @@ func (a *Application) GetTemporalApplication() *TemporalApplication {
 
 type HttpRouter func(s ApplicationServices, r chi.Router)
 
-func (a *HttpApplication) AddRouter(r chi.Router, x HttpRouter) {
-	x(a.Services, r)
+func (a *HttpApplication) AddRouters(r chi.Router, x ...HttpRouter) {
+	for _, y := range x {
+		y(a.Services, r)
+	}
 }
 
 type TemporalWorker func(s ApplicationServices, c *client.Client) worker.Worker

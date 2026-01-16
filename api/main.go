@@ -7,6 +7,7 @@ import (
 	"skulpture/buang/db"
 	enumsdbtypes "skulpture/buang/enums/db_types"
 	enumsenv "skulpture/buang/enums/env"
+	"skulpture/buang/handlers/deployments"
 	"skulpture/buang/handlers/projects"
 	authn "skulpture/buang/middleware/authn"
 	limiter "skulpture/buang/middleware/limiter"
@@ -141,7 +142,7 @@ func main() {
 		r.Use(limiter.Handle)
 		r.Use(authnConfig.Handle)
 
-		app.GetHttpApplication().AddRouter(r, projects.Router)
+		app.GetHttpApplication().AddRouters(r, projects.Router, deployments.Router)
 	})
 
 	app.GetTemporalApplication().AddWorkers(workers.Worker)
