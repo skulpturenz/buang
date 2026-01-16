@@ -35,6 +35,10 @@ func (d Deployment) GetClonePath() *string {
 	return d.ClonePath
 }
 
+func (d Deployment) GetServiceEntrypoint() string {
+	return d.ServiceEntrypoint
+}
+
 func (d Deployment) Unwrap() pg_models.Deployment {
 	return pg_models.Deployment(d)
 }

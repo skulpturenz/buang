@@ -15,9 +15,10 @@ UPDATE deployments
 	SET 
 		url = $2,
 		status = $3,
-		deployed_at = $4
+		deployed_at = $4,
+		clone_path = $5
 WHERE id = $1
-RETURNING id, project_id, url, status, sha, deployed_at, clone_path
+RETURNING id, project_id, url, status, sha, deployed_at, clone_path, service_entrypoint
 `
 
 type UpdateDeploymentParams struct {
@@ -25,6 +26,7 @@ type UpdateDeploymentParams struct {
 	Url        *string    `json:"url"`
 	Status     int16      `json:"status"`
 	DeployedAt *time.Time `json:"deployed_at"`
+	ClonePath  *string    `json:"clone_path"`
 }
 
 func (q *Queries) UpdateDeployment(ctx context.Context, arg UpdateDeploymentParams) (Deployment, error) {
@@ -33,6 +35,7 @@ func (q *Queries) UpdateDeployment(ctx context.Context, arg UpdateDeploymentPara
 		arg.Url,
 		arg.Status,
 		arg.DeployedAt,
+		arg.ClonePath,
 	)
 	var i Deployment
 	err := row.Scan(
@@ -43,6 +46,7 @@ func (q *Queries) UpdateDeployment(ctx context.Context, arg UpdateDeploymentPara
 		&i.Sha,
 		&i.DeployedAt,
 		&i.ClonePath,
+		&i.ServiceEntrypoint,
 	)
 	return i, err
 }

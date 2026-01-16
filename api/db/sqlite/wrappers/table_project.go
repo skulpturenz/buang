@@ -39,6 +39,10 @@ func (p Project) GetComposePath() string {
 	return p.ComposePath
 }
 
+func (p Project) GetDeleted() bool {
+	return p.Deleted
+}
+
 func (p Project) Unwrap() sqlite_models.Project {
 	return sqlite_models.Project(p)
 }

@@ -39,6 +39,10 @@ func (p Project) GetComposePath() string {
 	return p.ComposePath
 }
 
+func (p Project) GetDeleted() bool {
+	return p.Deleted
+}
+
 func (p Project) Unwrap() pg_models.Project {
 	return pg_models.Project(p)
 }

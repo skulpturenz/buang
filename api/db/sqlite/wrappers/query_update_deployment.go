@@ -13,6 +13,7 @@ func (q Queries) UpdateDeployment(ctx context.Context, arg interfaces.UpdateDepl
 		Url:        arg.Url,
 		Status:     arg.Status,
 		DeployedAt: arg.DeployedAt,
+		ClonePath:  arg.ClonePath,
 	})
 
 	return Deployment(ret), err

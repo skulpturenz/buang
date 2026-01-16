@@ -9,13 +9,14 @@ import (
 )
 
 type Deployment struct {
-	ID         int64      `json:"id"`
-	ProjectID  int64      `json:"project_id"`
-	Url        *string    `json:"url"`
-	Status     int16      `json:"status"`
-	Sha        *string    `json:"sha"`
-	DeployedAt *time.Time `json:"deployed_at"`
-	ClonePath  *string    `json:"clone_path"`
+	ID                int64      `json:"id"`
+	ProjectID         int64      `json:"project_id"`
+	Url               *string    `json:"url"`
+	Status            int16      `json:"status"`
+	Sha               *string    `json:"sha"`
+	DeployedAt        *time.Time `json:"deployed_at"`
+	ClonePath         *string    `json:"clone_path"`
+	ServiceEntrypoint string     `json:"service_entrypoint"`
 }
 
 type DeploymentLog struct {
@@ -33,4 +34,5 @@ type Project struct {
 	CreatedAt     time.Time `json:"created_at"`
 	UpdatedAt     time.Time `json:"updated_at"`
 	ComposePath   string    `json:"compose_path"`
+	Deleted       bool      `json:"deleted"`
 }

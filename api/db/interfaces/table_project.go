@@ -13,4 +13,5 @@ type Project interface {
 	GetCreatedAt() time.Time
 	GetUpdatedAt() time.Time
 	GetComposePath() string
+	GetDeleted() bool
 }

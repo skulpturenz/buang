@@ -15,15 +15,17 @@ UPDATE deployments
 	SET 
 		url = ?1,
 		status = ?2,
-		deployed_at = ?3
-WHERE id = ?4
-RETURNING id, project_id, url, status, sha, deployed_at, clone_path
+		deployed_at = ?3,
+		clone_path = ?4
+WHERE id = ?5
+RETURNING id, project_id, url, status, sha, deployed_at, clone_path, service_entrypoint
 `
 
 type UpdateDeploymentParams struct {
 	Url        *string    `json:"url"`
 	Status     int16      `json:"status"`
 	DeployedAt *time.Time `json:"deployedAt"`
+	ClonePath  *string    `json:"clonePath"`
 	ID         int64      `json:"id"`
 }
 
@@ -32,6 +34,7 @@ func (q *Queries) UpdateDeployment(ctx context.Context, arg UpdateDeploymentPara
 		arg.Url,
 		arg.Status,
 		arg.DeployedAt,
+		arg.ClonePath,
 		arg.ID,
 	)
 	var i Deployment
@@ -43,6 +46,7 @@ func (q *Queries) UpdateDeployment(ctx context.Context, arg UpdateDeploymentPara
 		&i.Sha,
 		&i.DeployedAt,
 		&i.ClonePath,
+		&i.ServiceEntrypoint,
 	)
 	return i, err
 }

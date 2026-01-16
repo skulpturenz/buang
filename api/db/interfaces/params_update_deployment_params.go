@@ -7,4 +7,5 @@ type UpdateDeploymentParams struct {
 	Url        *string
 	Status     int16
 	DeployedAt *time.Time
+	ClonePath  *string
 }

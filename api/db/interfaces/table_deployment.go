@@ -10,4 +10,5 @@ type Deployment interface {
 	GetSha() *string
 	GetDeployedAt() *time.Time
 	GetClonePath() *string
+	GetServiceEntrypoint() string
 }

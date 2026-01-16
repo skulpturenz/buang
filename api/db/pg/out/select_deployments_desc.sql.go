@@ -19,7 +19,7 @@ WITH start AS (SELECT id
 	min AS (SELECT MIN(id) AS min FROM START)
 
 
-SELECT id, project_id, url, status, sha, deployed_at, clone_path FROM deployments
+SELECT id, project_id, url, status, sha, deployed_at, clone_path, service_entrypoint FROM deployments
 WHERE (deployments.project_id = $1) AND (($3 = 1) OR (id < (SELECT min FROM min)))
 ORDER BY id DESC
 LIMIT $2
@@ -48,6 +48,7 @@ func (q *Queries) SelectDeploymentsDesc(ctx context.Context, arg SelectDeploymen
 			&i.Sha,
 			&i.DeployedAt,
 			&i.ClonePath,
+			&i.ServiceEntrypoint,
 		); err != nil {
 			return nil, err
 		}

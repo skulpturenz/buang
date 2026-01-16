@@ -145,7 +145,7 @@ func main() {
 		app.GetHttpApplication().AddRouters(r, projects.Router, deployments.Router)
 	})
 
-	app.GetTemporalApplication().AddWorkers(workers.Worker)
+	app.GetTemporalApplication().AddWorkers(workers.DeploymentWorker, workers.BuangWorker)
 
 	cleanup, err = app.Run(ctx)
 	if err != nil {

@@ -12,7 +12,7 @@ import (
 const createDeployment = `-- name: CreateDeployment :one
 INSERT INTO deployments (project_id, sha, status) 
 	VALUES	(?1, ?2, ?3)
-RETURNING id, project_id, url, status, sha, deployed_at, clone_path
+RETURNING id, project_id, url, status, sha, deployed_at, clone_path, service_entrypoint
 `
 
 type CreateDeploymentParams struct {
@@ -32,6 +32,7 @@ func (q *Queries) CreateDeployment(ctx context.Context, arg CreateDeploymentPara
 		&i.Sha,
 		&i.DeployedAt,
 		&i.ClonePath,
+		&i.ServiceEntrypoint,
 	)
 	return i, err
 }

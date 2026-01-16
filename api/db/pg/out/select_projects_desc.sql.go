@@ -13,13 +13,14 @@ const selectProjectsDesc = `-- name: SelectProjectsDesc :many
 WITH start AS (
 	SELECT MIN(id) AS min
 	FROM projects
+	WHERE deleted = FALSE
 	ORDER BY id DESC
 	-- limit * (page - 1)
 	LIMIT ($1 * ($2 - 1))
 )
 
-SELECT id, repository, requires_authn, username, password, created_at, updated_at, compose_path FROM projects
-WHERE ($1 = 1) OR (id < (SELECT min FROM start))
+SELECT id, repository, requires_authn, username, password, created_at, updated_at, compose_path, deleted FROM projects
+WHERE (deleted = FALSE) AND (($1 = 1) OR (id < (SELECT min FROM start)))
 ORDER BY id DESC
 LIMIT $1
 `
@@ -47,6 +48,7 @@ func (q *Queries) SelectProjectsDesc(ctx context.Context, arg SelectProjectsDesc
 			&i.CreatedAt,
 			&i.UpdatedAt,
 			&i.ComposePath,
+			&i.Deleted,
 		); err != nil {
 			return nil, err
 		}

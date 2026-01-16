@@ -9,4 +9,6 @@ type Queries interface {
 	UpdateDeployment(ctx context.Context, arg UpdateDeploymentParams) (Deployment, error)
 	SelectDeploymentsDesc(ctx context.Context, arg SelectDeploymentsDescParams) ([]Deployment, error)
 	UpdateDeploymentStatus(ctx context.Context, arg UpdateDeploymentStatusParams) (Deployment, error)
+	SelectProject(ctx context.Context, id int64) (Project, error)
+	SelectDeployment(ctx context.Context, arg SelectDeploymentParams) (Deployment, error)
 }

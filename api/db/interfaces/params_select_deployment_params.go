@@ -1,7 +1,6 @@
 package interfaces
 
-type SelectDeploymentsDescParams struct {
+type SelectDeploymentParams struct {
+	ID        int64
 	ProjectID int64
-	Limit     int32
-	Page      int32
 }

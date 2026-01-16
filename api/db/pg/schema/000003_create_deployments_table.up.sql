@@ -6,5 +6,6 @@ CREATE TABLE IF NOT EXISTS deployments (
 	sha TEXT,
 	deployed_at TIMESTAMPTZ,
 	clone_path TEXT,
+	service_entrypoint TEXT NOT NULL,
 	CONSTRAINT pk_deployments PRIMARY KEY(id, project_id)
 );

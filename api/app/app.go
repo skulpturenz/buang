@@ -3,7 +3,6 @@ package app
 import (
 	"context"
 	"fmt"
-	"log"
 	"log/slog"
 	"net/http"
 	"os"
@@ -76,6 +75,11 @@ func (a ApplicationConfig) New(ctx context.Context, chi *chi.Mux) (*Application,
 }
 
 func (a *Application) Run(ctx context.Context) (func(ctx context.Context), error) {
+	sigs := make(chan os.Signal, 1)
+	signal.Notify(sigs, syscall.SIGINT, syscall.SIGTERM)
+	ctx, cancel := context.WithCancel(ctx)
+	var wg sync.WaitGroup
+
 	startHttpServer := func(ctx context.Context, wg *sync.WaitGroup) {
 		server := &http.Server{
 			Addr:    a.config.HttpPort,
@@ -94,7 +98,7 @@ func (a *Application) Run(ctx context.Context) (func(ctx context.Context), error
 		_ = <-ctx.Done()
 		slog.InfoContext(ctx, "shutting down HTTP server")
 		if err := server.Shutdown(ctx); err != nil {
-			log.Fatalf("server shutdown failed: %v", err)
+			slog.ErrorContext(ctx, fmt.Sprintf("server shutdown failed: %v", err.Error()))
 		}
 	}
 
@@ -105,7 +109,12 @@ func (a *Application) Run(ctx context.Context) (func(ctx context.Context), error
 			wg.Add(1)
 			defer wg.Done()
 
-			w(a.temporal.Services, a.temporal.client) // blocks until workers stop
+			_, err := w(a.temporal.Services, a.temporal.client) // blocks until workers stop
+			if err != nil {
+				slog.ErrorContext(ctx, fmt.Sprintf("unable to start worker: %v", err.Error()))
+
+				cancel()
+			}
 		}
 
 		for _, w := range a.temporal.workers {
@@ -114,11 +123,6 @@ func (a *Application) Run(ctx context.Context) (func(ctx context.Context), error
 
 		slog.InfoContext(ctx, "started temporal workers")
 	}
-
-	sigs := make(chan os.Signal, 1)
-	signal.Notify(sigs, syscall.SIGINT, syscall.SIGTERM)
-	ctx, cancel := context.WithCancel(ctx)
-	var wg sync.WaitGroup
 
 	wg.Add(1)
 	go startHttpServer(ctx, &wg)
@@ -158,7 +162,7 @@ func (a *HttpApplication) AddRouters(r chi.Router, x ...HttpRouter) {
 	}
 }
 
-type TemporalWorker func(s ApplicationServices, c *client.Client) worker.Worker
+type TemporalWorker func(s ApplicationServices, c *client.Client) (worker.Worker, error)
 
 func (a *TemporalApplication) AddWorkers(ws ...TemporalWorker) {
 	a.workers = ws

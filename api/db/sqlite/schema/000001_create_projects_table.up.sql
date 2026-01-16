@@ -9,6 +9,7 @@ CREATE TABLE IF NOT EXISTS projects (
 	-- https://github.com/mattn/go-sqlite3/blob/master/doc.go#L24
 	updated_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
 	compose_path TEXT NOT NULL,
+	deleted BOOLEAN NOT NULL DEFAULT 0,
 	CONSTRAINT unique_projects UNIQUE(id, repository)
 );
 
