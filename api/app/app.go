@@ -45,21 +45,27 @@ type ApplicationServices struct {
 	Queries       *interfaces.Queries
 	SchemaDecoder *schema.Decoder
 	SchemaEncoder *schema.Encoder
+	Temporal      client.Client
 }
 
 func (a ApplicationConfig) New(ctx context.Context, chi *chi.Mux) (*Application, error) {
 	opts := envconfig.MustLoadDefaultClientOptions()
 	opts.Logger = temporallog.NewStructuredLogger(slog.Default())
 
-	c, err := client.NewLazyClient(opts)
+	tc, err := client.NewLazyClient(opts)
+	if err != nil {
+		return nil, err
+	}
+
+	hc, err := client.NewLazyClient(opts)
 	if err != nil {
 		return nil, err
 	}
 
 	services := a.Services
-
 	services.SchemaDecoder = schema.NewDecoder()
 	services.SchemaEncoder = schema.NewEncoder()
+	services.Temporal = hc
 
 	return &Application{
 		http: HttpApplication{
@@ -68,7 +74,7 @@ func (a ApplicationConfig) New(ctx context.Context, chi *chi.Mux) (*Application,
 		},
 		temporal: TemporalApplication{
 			Services: services,
-			client:   &c,
+			client:   &tc,
 		},
 		config: a,
 	}, nil

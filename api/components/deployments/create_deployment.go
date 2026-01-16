@@ -4,12 +4,12 @@ import (
 	"context"
 	"skulpture/buang/app"
 	"skulpture/buang/db/interfaces"
+	enumsdeploymentstatus "skulpture/buang/enums/deployment_status"
 )
 
 type CreateDeploymentParams struct {
 	ProjectID int64
 	Sha       *string
-	Status    int16
 }
 
 type CreateDeploymentResult struct {
@@ -19,7 +19,11 @@ type CreateDeploymentResult struct {
 func (d CreateDeploymentParams) Exec(ctx context.Context, s *app.ApplicationServices) (*CreateDeploymentResult, error) {
 	q := *s.Queries
 
-	result, err := q.CreateDeployment(ctx, interfaces.CreateDeploymentParams(d))
+	result, err := q.CreateDeployment(ctx, interfaces.CreateDeploymentParams{
+		ProjectID: d.ProjectID,
+		Sha:       d.Sha,
+		Status:    int16(enumsdeploymentstatus.New),
+	})
 	if err != nil {
 		return nil, err
 	}

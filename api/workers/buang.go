@@ -2,6 +2,7 @@ package workers
 
 import (
 	"skulpture/buang/app"
+	constantstaskqueues "skulpture/buang/constants/task_queues"
 	"skulpture/buang/workers/activities"
 	"skulpture/buang/workers/workflows"
 
@@ -10,7 +11,7 @@ import (
 )
 
 func BuangWorker(s app.ApplicationServices, c *client.Client) (worker.Worker, error) {
-	w := worker.New(*c, Buang, worker.Options{})
+	w := worker.New(*c, constantstaskqueues.QueueBuang, worker.Options{})
 
 	buangDeployment := activities.BuangDeployment(s)
 
