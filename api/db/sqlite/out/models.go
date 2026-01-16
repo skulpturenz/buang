@@ -9,12 +9,12 @@ import (
 )
 
 type Deployment struct {
-	ID           int64      `json:"id"`
-	RepositoryID int64      `json:"repository_id"`
-	Url          *string    `json:"url"`
-	Status       int16      `json:"status"`
-	Sha          *string    `json:"sha"`
-	DeployedAt   *time.Time `json:"deployed_at"`
+	ID         int64      `json:"id"`
+	ProjectID  int64      `json:"project_id"`
+	Url        *string    `json:"url"`
+	Status     int16      `json:"status"`
+	Sha        *string    `json:"sha"`
+	DeployedAt *time.Time `json:"deployed_at"`
 }
 
 type DeploymentLog struct {

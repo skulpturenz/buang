@@ -11,8 +11,8 @@ func (d Deployment) GetId() int64 {
 	return d.ID
 }
 
-func (d Deployment) GetRepositoryId() int64 {
-	return d.RepositoryID
+func (d Deployment) GetProjectId() int64 {
+	return d.ProjectID
 }
 
 func (d Deployment) GetUrl() *string {

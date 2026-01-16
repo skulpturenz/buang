@@ -5,4 +5,7 @@ import "context"
 type Queries interface {
 	SelectProjectsDesc(ctx context.Context, arg SelectProjectsDescParams) ([]Project, error)
 	CreateProject(ctx context.Context, arg CreateProjectParams) (Project, error)
+	CreateDeployment(ctx context.Context, arg CreateDeploymentParams) (Deployment, error)
+	UpdateDeployment(ctx context.Context, arg UpdateDeploymentParams) (Deployment, error)
+	SelectDeploymentsDesc(ctx context.Context, arg SelectDeploymentsDescParams) ([]Deployment, error)
 }
