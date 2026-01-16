@@ -1,0 +1,51 @@
+package wrappers
+
+import (
+	"context"
+	"skulpture/buang/db/interfaces"
+	pg "skulpture/buang/db/pg/out"
+	migrations "skulpture/buang/db/pg/schema"
+
+	"github.com/golang-migrate/migrate/v4"
+	"github.com/golang-migrate/migrate/v4/database/pgx"
+	bindata "github.com/golang-migrate/migrate/v4/source/go_bindata"
+	"github.com/jackc/pgx/v5/pgxpool"
+	"github.com/jackc/pgx/v5/stdlib"
+)
+
+type PgConfig struct {
+	ConnectionString string
+}
+
+func (c PgConfig) New(ctx context.Context) (interfaces.Queries, func(ctx context.Context), error) {
+	pool, err := pgxpool.New(ctx, c.ConnectionString)
+	if err != nil {
+		return nil, nil, err
+	}
+	cleanup := func(ctx context.Context) {
+		pool.Close()
+	}
+
+	s := bindata.Resource(migrations.AssetNames(), func(name string) ([]byte, error) {
+		return migrations.Asset(name)
+	})
+	d, err := bindata.WithInstance(s)
+	if err != nil {
+		return nil, nil, err
+	}
+
+	driver, err := pgx.WithInstance(stdlib.OpenDBFromPool(pool), &pgx.Config{})
+	if err != nil {
+		return nil, nil, err
+	}
+	defer driver.Close()
+
+	m, err := migrate.NewWithInstance("go-bindata", d, "pg", driver)
+	if err := m.Up(); err != nil && err != migrate.ErrNoChange {
+		return nil, nil, err
+	}
+
+	queries := pg.New(pool)
+
+	return interfaces.Queries(Queries(*queries)), cleanup, nil
+}

@@ -3,29 +3,69 @@ package main
 import (
 	"context"
 	"log/slog"
-	"net/http"
-	"skulpture/buang/enums"
+	"skulpture/buang/app"
+	"skulpture/buang/db"
+	enumsdbtypes "skulpture/buang/enums/db_types"
+	enumsenv "skulpture/buang/enums/env"
+	"skulpture/buang/handlers/projects"
+	authn "skulpture/buang/middleware/authn"
+	limiter "skulpture/buang/middleware/limiter"
+	"skulpture/buang/workers"
 	"time"
 
 	"github.com/dogmatiq/ferrite"
 	"github.com/go-chi/chi/v5"
 	"github.com/go-chi/chi/v5/middleware"
-	"github.com/sethvargo/go-limiter"
-	"github.com/sethvargo/go-limiter/httplimit"
-	"github.com/sethvargo/go-limiter/memorystore"
-	"github.com/sethvargo/go-limiter/noopstore"
+	_ "github.com/mattn/go-sqlite3"
 )
 
 var (
+	GO_ENV = ferrite.
+		Enum("GO_ENV", "Golang environment").
+		WithMembers(enumsenv.Production.String(), enumsenv.Development.String(), enumsenv.Test.String()).
+		WithDefault(enumsenv.Development.String()).
+		Required()
+	API_KEY = ferrite.
+		String("API_KEY", "API key").
+		WithSensitiveContent().
+		WithDefault("supersecureapikey").
+		Required()
 	LOG_LEVEL = ferrite.EnumAs[slog.Level]("LOG_LEVEL", "Log level").
 			WithMembers(slog.LevelDebug, slog.LevelError, slog.LevelInfo, slog.LevelWarn).
 			WithDefault(slog.LevelInfo).
 			Required()
-	GO_ENV = ferrite.
-		Enum("GO_ENV", "Golang environment").
-		WithMembers(enums.Production.String(), enums.Development.String(), enums.Test.String()).
-		WithDefault(enums.Development.String()).
+	ENABLE_TELEMETRY = ferrite.
+				Bool("ENABLE_TELEMETRY", "Enable telemetry").
+				WithDefault(false).
+				Required()
+	OTEL_SERVICE_NAME = ferrite.
+				String("OTEL_SERVICE_NAME", "OpenTelemetry service name").
+				WithDefault("skulpture-buang").
+				Required()
+	OTEL_EXPORTER_OTLP_ENDPOINT = ferrite.
+					String("OTEL_EXPORTER_OTLP_ENDPOINT", "OpenTelemetry exporter endpoint").
+					WithDefault("").
+					Optional()
+	DB_TYPE = ferrite.
+		Enum("DB_TYPE", "DB_TYPE").
+		WithMembers(enumsdbtypes.Pg.String(), enumsdbtypes.Sqlite.String()).
+		WithDefault(enumsdbtypes.Sqlite.String()).
 		Required()
+	DB_CONNECTION_STRING = ferrite.
+				String("DB_CONNECTION_STRING", "Database connection string").
+				WithSensitiveContent().
+				WithDefault(":memory:").
+				Required()
+	TEMPORAL_ADDRESS = ferrite.
+				String("TEMPORAL_API_KEY", "Temporal API key").
+				WithSensitiveContent().
+				Optional()
+	TEMPORAL_NAMESPACE = ferrite.
+				String("TEMPORAL_NAMESPACE", "Temporal namespace").
+				Optional()
+	TEMPORAL_API_KEY = ferrite.
+				String("TEMPORAL_ADDRESS", "Temporal address").
+				Optional()
 )
 
 func init() {
@@ -40,31 +80,58 @@ func main() {
 	r.Use(middleware.RequestID)
 	r.Use(middleware.Heartbeat("/ping"))
 	r.Use(middleware.RealIP)
+	r.Use(middleware.Logger)
 	r.Use(middleware.Recoverer)
 
-	var store limiter.Store
-	if GO_ENV.Value() != enums.Production.String() {
-		noopStore, err := noopstore.New()
-		if err != nil {
-			slog.ErrorContext(ctx, "error", "init", err.Error())
-			panic(err)
-		}
-
-		store = noopStore
-	} else {
-		memoryStore, err := memorystore.New(&memorystore.Config{
-			Tokens:   5,
-			Interval: time.Minute,
-		})
-		if err != nil {
-			slog.ErrorContext(ctx, "error", "init", err.Error())
-			panic(err)
-		}
-
-		store = memoryStore
+	env, err := enumsenv.Parse(GO_ENV.Value())
+	limiterConfig := limiter.LimiterConfig{
+		Env:      env,
+		Tokens:   500,
+		Interval: time.Minute,
+	}
+	limiter, err := limiterConfig.New(ctx)
+	if err != nil {
+		slog.ErrorContext(ctx, "error", "err", err.Error())
+		panic(err)
 	}
 
-	limiter, err := httplimit.NewMiddleware(store, httplimit.IPKeyFunc("X-Forwarded-For"))
+	logger := app.LoggerConfig{
+		Enable:   ENABLE_TELEMETRY.Value() || env == enumsenv.Production,
+		Service:  OTEL_SERVICE_NAME.Value(),
+		Env:      env,
+		LogLevel: LOG_LEVEL.Value(),
+	}
+	cleanup := logger.SetDefault(ctx, r)
+	defer cleanup(ctx)
+
+	dbType, err := enumsdbtypes.Parse(DB_TYPE.Value())
+	if err != nil {
+		slog.ErrorContext(ctx, "error", "err", err.Error())
+		panic(err)
+	}
+
+	dbCfg := db.DbConfig{
+		Type:             dbType,
+		ConnectionString: DB_CONNECTION_STRING.Value(),
+	}
+	queries, cleanup, err := dbCfg.New(ctx)
+	if err != nil {
+		slog.ErrorContext(ctx, "error", "err", err.Error())
+		panic(err)
+	}
+	defer cleanup(ctx)
+
+	authnConfig := authn.AuthnMiddlewareConfig{
+		ApiKey: API_KEY.Value(),
+	}
+
+	appConfig := app.ApplicationConfig{
+		HttpPort: ":80",
+		Services: app.ApplicationServices{
+			Queries: &queries,
+		},
+	}
+	app, err := appConfig.New(ctx, r)
 	if err != nil {
 		slog.ErrorContext(ctx, "error", "err", err.Error())
 		panic(err)
@@ -72,8 +139,18 @@ func main() {
 
 	r.Route("/api/v1", func(r chi.Router) {
 		r.Use(limiter.Handle)
+		r.Use(authnConfig.Handle)
 
+		app.GetHttpApplication().AddRouter(r, projects.Router)
 	})
 
-	http.ListenAndServe(":80", r)
+	app.GetTemporalApplication().AddWorkers(workers.Worker)
+
+	cleanup, err = app.Run(ctx)
+	if err != nil {
+		slog.ErrorContext(ctx, "error", "err", err.Error())
+		panic(err)
+	}
+
+	defer cleanup(ctx)
 }

@@ -6,12 +6,14 @@
 		"dockerfile": "Dockerfile"
 	},
 	"runArgs": [
+		"--network=host", // for temporal dev server
 		"--env-file",
 		".devcontainer/.env"
 	],
 	"containerEnv": {
-		"SERVICE_NAME": "skulpture-buang",
-		"GO_ENV": "development"
+		"OTLER_SERVICE_NAME": "skulpture-buang",
+		"GO_ENV": "development",
+		"CGO_ENABLED": "1"
 	},
 	"mounts": [
 		"source=/var/run/docker.sock,target=/var/run/docker.sock,type=bind"
@@ -20,7 +22,7 @@
 		"settings": {
 			"go.buildTags": "",
 			"go.toolsEnvVars": {
-				"CGO_ENABLED": "0"
+				"CGO_ENABLED": "1"
 			},
 			"go.useLanguageServer": true,
 			"go.testEnvVars": {

@@ -1,6 +1,6 @@
 CREATE TABLE IF NOT EXISTS deployment_logs (
-	id INTEGER NOT NULL AUTOINCREMENT,
+	id INTEGER PRIMARY KEY,
 	deployment_id INTEGER NOT NULL REFERENCES deployments(id),
 	log TEXT,
-	CONSTRAINT pk_deployment_logs PRIMARY KEY(id, deployment_id)
+	CONSTRAINT pk_deployment_logs UNIQUE(id, deployment_id)
 );

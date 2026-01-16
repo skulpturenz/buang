@@ -7,7 +7,7 @@ import (
 type Project interface {
 	GetId() int64
 	GetRepository() string
-	GetRequiresAuth() bool
+	GetRequiresAuthn() bool
 	GetUsername() *string
 	GetPassword() *string
 	GetCreatedAt() time.Time

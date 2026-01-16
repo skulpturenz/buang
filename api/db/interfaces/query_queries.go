@@ -3,5 +3,6 @@ package interfaces
 import "context"
 
 type Queries interface {
-	SelectAllProjectsDesc(ctx context.Context) ([]Project, error)
+	SelectProjectsDesc(ctx context.Context, arg SelectProjectsDescParams) ([]Project, error)
+	CreateProject(ctx context.Context, arg CreateProjectParams) (Project, error)
 }

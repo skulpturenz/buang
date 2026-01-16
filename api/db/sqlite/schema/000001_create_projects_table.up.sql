@@ -1,12 +1,12 @@
 CREATE TABLE IF NOT EXISTS projects (
-	id INTEGER NOT NULL AUTOINCREMENT,
+	id INTEGER PRIMARY KEY,
 	repository TEXT NOT NULL,
 	requires_authn BOOLEAN NOT NULL DEFAULT 0,
 	username TEXT,
 	password TEXT,
 	created_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP,
 	updated_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP,
-	CONSTRAINT pk_projects PRIMARY KEY(id, repository)
+	CONSTRAINT unique_projects UNIQUE(id, repository)
 );
 
 CREATE TRIGGER IF NOT EXISTS projects_moddatetime
