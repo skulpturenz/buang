@@ -31,6 +31,10 @@ func (d Deployment) GetDeployedAt() *time.Time {
 	return d.DeployedAt
 }
 
+func (d Deployment) GetClonePath() *string {
+	return d.ClonePath
+}
+
 func (d Deployment) Unwrap() pg_models.Deployment {
 	return pg_models.Deployment(d)
 }

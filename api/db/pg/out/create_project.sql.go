@@ -12,7 +12,7 @@ import (
 const createProject = `-- name: CreateProject :one
 INSERT INTO projects(repository, requires_authn, username, password) 
 	VALUES ($1, $2, $3, $4)
-RETURNING id, repository, requires_authn, username, password, created_at, updated_at
+RETURNING id, repository, requires_authn, username, password, created_at, updated_at, compose_path
 `
 
 type CreateProjectParams struct {
@@ -38,6 +38,7 @@ func (q *Queries) CreateProject(ctx context.Context, arg CreateProjectParams) (P
 		&i.Password,
 		&i.CreatedAt,
 		&i.UpdatedAt,
+		&i.ComposePath,
 	)
 	return i, err
 }

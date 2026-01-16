@@ -18,7 +18,7 @@ WITH start AS (
 	LIMIT ($1 * ($2 - 1))
 )
 
-SELECT id, repository, requires_authn, username, password, created_at, updated_at FROM projects
+SELECT id, repository, requires_authn, username, password, created_at, updated_at, compose_path FROM projects
 WHERE ($1 = 1) OR (id < (SELECT min FROM start))
 ORDER BY id DESC
 LIMIT $1
@@ -46,6 +46,7 @@ func (q *Queries) SelectProjectsDesc(ctx context.Context, arg SelectProjectsDesc
 			&i.Password,
 			&i.CreatedAt,
 			&i.UpdatedAt,
+			&i.ComposePath,
 		); err != nil {
 			return nil, err
 		}

@@ -35,6 +35,10 @@ func (p Project) GetUpdatedAt() time.Time {
 	return p.UpdatedAt
 }
 
+func (p Project) GetComposePath() string {
+	return p.ComposePath
+}
+
 func (p Project) Unwrap() sqlite_models.Project {
 	return sqlite_models.Project(p)
 }

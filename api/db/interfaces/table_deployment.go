@@ -9,4 +9,5 @@ type Deployment interface {
 	GetStatus() int16
 	GetSha() *string
 	GetDeployedAt() *time.Time
+	GetClonePath() *string
 }

@@ -6,5 +6,6 @@ CREATE TABLE IF NOT EXISTS deployments (
 	sha TEXT,
 	-- https://github.com/mattn/go-sqlite3/blob/master/doc.go#L24
 	deployed_at TIMESTAMP,
+	clone_path TEXT,
 	CONSTRAINT pk_deployments UNIQUE(id, project_id)
 );

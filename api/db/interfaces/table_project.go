@@ -12,4 +12,5 @@ type Project interface {
 	GetPassword() *string
 	GetCreatedAt() time.Time
 	GetUpdatedAt() time.Time
+	GetComposePath() string
 }

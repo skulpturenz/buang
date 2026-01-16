@@ -15,6 +15,7 @@ type Deployment struct {
 	Status     int16      `json:"status"`
 	Sha        *string    `json:"sha"`
 	DeployedAt *time.Time `json:"deployed_at"`
+	ClonePath  *string    `json:"clone_path"`
 }
 
 type DeploymentLog struct {
@@ -31,4 +32,5 @@ type Project struct {
 	Password      *string   `json:"password"`
 	CreatedAt     time.Time `json:"created_at"`
 	UpdatedAt     time.Time `json:"updated_at"`
+	ComposePath   string    `json:"compose_path"`
 }

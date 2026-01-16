@@ -5,5 +5,6 @@ CREATE TABLE IF NOT EXISTS deployments (
 	status SMALLINT NOT NULL,
 	sha TEXT,
 	deployed_at TIMESTAMPTZ,
+	clone_path TEXT,
 	CONSTRAINT pk_deployments PRIMARY KEY(id, project_id)
 );
