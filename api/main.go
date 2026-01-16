@@ -5,9 +5,9 @@ import (
 	"log/slog"
 	"skulpture/buang/app"
 	"skulpture/buang/db"
+	_ "skulpture/buang/docs"
 	enumsdbtypes "skulpture/buang/enums/db_types"
 	enumsenv "skulpture/buang/enums/env"
-	"skulpture/buang/handlers/deployments"
 	"skulpture/buang/handlers/projects"
 	authn "skulpture/buang/middleware/authn"
 	limiter "skulpture/buang/middleware/limiter"
@@ -18,6 +18,7 @@ import (
 	"github.com/go-chi/chi/v5"
 	"github.com/go-chi/chi/v5/middleware"
 	_ "github.com/mattn/go-sqlite3"
+	httpSwagger "github.com/swaggo/http-swagger"
 )
 
 var (
@@ -73,6 +74,13 @@ func init() {
 	ferrite.Init()
 }
 
+// @title						Buang API
+// @description				Deploy preview environments with ease
+// @license					MIT
+// @BasePath					/api/v1
+// @securityDefinitions.apikey	ApiKeyAuth
+// @in							header
+// @name						X-API-Key
 func main() {
 	ctx := context.Background()
 
@@ -138,11 +146,14 @@ func main() {
 		panic(err)
 	}
 
+	r.Mount("/docs", httpSwagger.WrapHandler)
+
 	r.Route("/api/v1", func(r chi.Router) {
+
 		r.Use(limiter.Handle)
 		r.Use(authnConfig.Handle)
 
-		app.GetHttpApplication().AddRouters(r, projects.Router, deployments.Router)
+		app.GetHttpApplication().AddRouters(r, projects.Router)
 	})
 
 	app.GetTemporalApplication().AddWorkers(workers.DeploymentWorker, workers.BuangWorker)

@@ -19,6 +19,14 @@ type CreateDeploymentRequest struct {
 	Sha *string `json:"sha"`
 }
 
+// @summary	Spin up a preview deployment
+// @tags		api.v1, project
+// @param		projectId			path		int						true	"Project ID"
+// @param		deploymentDetails	body		CreateDeploymentRequest	true	"Deployment details"
+// @success	200					{object}	int
+// @failure	403
+// @failure	500	{object}	string
+// @router		/project/{projectId}/deployment [post]
 func CreateDeployment(s app.ApplicationServices) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		projectIdParam := chi.URLParam(r, "projectId")

@@ -110,23 +110,26 @@ func AssetNames() []string {
 
 // _bindata is a table, holding each asset generator, mapped to its name.
 var _bindata = map[string]func() ([]byte, error){
-	"000001_create_projects_table.down.sql": _000001_create_projects_table_down_sql,
-	"000001_create_projects_table.up.sql": _000001_create_projects_table_up_sql,
-	"000002_create_deployments_table.down.sql": _000002_create_deployments_table_down_sql,
-	"000002_create_deployments_table.up.sql": _000002_create_deployments_table_up_sql,
+	"000001_create_projects_table.down.sql":        _000001_create_projects_table_down_sql,
+	"000001_create_projects_table.up.sql":          _000001_create_projects_table_up_sql,
+	"000002_create_deployments_table.down.sql":     _000002_create_deployments_table_down_sql,
+	"000002_create_deployments_table.up.sql":       _000002_create_deployments_table_up_sql,
 	"000003_create_deployment_logs_table.down.sql": _000003_create_deployment_logs_table_down_sql,
-	"000003_create_deployment_logs_table.up.sql": _000003_create_deployment_logs_table_up_sql,
+	"000003_create_deployment_logs_table.up.sql":   _000003_create_deployment_logs_table_up_sql,
 	"bindata.go": bindata_go,
 }
+
 // AssetDir returns the file names below a certain
 // directory embedded in the file by go-bindata.
 // For example if you run go-bindata on data/... and data contains the
 // following hierarchy:
-//     data/
-//       foo.txt
-//       img/
-//         a.png
-//         b.png
+//
+//	data/
+//	  foo.txt
+//	  img/
+//	    a.png
+//	    b.png
+//
 // then AssetDir("data") would return []string{"foo.txt", "img"}
 // AssetDir("data/img") would return []string{"a.png", "b.png"}
 // AssetDir("foo.txt") and AssetDir("notexist") would return an error
@@ -154,22 +157,16 @@ func AssetDir(name string) ([]string, error) {
 }
 
 type _bintree_t struct {
-	Func func() ([]byte, error)
+	Func     func() ([]byte, error)
 	Children map[string]*_bintree_t
 }
+
 var _bintree = &_bintree_t{nil, map[string]*_bintree_t{
-	"000001_create_projects_table.down.sql": &_bintree_t{_000001_create_projects_table_down_sql, map[string]*_bintree_t{
-	}},
-	"000001_create_projects_table.up.sql": &_bintree_t{_000001_create_projects_table_up_sql, map[string]*_bintree_t{
-	}},
-	"000002_create_deployments_table.down.sql": &_bintree_t{_000002_create_deployments_table_down_sql, map[string]*_bintree_t{
-	}},
-	"000002_create_deployments_table.up.sql": &_bintree_t{_000002_create_deployments_table_up_sql, map[string]*_bintree_t{
-	}},
-	"000003_create_deployment_logs_table.down.sql": &_bintree_t{_000003_create_deployment_logs_table_down_sql, map[string]*_bintree_t{
-	}},
-	"000003_create_deployment_logs_table.up.sql": &_bintree_t{_000003_create_deployment_logs_table_up_sql, map[string]*_bintree_t{
-	}},
-	"bindata.go": &_bintree_t{bindata_go, map[string]*_bintree_t{
-	}},
+	"000001_create_projects_table.down.sql":        &_bintree_t{_000001_create_projects_table_down_sql, map[string]*_bintree_t{}},
+	"000001_create_projects_table.up.sql":          &_bintree_t{_000001_create_projects_table_up_sql, map[string]*_bintree_t{}},
+	"000002_create_deployments_table.down.sql":     &_bintree_t{_000002_create_deployments_table_down_sql, map[string]*_bintree_t{}},
+	"000002_create_deployments_table.up.sql":       &_bintree_t{_000002_create_deployments_table_up_sql, map[string]*_bintree_t{}},
+	"000003_create_deployment_logs_table.down.sql": &_bintree_t{_000003_create_deployment_logs_table_down_sql, map[string]*_bintree_t{}},
+	"000003_create_deployment_logs_table.up.sql":   &_bintree_t{_000003_create_deployment_logs_table_up_sql, map[string]*_bintree_t{}},
+	"bindata.go": &_bintree_t{bindata_go, map[string]*_bintree_t{}},
 }}

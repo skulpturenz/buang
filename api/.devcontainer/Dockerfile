@@ -11,7 +11,8 @@ FROM base
 
 RUN go install github.com/golang-migrate/migrate/v4/cmd/migrate@latest && \
 	go install github.com/swaggo/swag/cmd/swag@latest && \
-	go install github.com/sqlc-dev/sqlc/cmd/sqlc@latest
+	go install github.com/sqlc-dev/sqlc/cmd/sqlc@latest && \
+	go install github.com/swaggo/swag/cmd/swag@latest
 
 RUN apk update && \
 	apk add --no-cache build-base libc6-compat git-lfs ca-certificates openssl && \

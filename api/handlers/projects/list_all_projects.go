@@ -23,6 +23,14 @@ type Project struct {
 	UpdatedAt     time.Time `json:"updatedAt"`
 }
 
+// @summary	List all projects
+// @tags		api.v1, projects
+// @param		limit	query	int	false	"Limit"
+// @param		page	query	int	false	"Page"
+// @success	200		{array}	Project
+// @failure	403
+// @failure	500	{object}	string
+// @router		/projects [get]
 func ListAllProjects(s app.ApplicationServices) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		var req ListProjectRequest

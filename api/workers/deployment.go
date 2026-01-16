@@ -17,9 +17,9 @@ func DeploymentWorker(s app.ApplicationServices, c *client.Client) (worker.Worke
 	cloneDeployment := activities.CloneDeployment(s)
 	deployProject := activities.DeployProject(s)
 
-	w.RegisterActivity(createDynamicConfigDir)
-	w.RegisterActivity(cloneDeployment)
-	w.RegisterActivity(deployProject)
+	w.RegisterActivity(createDynamicConfigDir.CreateDynamicConfigDir)
+	w.RegisterActivity(cloneDeployment.CloneDeployment)
+	w.RegisterActivity(deployProject.DeployProject)
 	w.RegisterWorkflow(workflows.Deploy)
 
 	err := w.Run(worker.InterruptCh())

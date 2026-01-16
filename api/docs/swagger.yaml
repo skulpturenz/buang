@@ -1,0 +1,201 @@
+basePath: /api/v1
+definitions:
+  projects.CreateDeploymentRequest:
+    properties:
+      sha:
+        type: string
+    type: object
+  projects.CreateProjectRequest:
+    properties:
+      password:
+        type: string
+      repository:
+        type: string
+      requiresAuthn:
+        type: boolean
+      username:
+        type: string
+    type: object
+  projects.Deployment:
+    properties:
+      deployedAt:
+        type: string
+      id:
+        type: integer
+      projectId:
+        type: integer
+      sha:
+        type: string
+      status:
+        type: integer
+      url:
+        type: string
+    type: object
+  projects.Project:
+    properties:
+      createdAt:
+        type: string
+      id:
+        type: integer
+      password:
+        type: string
+      repository:
+        type: string
+      requiresAuthn:
+        type: boolean
+      updatedAt:
+        type: string
+      username:
+        type: string
+    type: object
+info:
+  contact: {}
+  description: Deploy preview environments with ease
+  title: Buang API
+paths:
+  /project:
+    post:
+      parameters:
+      - description: Project details
+        in: body
+        name: projectDetails
+        required: true
+        schema:
+          $ref: '#/definitions/projects.CreateProjectRequest'
+      responses:
+        "200":
+          description: OK
+          schema:
+            type: integer
+        "403":
+          description: Forbidden
+        "500":
+          description: Internal Server Error
+          schema:
+            type: string
+      summary: Create a project
+      tags:
+      - api.v1
+      - project
+  /project/{projectId}/deployment:
+    post:
+      parameters:
+      - description: Project ID
+        in: path
+        name: projectId
+        required: true
+        type: integer
+      - description: Deployment details
+        in: body
+        name: deploymentDetails
+        required: true
+        schema:
+          $ref: '#/definitions/projects.CreateDeploymentRequest'
+      responses:
+        "200":
+          description: OK
+          schema:
+            type: integer
+        "403":
+          description: Forbidden
+        "500":
+          description: Internal Server Error
+          schema:
+            type: string
+      summary: Spin up a preview deployment
+      tags:
+      - api.v1
+      - project
+  /project/{projectId}/deployment/{deploymentId}:
+    delete:
+      parameters:
+      - description: Project ID
+        in: path
+        name: projectId
+        required: true
+        type: integer
+      - description: Deployment ID
+        in: path
+        name: deploymentId
+        required: true
+        type: integer
+      responses:
+        "204":
+          description: No Content
+        "403":
+          description: Forbidden
+        "500":
+          description: Internal Server Error
+          schema:
+            type: string
+      summary: Spin down a preview deployment
+      tags:
+      - api.v1
+      - project
+  /project/{projectId}/deployments:
+    get:
+      parameters:
+      - description: Project ID
+        in: path
+        name: projectId
+        required: true
+        type: integer
+      - description: Limit
+        in: query
+        name: limit
+        type: integer
+      - description: Page
+        in: query
+        name: page
+        type: integer
+      responses:
+        "200":
+          description: OK
+          schema:
+            items:
+              $ref: '#/definitions/projects.Deployment'
+            type: array
+        "403":
+          description: Forbidden
+        "500":
+          description: Internal Server Error
+          schema:
+            type: string
+      summary: List all deployments
+      tags:
+      - api.v1
+      - project
+  /projects:
+    get:
+      parameters:
+      - description: Limit
+        in: query
+        name: limit
+        type: integer
+      - description: Page
+        in: query
+        name: page
+        type: integer
+      responses:
+        "200":
+          description: OK
+          schema:
+            items:
+              $ref: '#/definitions/projects.Project'
+            type: array
+        "403":
+          description: Forbidden
+        "500":
+          description: Internal Server Error
+          schema:
+            type: string
+      summary: List all projects
+      tags:
+      - api.v1
+      - projects
+securityDefinitions:
+  ApiKeyAuth:
+    in: header
+    name: X-API-Key
+    type: apiKey
+swagger: "2.0"

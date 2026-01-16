@@ -20,7 +20,7 @@ func Buang(ctx workflow.Context, projectId int64, deploymentId int64) error {
 	var buangDeployment *activities.BuangDeployment
 	var buangDeploymentResult activities.BuangDeploymentResult
 
-	err := workflow.ExecuteActivity(ctx, buangDeployment.Exec, activities.BuangDeploymentParams{ProjectId: projectId, DeploymentId: deploymentId}).Get(ctx, buangDeploymentResult)
+	err := workflow.ExecuteActivity(ctx, buangDeployment.BuangDeployment, activities.BuangDeploymentParams{ProjectId: projectId, DeploymentId: deploymentId}).Get(ctx, buangDeploymentResult)
 	if err != nil {
 		return err
 	}

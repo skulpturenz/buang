@@ -16,6 +16,13 @@ type CreateProjectRequest struct {
 	Password      *string `json:"password,omitempty"`
 }
 
+// @summary	Create a project
+// @tags		api.v1, project
+// @param		projectDetails	body		CreateProjectRequest	true	"Project details"
+// @success	200				{object}	int
+// @failure	403
+// @failure	500	{object}	string
+// @router		/project [post]
 func CreateProject(s app.ApplicationServices) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		var req CreateProjectRequest

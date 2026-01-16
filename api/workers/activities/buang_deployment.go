@@ -20,7 +20,7 @@ type BuangDeploymentParams struct {
 
 type BuangDeploymentResult struct{}
 
-func (bd *BuangDeployment) Exec(ctx context.Context, b BuangDeploymentParams) (*BuangDeploymentResult, error) {
+func (bd *BuangDeployment) BuangDeployment(ctx context.Context, b BuangDeploymentParams) (*BuangDeploymentResult, error) {
 	s := app.ApplicationServices(*bd)
 
 	findProjectParams := projects.FindProjectByIdParams{

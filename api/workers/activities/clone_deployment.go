@@ -21,7 +21,7 @@ type CloneDeploymentResult struct {
 	Dir string
 }
 
-func (cd *CloneDeployment) Exec(ctx context.Context, d CloneDeploymentParams) (*CloneDeploymentResult, error) {
+func (cd *CloneDeployment) CloneDeployment(ctx context.Context, d CloneDeploymentParams) (*CloneDeploymentResult, error) {
 	s := app.ApplicationServices(*cd)
 
 	findProjectParams := projects.FindProjectByIdParams{

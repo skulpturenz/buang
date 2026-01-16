@@ -27,7 +27,7 @@ type DeployProjectParams struct {
 
 type DeployProjectResult struct{}
 
-func (dp *DeployProject) Exec(ctx context.Context, d DeployProjectParams) (*DeployProjectResult, error) {
+func (dp *DeployProject) DeployProject(ctx context.Context, d DeployProjectParams) (*DeployProjectResult, error) {
 	s := app.ApplicationServices(*dp)
 
 	err := os.MkdirAll(TRAEFIK_DYNAMIC_CONFIG, os.ModePerm)
