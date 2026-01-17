@@ -12,7 +12,9 @@ definitions:
       sha:
         type: string
     required:
+    - branch
     - serviceEntrypoint
+    - sha
     type: object
   projects.CreateProjectRequest:
     properties:

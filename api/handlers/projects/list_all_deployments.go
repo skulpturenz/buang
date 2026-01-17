@@ -1,6 +1,7 @@
 package projects
 
 import (
+	"errors"
 	"log/slog"
 	"net/http"
 	"skulpture/buang/app"
@@ -9,12 +10,13 @@ import (
 	"time"
 
 	"github.com/go-chi/chi/v5"
+	"github.com/go-playground/validator/v10"
 )
 
 type ListDeploymentsRequest struct {
-	ProjectID int64 `schema:"-"`
-	Limit     int32 `schema:"limit,default:50"`
-	Page      int32 `schema:"page,default:1"`
+	ProjectID int64  `schema:"-"`
+	Limit     *int32 `schema:"limit,default:50" validate:"gte=1"`
+	Page      *int32 `schema:"page,default:1" validate:"gte=1"`
 }
 
 type Deployment struct {
@@ -37,6 +39,8 @@ type Deployment struct {
 // @failure	500	{object}	string
 // @router		/project/{projectId}/deployments [get]
 func ListAllDeployments(s app.ApplicationServices) http.HandlerFunc {
+	validate := validator.New(validator.WithRequiredStructEnabled())
+
 	return func(w http.ResponseWriter, r *http.Request) {
 		projectIdParam := chi.URLParam(r, "projectId")
 		projectId, err := strconv.Atoi(projectIdParam)
@@ -55,9 +59,29 @@ func ListAllDeployments(s app.ApplicationServices) http.HandlerFunc {
 			return
 		}
 
+		err = validate.Struct(req)
+		if err != nil {
+			var validateErrs validator.ValidationErrors
+			errs := map[string]string{}
+
+			if errors.As(err, &validateErrs) {
+				for _, e := range validateErrs {
+					errs[e.Field()] = e.Error()
+				}
+			}
+
+			app.WriteError(w, errs, http.StatusBadRequest)
+
+			return
+		}
+
 		req.ProjectID = int64(projectId)
 
-		p := deployments.ListDeploymentsParams(req)
+		p := deployments.ListDeploymentsParams{
+			ProjectID: req.ProjectID,
+			Limit:     *req.Limit,
+			Page:      *req.Page,
+		}
 
 		res, err := p.Exec(r.Context(), &s)
 		if err != nil {

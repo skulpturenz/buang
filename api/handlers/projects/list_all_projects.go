@@ -1,16 +1,19 @@
 package projects
 
 import (
+	"errors"
 	"log/slog"
 	"net/http"
 	"skulpture/buang/app"
 	"skulpture/buang/components/projects"
 	"time"
+
+	"github.com/go-playground/validator/v10"
 )
 
 type ListProjectRequest struct {
-	Limit int32 `schema:"limit,default:50"`
-	Page  int32 `schema:"page,default:1"`
+	Limit *int32 `schema:"limit,default:50" validate:"gte=1"`
+	Page  *int32 `schema:"page,default:1" validate:"gte=1"`
 }
 
 type Project struct {
@@ -33,6 +36,8 @@ type Project struct {
 // @failure	500	{object}	string
 // @router		/projects [get]
 func ListAllProjects(s app.ApplicationServices) http.HandlerFunc {
+	validate := validator.New(validator.WithRequiredStructEnabled())
+
 	return func(w http.ResponseWriter, r *http.Request) {
 		var req ListProjectRequest
 
@@ -43,7 +48,26 @@ func ListAllProjects(s app.ApplicationServices) http.HandlerFunc {
 			return
 		}
 
-		p := projects.ListProjectParams(req)
+		err = validate.Struct(req)
+		if err != nil {
+			var validateErrs validator.ValidationErrors
+			errs := map[string]string{}
+
+			if errors.As(err, &validateErrs) {
+				for _, e := range validateErrs {
+					errs[e.Field()] = e.Error()
+				}
+			}
+
+			app.WriteError(w, errs, http.StatusBadRequest)
+
+			return
+		}
+
+		p := projects.ListProjectParams{
+			Limit: *req.Limit,
+			Page:  *req.Page,
+		}
 
 		res, err := p.Exec(r.Context(), &s)
 		if err != nil {

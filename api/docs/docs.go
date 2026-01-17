@@ -258,7 +258,9 @@ const docTemplate = `{
         "projects.CreateDeploymentRequest": {
             "type": "object",
             "required": [
-                "serviceEntrypoint"
+                "branch",
+                "serviceEntrypoint",
+                "sha"
             ],
             "properties": {
                 "branch": {
