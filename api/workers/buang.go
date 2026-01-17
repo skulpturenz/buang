@@ -16,7 +16,7 @@ func BuangWorker(s app.ApplicationServices, c *client.Client) (worker.Worker, er
 	buangDeployment := activities.BuangDeployment(s)
 
 	w.RegisterActivity(buangDeployment.BuangDeployment)
-	w.RegisterWorkflow(workflows.Buang)
+	w.RegisterWorkflow(workflows.BuangDeployment)
 
 	err := w.Run(worker.InterruptCh())
 	if err != nil {

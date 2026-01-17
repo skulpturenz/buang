@@ -96,16 +96,17 @@ func (dp *DeployProject) DeployProject(ctx context.Context, d DeployProjectParam
 		HTTP: &dynamic.HTTPConfiguration{
 			Routers: map[string]*dynamic.Router{
 				projectName: {
-					EntryPoints: []string{"http"},
-					Rule:        url,
+					EntryPoints: []string{"web"},
+					Rule:        fmt.Sprintf("PathPrefix(`%v`)", url),
 					Service:     projectName,
+					Middlewares: []string{fmt.Sprintf("%v-stripprefix", projectName)},
 				},
 			},
 			Services: map[string]*dynamic.Service{
 				projectName: {
 					LoadBalancer: &dynamic.ServersLoadBalancer{
 						Servers: []dynamic.Server{
-							{URL: serviceEntrypoint[0], Port: serviceEntrypoint[1]},
+							{URL: fmt.Sprintf("http://%v:%v", serviceEntrypoint[0], serviceEntrypoint[1])},
 						},
 						PassHostHeader: &passHostHeader,
 					},
@@ -126,7 +127,7 @@ func (dp *DeployProject) DeployProject(ctx context.Context, d DeployProjectParam
 		return nil, err
 	}
 
-	err = os.WriteFile(filepath.Join(TRAEFIK_DYNAMIC_CONFIG, fmt.Sprintf("project-%v-deployment-%v", p.Project.GetId(), dply.Deployment.GetId())), yml, 0644)
+	err = os.WriteFile(filepath.Join(TRAEFIK_DYNAMIC_CONFIG, fmt.Sprintf("project-%v-deployment-%v.yaml", p.Project.GetId(), dply.Deployment.GetId())), yml, 0644)
 	if err != nil {
 		return nil, err
 	}

@@ -8,7 +8,7 @@ import (
 	"go.temporal.io/sdk/workflow"
 )
 
-func Buang(ctx workflow.Context, projectId int64, deploymentId int64) error {
+func BuangDeployment(ctx workflow.Context, projectId int64, deploymentId int64) error {
 	ao := workflow.ActivityOptions{
 		ScheduleToCloseTimeout: time.Minute,
 		RetryPolicy: &temporal.RetryPolicy{

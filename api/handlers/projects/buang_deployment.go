@@ -46,7 +46,7 @@ func BuangDeployment(s app.ApplicationServices) http.HandlerFunc {
 			TaskQueue: constantstaskqueues.QueueBuang,
 		}
 
-		_, err = s.Temporal.ExecuteWorkflow(r.Context(), options, workflows.Buang, int64(projectId), int64(deploymentId))
+		_, err = s.Temporal.ExecuteWorkflow(r.Context(), options, workflows.BuangDeployment, int64(projectId), int64(deploymentId))
 		if err != nil {
 			slog.ErrorContext(r.Context(), "buang deployment", "err", err.Error())
 			http.Error(w, err.Error(), http.StatusInternalServerError)
