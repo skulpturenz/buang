@@ -60,3 +60,10 @@ tasks:
     desc: Run Temporal dev server
     cmds:
       - docker run --rm -p 7233:7233 -p 8233:8233 temporalio/temporal server start-dev --ip 0.0.0.0
+
+  deploy-prod:
+    desc: Deploy compose service in production
+    cmds:
+      - mkdir -p /deployments
+      - echo "Buang depends on Temporal, you can use Temporal Cloud or self host it by following the docs at https://docs.temporal.io/self-hosted-guide"
+      - docker-compose -f docker-compose.prod.yml up

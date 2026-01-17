@@ -1,0 +1,67 @@
+networks:
+  buang:
+    driver: bridge
+
+secrets:
+  proxy.certificate:
+    file: ${PROXY_CERT_PATH}
+  proxy.key:
+    file: ${PROXY_KEY_PATH}
+
+services:
+  proxy:
+    image: traefik
+    command: >
+      --providers.file.directory=/deployments
+      --providers.file.watch=true
+      --providers.docker=true
+      --providers.docker.exposedByDefault=false
+      --entryPoints.web.address=:80
+      --entryPoints.websecure.address=:443
+      --entryPoints.websecure.asDefault=true
+      --entryPoints.web.http.redirections.entryPoint.to=websecure
+      --entryPoints.web.http.redirections.entryPoint.scheme=https
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock
+      - /deployments:/deployments
+    secrets:
+      - source: proxy.certificate
+        target: /certs/fullchain.pem
+      - source: proxy.key
+        target: /certs/privkey.pem
+    ulimits:
+      nofile:
+        soft: 20000
+        hard: 20000
+    networks:
+      - buang
+    deploy:
+      mode: replicated
+      replicas: 1
+
+  buang:
+    image: skulpture/buang
+    environment:
+      GO_ENV: "production"
+      API_KEY: ${BUANG_API_KEY}
+      ENABLE_TELEMETRY: ${BUANG_ENABLE_TELEMETRY}
+      OTEL_SERVICE_NAME: ${BUANG_OTEL_SERVICE_NAME}
+      OTEL_EXPORTER_OTLP_ENDPOINT: ${BUANG_OTEL_EXPORTER_OTLP_ENDPOINT}
+      DB_TYPE: ${BUANG_DB_TYPE}
+      DB_CONNECTION_STRING: ${BUANG_DB_CONNECTION_STRING}
+      # set temporal client env variables as required
+      # docs: https://docs.temporal.io/references/client-environment-configuration
+      TEMPORAL_API_KEY: ${BUANG_TEMPORAL_API_KEY}
+      TEMPORAL_NAMESPACE: ${BUANG_TEMPORAL_NAMESPACE}
+      TEMPORAL_ADDRESS: ${BUANG_TEMPORAL_ADDRESS}
+    volumes:
+      - /deployments:/deployments
+    ulimits:
+      nofile:
+        soft: 20000
+        hard: 20000
+    networks:
+      - buang
+    deploy:
+      mode: replicated
+      replicas: 1
