@@ -16,6 +16,47 @@ const docTemplate = `{
     "basePath": "{{.BasePath}}",
     "paths": {
         "/project": {
+            "get": {
+                "security": [
+                    {
+                        "ApiKeyAuth": []
+                    }
+                ],
+                "tags": [
+                    "api.v1",
+                    "project"
+                ],
+                "summary": "Find project by repository",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "Repository",
+                        "name": "repository",
+                        "in": "query",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "type": "array",
+                            "items": {
+                                "$ref": "#/definitions/projects.FindProjectByRepositoryResponse"
+                            }
+                        }
+                    },
+                    "401": {
+                        "description": "Unauthorized"
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "type": "string"
+                        }
+                    }
+                }
+            },
             "post": {
                 "security": [
                     {
@@ -235,7 +276,7 @@ const docTemplate = `{
                         "schema": {
                             "type": "array",
                             "items": {
-                                "$ref": "#/definitions/projects.Deployment"
+                                "$ref": "#/definitions/projects.ListAllDeploymentsItem"
                             }
                         }
                     },
@@ -283,7 +324,7 @@ const docTemplate = `{
                         "schema": {
                             "type": "array",
                             "items": {
-                                "$ref": "#/definitions/projects.Project"
+                                "$ref": "#/definitions/projects.ListAllProjectsItem"
                             }
                         }
                     },
@@ -304,10 +345,10 @@ const docTemplate = `{
         "projects.BuangBranchRequest": {
             "type": "object",
             "required": [
-                "repository"
+                "branch"
             ],
             "properties": {
-                "repository": {
+                "branch": {
                     "type": "string"
                 }
             }
@@ -359,7 +400,36 @@ const docTemplate = `{
                 }
             }
         },
-        "projects.Deployment": {
+        "projects.FindProjectByRepositoryResponse": {
+            "type": "object",
+            "properties": {
+                "composePath": {
+                    "type": "string"
+                },
+                "createdAt": {
+                    "type": "string"
+                },
+                "id": {
+                    "type": "integer"
+                },
+                "password": {
+                    "type": "string"
+                },
+                "repository": {
+                    "type": "string"
+                },
+                "requiresAuthn": {
+                    "type": "boolean"
+                },
+                "updatedAt": {
+                    "type": "string"
+                },
+                "username": {
+                    "type": "string"
+                }
+            }
+        },
+        "projects.ListAllDeploymentsItem": {
             "type": "object",
             "properties": {
                 "deployedAt": {
@@ -382,9 +452,12 @@ const docTemplate = `{
                 }
             }
         },
-        "projects.Project": {
+        "projects.ListAllProjectsItem": {
             "type": "object",
             "properties": {
+                "composePath": {
+                    "type": "string"
+                },
                 "createdAt": {
                     "type": "string"
                 },

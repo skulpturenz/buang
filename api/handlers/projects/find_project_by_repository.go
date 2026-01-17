@@ -11,12 +11,11 @@ import (
 	"github.com/go-playground/validator/v10"
 )
 
-type ListAllProjectsRequest struct {
-	Limit *int32 `schema:"limit,default:50" validate:"gte=1"`
-	Page  *int32 `schema:"page,default:1" validate:"gte=1"`
+type FindProjectByRepositoryRequest struct {
+	Repository string `schema:"repository" validate:"required"`
 }
 
-type ListAllProjectsItem struct {
+type FindProjectByRepositoryResponse struct {
 	Id            int64     `json:"id"`
 	Repository    string    `json:"repository"`
 	RequiresAuthn bool      `json:"requiresAuthn"`
@@ -27,24 +26,23 @@ type ListAllProjectsItem struct {
 	ComposePath   string    `json:"composePath"`
 }
 
-// @summary	List all projects
-// @tags		api.v1, projects
+// @summary	Find project by repository
+// @tags		api.v1, project
 // @security	ApiKeyAuth
-// @param		limit	query	int	false	"Limit"
-// @param		page	query	int	false	"Page"
-// @success	200		{array}	ListAllProjectsItem
+// @param		repository	query	string	required	"Repository"
+// @success	200			{array}	FindProjectByRepositoryResponse
 // @failure	401
 // @failure	500	{object}	string
-// @router		/projects [get]
-func ListAllProjects(s app.ApplicationServices) http.HandlerFunc {
+// @router		/project [get]
+func FindProjectByRepository(s app.ApplicationServices) http.HandlerFunc {
 	validate := validator.New(validator.WithRequiredStructEnabled())
 
 	return func(w http.ResponseWriter, r *http.Request) {
-		var req ListAllProjectsRequest
+		var req FindProjectByRepositoryRequest
 
 		err := s.SchemaDecoder.Decode(&req, r.URL.Query())
 		if err != nil {
-			slog.ErrorContext(r.Context(), "list all projects", "err", err.Error())
+			slog.ErrorContext(r.Context(), "find project by repository", "err", err.Error())
 			http.Error(w, err.Error(), http.StatusBadRequest)
 			return
 		}
@@ -65,35 +63,30 @@ func ListAllProjects(s app.ApplicationServices) http.HandlerFunc {
 			return
 		}
 
-		p := projects.ListProjectParams{
-			Limit: *req.Limit,
-			Page:  *req.Page,
+		p := projects.FindProjectByRepositoryParams{
+			Repository: req.Repository,
 		}
 
 		res, err := p.Exec(r.Context(), &s)
 		if err != nil {
-			slog.ErrorContext(r.Context(), "list all projects", "err", err.Error())
+			slog.ErrorContext(r.Context(), "find project by repository", "err", err.Error())
 			http.Error(w, err.Error(), http.StatusInternalServerError)
 			return
 		}
 
-		ret := []ListAllProjectsItem{}
-		for _, x := range res.Projects {
-			ret = append(ret, ListAllProjectsItem{
-				Id:            x.GetId(),
-				Repository:    x.GetRepository(),
-				RequiresAuthn: x.GetRequiresAuthn(),
-				Username:      x.GetUsername(),
-				Password:      x.GetPassword(),
-				CreatedAt:     x.GetCreatedAt(),
-				UpdatedAt:     x.GetUpdatedAt(),
-				ComposePath:   x.GetComposePath(),
-			})
+		ret := FindProjectByRepositoryResponse{
+			Id:            res.Project.GetId(),
+			Repository:    res.Project.GetRepository(),
+			RequiresAuthn: res.Project.GetRequiresAuthn(),
+			Username:      res.Project.GetUsername(),
+			Password:      res.Project.GetPassword(),
+			CreatedAt:     res.Project.GetCreatedAt(),
+			UpdatedAt:     res.Project.GetUpdatedAt(),
 		}
 
 		err = app.WriteJson(w, ret, http.StatusOK)
 		if err != nil {
-			slog.ErrorContext(r.Context(), "list all projects", "err", err.Error())
+			slog.ErrorContext(r.Context(), "find project by repository", "err", err.Error())
 			http.Error(w, err.Error(), http.StatusInternalServerError)
 			return
 		}

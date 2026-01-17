@@ -2,10 +2,10 @@ basePath: /api/v1
 definitions:
   projects.BuangBranchRequest:
     properties:
-      repository:
+      branch:
         type: string
     required:
-    - repository
+    - branch
     type: object
   projects.CreateDeploymentRequest:
     properties:
@@ -39,7 +39,26 @@ definitions:
     - composePath
     - repository
     type: object
-  projects.Deployment:
+  projects.FindProjectByRepositoryResponse:
+    properties:
+      composePath:
+        type: string
+      createdAt:
+        type: string
+      id:
+        type: integer
+      password:
+        type: string
+      repository:
+        type: string
+      requiresAuthn:
+        type: boolean
+      updatedAt:
+        type: string
+      username:
+        type: string
+    type: object
+  projects.ListAllDeploymentsItem:
     properties:
       deployedAt:
         type: string
@@ -54,8 +73,10 @@ definitions:
       url:
         type: string
     type: object
-  projects.Project:
+  projects.ListAllProjectsItem:
     properties:
+      composePath:
+        type: string
       createdAt:
         type: string
       id:
@@ -77,6 +98,32 @@ info:
   title: Buang API
 paths:
   /project:
+    get:
+      parameters:
+      - description: Repository
+        in: query
+        name: repository
+        required: true
+        type: string
+      responses:
+        "200":
+          description: OK
+          schema:
+            items:
+              $ref: '#/definitions/projects.FindProjectByRepositoryResponse'
+            type: array
+        "401":
+          description: Unauthorized
+        "500":
+          description: Internal Server Error
+          schema:
+            type: string
+      security:
+      - ApiKeyAuth: []
+      summary: Find project by repository
+      tags:
+      - api.v1
+      - project
     post:
       parameters:
       - description: Project details
@@ -211,7 +258,7 @@ paths:
           description: OK
           schema:
             items:
-              $ref: '#/definitions/projects.Deployment'
+              $ref: '#/definitions/projects.ListAllDeploymentsItem'
             type: array
         "401":
           description: Unauthorized
@@ -241,7 +288,7 @@ paths:
           description: OK
           schema:
             items:
-              $ref: '#/definitions/projects.Project'
+              $ref: '#/definitions/projects.ListAllProjectsItem'
             type: array
         "401":
           description: Unauthorized

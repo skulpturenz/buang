@@ -1,0 +1,47 @@
+name: Preview Deployment
+
+on:
+  pull_request:
+    types: [closed]
+
+env:
+  API_BASE_URL: https://buang.skulpture.xyz/api/v1 # TODO: update
+  API_KEY: ${{ secrets.BUANG_API_KEY }} # TODO: update
+  PREVIEW_ENVS: ${{ secrets.BUANG_PREVIEW_ENVS_JSON }} # TODO: update
+  SERVICE_ENTRYPONT: ${{ vars.BUANG_SERVICE_ENTRYPOINT }} # TODO: update, format: `hostname:port`
+
+jobs:
+  deploy-preview:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Get project details
+        id: get_project
+        run: |
+          REPO=$(echo "${{ github.repository }}" | jq -rr @uri)
+
+          RESPONSE=$(curl -s -X GET "${{ env.API_BASE_URL }}/project?repo=$REPO" \
+            -H "X-API-Key: ${{ env.API_KEY }}")
+          
+          PROJECT_ID=$(echo $RESPONSE | jq -r '.id')
+          
+          echo "project_id=$PROJECT_ID" >> $GITHUB_OUTPUT
+
+      - name: Buang preview environment
+        env:
+          PROJECT_ID: ${{ steps.get_project.outputs.project_id }}
+        run: |
+          REQUEST=$(jq -n \
+            --arg branch "${{ github.head_ref }}" \
+            '
+            {
+              branch: $branch
+            }
+            ')
+
+          curl -X DELETE "${{ env.API_BASE_URL }}/project/${{ env.PROJECT_ID }}/branch" \
+            -H "Content-Type: application/json"
+            -H "X-API-Key: ${{ env.API_KEY }}"
+            -d "$REQUEST"

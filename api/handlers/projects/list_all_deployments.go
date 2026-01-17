@@ -13,13 +13,13 @@ import (
 	"github.com/go-playground/validator/v10"
 )
 
-type ListDeploymentsRequest struct {
+type ListAllDeploymentsRequest struct {
 	ProjectID int64  `schema:"-"`
 	Limit     *int32 `schema:"limit,default:50" validate:"gte=1"`
 	Page      *int32 `schema:"page,default:1" validate:"gte=1"`
 }
 
-type Deployment struct {
+type ListAllDeploymentsItem struct {
 	ID         int64      `json:"id"`
 	ProjectID  int64      `json:"projectId"`
 	Url        *string    `json:"url"`
@@ -34,7 +34,7 @@ type Deployment struct {
 // @param		projectId	path	int	true	"Project ID"
 // @param		limit		query	int	false	"Limit"
 // @param		page		query	int	false	"Page"
-// @success	200			{array}	Deployment
+// @success	200			{array}	ListAllDeploymentsItem
 // @failure	401
 // @failure	500	{object}	string
 // @router		/project/{projectId}/deployments [get]
@@ -50,7 +50,7 @@ func ListAllDeployments(s app.ApplicationServices) http.HandlerFunc {
 			return
 		}
 
-		var req ListDeploymentsRequest
+		var req ListAllDeploymentsRequest
 
 		err = s.SchemaDecoder.Decode(&req, r.URL.Query())
 		if err != nil {
@@ -90,9 +90,9 @@ func ListAllDeployments(s app.ApplicationServices) http.HandlerFunc {
 			return
 		}
 
-		ret := []Deployment{}
+		ret := []ListAllDeploymentsItem{}
 		for _, x := range res.Deployments {
-			ret = append(ret, Deployment{
+			ret = append(ret, ListAllDeploymentsItem{
 				ID:         x.GetId(),
 				ProjectID:  x.GetProjectId(),
 				Url:        x.GetUrl(),

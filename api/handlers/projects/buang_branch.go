@@ -17,7 +17,7 @@ import (
 )
 
 type BuangBranchRequest struct {
-	Branch string `json:"repository" validate:"required"`
+	Branch string `json:"branch" validate:"required"`
 }
 
 // @summary	Spin down a preview branch
