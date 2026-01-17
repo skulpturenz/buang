@@ -18,7 +18,7 @@ UPDATE deployments
 		deployed_at = ?3,
 		clone_path = ?4
 WHERE id = ?5
-RETURNING id, project_id, url, status, sha, deployed_at, clone_path, service_entrypoint
+RETURNING id, project_id, url, status, sha, deployed_at, clone_path, service_entrypoint, branch, env_vars
 `
 
 type UpdateDeploymentParams struct {
@@ -47,6 +47,8 @@ func (q *Queries) UpdateDeployment(ctx context.Context, arg UpdateDeploymentPara
 		&i.DeployedAt,
 		&i.ClonePath,
 		&i.ServiceEntrypoint,
+		&i.Branch,
+		&i.EnvVars,
 	)
 	return i, err
 }

@@ -9,8 +9,10 @@ import (
 
 type CreateDeploymentParams struct {
 	ProjectID         int64
-	Sha               *string
+	Branch            string
+	Sha               string
 	ServiceEntrypoint string
+	Env               map[string]any
 }
 
 type CreateDeploymentResult struct {
@@ -22,9 +24,11 @@ func (d CreateDeploymentParams) Exec(ctx context.Context, s *app.ApplicationServ
 
 	result, err := q.CreateDeployment(ctx, interfaces.CreateDeploymentParams{
 		ProjectID:         d.ProjectID,
+		Branch:            d.Branch,
 		Sha:               d.Sha,
 		Status:            int16(enumsdeploymentstatus.New),
 		ServiceEntrypoint: d.ServiceEntrypoint,
+		EnvVars:           d.Env,
 	})
 	if err != nil {
 		return nil, err

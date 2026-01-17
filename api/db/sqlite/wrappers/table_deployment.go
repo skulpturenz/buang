@@ -1,6 +1,7 @@
 package wrappers
 
 import (
+	"encoding/json"
 	sqlite_models "skulpture/buang/db/sqlite/out"
 	"time"
 )
@@ -23,7 +24,7 @@ func (d Deployment) GetStatus() int16 {
 	return d.Status
 }
 
-func (d Deployment) GetSha() *string {
+func (d Deployment) GetSha() string {
 	return d.Sha
 }
 
@@ -37,6 +38,22 @@ func (d Deployment) GetClonePath() *string {
 
 func (d Deployment) GetServiceEntrypoint() string {
 	return d.ServiceEntrypoint
+}
+
+func (d Deployment) GetBranch() string {
+	return d.Branch
+}
+
+func (d Deployment) GetEnvVars() (map[string]any, error) {
+	env := d.EnvVars
+
+	var res map[string]any
+	err := json.Unmarshal(env, &res)
+	if err != nil {
+		return nil, err
+	}
+
+	return res, nil
 }
 
 func (d Deployment) Unwrap() sqlite_models.Deployment {

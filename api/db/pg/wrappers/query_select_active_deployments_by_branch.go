@@ -6,9 +6,9 @@ import (
 	pgmodels "skulpture/buang/db/pg/out"
 )
 
-func (q Queries) SelectActiveDeployments(ctx context.Context, projectId int64) ([]interfaces.Deployment, error) {
+func (q Queries) SelectActiveDeploymentsByBranch(ctx context.Context, arg interfaces.SelectActiveDeploymentsByBranchParams) ([]interfaces.Deployment, error) {
 	m := pgmodels.Queries(q)
-	res, err := m.SelectActiveDeployments(ctx, projectId)
+	res, err := m.SelectActiveDeploymentsByBranch(ctx, pgmodels.SelectActiveDeploymentsByBranchParams(arg))
 
 	ret := []interfaces.Deployment{}
 	for _, x := range res {

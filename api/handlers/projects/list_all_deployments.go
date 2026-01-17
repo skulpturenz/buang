@@ -22,7 +22,7 @@ type Deployment struct {
 	ProjectID  int64      `json:"projectId"`
 	Url        *string    `json:"url"`
 	Status     int16      `json:"status"`
-	Sha        *string    `json:"sha"`
+	Sha        string     `json:"sha"`
 	DeployedAt *time.Time `json:"deployedAt"`
 }
 

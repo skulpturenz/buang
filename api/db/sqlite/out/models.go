@@ -13,10 +13,12 @@ type Deployment struct {
 	ProjectID         int64      `json:"project_id"`
 	Url               *string    `json:"url"`
 	Status            int16      `json:"status"`
-	Sha               *string    `json:"sha"`
+	Sha               string     `json:"sha"`
 	DeployedAt        *time.Time `json:"deployed_at"`
 	ClonePath         *string    `json:"clone_path"`
 	ServiceEntrypoint string     `json:"service_entrypoint"`
+	Branch            string     `json:"branch"`
+	EnvVars           []byte     `json:"env_vars"`
 }
 
 type DeploymentLog struct {

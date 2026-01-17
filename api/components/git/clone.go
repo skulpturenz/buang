@@ -14,7 +14,8 @@ type CloneParams struct {
 	URL               string
 	Depth             int
 	RecurseSubmodules int
-	Hash              string
+	Branch            string `validate:"required_without=Sha,excluded_with=Sha"`
+	Hash              string `validate:"required_without=Branch,excluded_with=Branch"`
 	Username          *string
 	Password          *string
 }
@@ -60,7 +61,8 @@ func (c CloneParams) Exec(ctx context.Context, s *app.ApplicationServices) (*Clo
 	}
 
 	err = w.Checkout(&git.CheckoutOptions{
-		Hash: plumbing.NewHash(c.Hash),
+		Branch: plumbing.ReferenceName(c.Branch),
+		Hash:   plumbing.NewHash(c.Hash),
 	})
 	if err != nil {
 		return nil, cleanup, err

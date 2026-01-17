@@ -13,7 +13,7 @@ const updateDeploymentStatus = `-- name: UpdateDeploymentStatus :one
 UPDATE deployments
 	SET status = $2
 WHERE id = $1
-RETURNING id, project_id, url, status, sha, deployed_at, clone_path, service_entrypoint
+RETURNING id, project_id, url, status, sha, deployed_at, clone_path, service_entrypoint, branch, env_vars
 `
 
 type UpdateDeploymentStatusParams struct {
@@ -33,6 +33,8 @@ func (q *Queries) UpdateDeploymentStatus(ctx context.Context, arg UpdateDeployme
 		&i.DeployedAt,
 		&i.ClonePath,
 		&i.ServiceEntrypoint,
+		&i.Branch,
+		&i.EnvVars,
 	)
 	return i, err
 }

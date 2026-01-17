@@ -3,9 +3,11 @@ CREATE TABLE IF NOT EXISTS deployments (
 	project_id BIGINT NOT NULL REFERENCES projects(id),
 	url TEXT,
 	status SMALLINT NOT NULL,
-	sha TEXT,
+	sha TEXT NOT NULL,
 	deployed_at TIMESTAMPTZ,
 	clone_path TEXT,
 	service_entrypoint TEXT NOT NULL,
-	CONSTRAINT pk_deployments PRIMARY KEY(id, project_id)
+	branch TEXT NOT NULL,
+	env_vars JSONB,
+	CONSTRAINT pk_deployments PRIMARY KEY(id, project_id, branch)
 );

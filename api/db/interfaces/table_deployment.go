@@ -7,8 +7,10 @@ type Deployment interface {
 	GetProjectId() int64
 	GetUrl() *string
 	GetStatus() int16
-	GetSha() *string
+	GetSha() string
 	GetDeployedAt() *time.Time
 	GetClonePath() *string
 	GetServiceEntrypoint() string
+	GetBranch() string
+	GetEnvVars() (map[string]any, error)
 }

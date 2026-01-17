@@ -257,7 +257,17 @@ const docTemplate = `{
     "definitions": {
         "projects.CreateDeploymentRequest": {
             "type": "object",
+            "required": [
+                "serviceEntrypoint"
+            ],
             "properties": {
+                "branch": {
+                    "type": "string"
+                },
+                "env": {
+                    "type": "object",
+                    "additionalProperties": {}
+                },
                 "serviceEntrypoint": {
                     "type": "string"
                 },
@@ -268,6 +278,10 @@ const docTemplate = `{
         },
         "projects.CreateProjectRequest": {
             "type": "object",
+            "required": [
+                "composePath",
+                "repository"
+            ],
             "properties": {
                 "composePath": {
                     "type": "string"

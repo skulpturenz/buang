@@ -8,7 +8,6 @@ import (
 	"skulpture/buang/app"
 	"skulpture/buang/components/deployments"
 	"skulpture/buang/components/docker"
-	"skulpture/buang/components/git"
 	"skulpture/buang/components/projects"
 	enumsdeploymentstatus "skulpture/buang/enums/deployment_status"
 	"strings"
@@ -23,6 +22,7 @@ type DeployProject app.ApplicationServices
 type DeployProjectParams struct {
 	ProjectId    int64
 	DeploymentId int64
+	Dir          string
 }
 
 type DeployProjectResult struct{}
@@ -54,21 +54,8 @@ func (dp *DeployProject) DeployProject(ctx context.Context, d DeployProjectParam
 		return nil, err
 	}
 
-	if dply.Deployment.GetStatus() != int16(enumsdeploymentstatus.New) {
+	if dply.Deployment.GetStatus() != int16(enumsdeploymentstatus.Deploying) {
 		return nil, fmt.Errorf("deployment %v for project %v is invalid", d.DeploymentId, d.ProjectId)
-	}
-
-	cloneParams := git.CloneParams{
-		URL:               p.Project.GetRepository(),
-		Depth:             1,
-		RecurseSubmodules: 1,
-		Hash:              *dply.Deployment.GetSha(),
-	}
-
-	c, cleanup, err := cloneParams.Exec(ctx, &s)
-	defer cleanup(ctx)
-	if err != nil {
-		return nil, err
 	}
 
 	deployingParams := deployments.UpdateDeploymentParams{
@@ -81,11 +68,17 @@ func (dp *DeployProject) DeployProject(ctx context.Context, d DeployProjectParam
 		return nil, err
 	}
 
+	env, err := dply.Deployment.GetEnvVars()
+	if err != nil {
+		return nil, err
+	}
+
 	upParams := docker.ComposeUpParams{
 		ProjectName: fmt.Sprintf("%v-%v", p.Project.GetId(), dply.Deployment.GetSha()),
 		ConfigPaths: []string{
-			filepath.Join(c.Dir, p.Project.GetComposePath()),
+			filepath.Join(d.Dir, p.Project.GetComposePath()),
 		},
+		Environment: env,
 	}
 
 	_, _, err = upParams.Exec(ctx, &s)
@@ -102,11 +95,11 @@ func (dp *DeployProject) DeployProject(ctx context.Context, d DeployProjectParam
 				entrypointName: {
 					EntryPoints: []string{"http"},
 					Rule:        fmt.Sprintf("/deployment/%v", dply.Deployment.GetSha()),
-					Service:     *dply.Deployment.GetSha(),
+					Service:     dply.Deployment.GetSha(),
 				},
 			},
 			Services: map[string]*dynamic.Service{
-				*dply.Deployment.GetSha(): {
+				dply.Deployment.GetSha(): {
 					LoadBalancer: &dynamic.ServersLoadBalancer{
 						Servers: []dynamic.Server{
 							{URL: serviceEntrypoint[0], Port: serviceEntrypoint[1]},

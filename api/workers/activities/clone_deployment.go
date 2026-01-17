@@ -51,7 +51,7 @@ func (cd *CloneDeployment) CloneDeployment(ctx context.Context, d CloneDeploymen
 		URL:               p.Project.GetRepository(),
 		Depth:             1,
 		RecurseSubmodules: 3,
-		Hash:              *dply.Deployment.GetSha(),
+		Hash:              dply.Deployment.GetSha(),
 	}
 	if p.Project.GetRequiresAuthn() {
 		cloneParams.Username = p.Project.GetUsername()

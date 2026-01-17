@@ -2,10 +2,12 @@ package docker
 
 import (
 	"context"
+	"fmt"
 	"io"
 	"skulpture/buang/app"
 	"time"
 
+	"github.com/compose-spec/compose-go/v2/types"
 	"github.com/docker/cli/cli/command"
 	"github.com/docker/cli/cli/flags"
 	"github.com/docker/compose/v5/pkg/api"
@@ -18,6 +20,7 @@ type ComposeUpParams struct {
 	Writer         io.Writer
 	DryRun         bool
 	EventProcessor api.EventProcessor
+	Environment    map[string]any
 }
 
 type ComposeUpResult struct {
@@ -60,6 +63,12 @@ func (c ComposeUpParams) Exec(ctx context.Context, s *app.ApplicationServices) (
 	if err != nil {
 		return nil, nil, err
 	}
+	envVars := []string{}
+	for k, v := range c.Environment {
+		envVars = append(envVars, fmt.Sprintf("%v=%v", k, v))
+	}
+
+	project.Environment.Merge(types.NewMapping(envVars))
 
 	err = svc.Up(ctx, project, api.UpOptions{
 		Create: api.CreateOptions{

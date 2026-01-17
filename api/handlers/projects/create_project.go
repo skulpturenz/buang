@@ -2,19 +2,22 @@ package projects
 
 import (
 	"encoding/json"
+	"errors"
 	"fmt"
 	"log/slog"
 	"net/http"
 	"skulpture/buang/app"
 	"skulpture/buang/components/projects"
+
+	"github.com/go-playground/validator/v10"
 )
 
 type CreateProjectRequest struct {
-	Repository    string  `json:"repository"`
+	Repository    string  `json:"repository" validate:"required"`
 	RequiresAuthn bool    `json:"requiresAuthn"`
-	Username      *string `json:"username,omitempty"`
-	Password      *string `json:"password,omitempty"`
-	ComposePath   string  `json:"composePath"`
+	Username      *string `json:"username,omitempty" validate:"required_with=Password,required_if=RequiresAuthn true"`
+	Password      *string `json:"password,omitempty" validate:"required_with=Username,required_if=RequiresAuthn true"`
+	ComposePath   string  `json:"composePath" validate:"required"`
 }
 
 // @summary	Create a project
@@ -26,6 +29,8 @@ type CreateProjectRequest struct {
 // @failure	500	{object}	string
 // @router		/project [post]
 func CreateProject(s app.ApplicationServices) http.HandlerFunc {
+	validate := validator.New(validator.WithRequiredStructEnabled())
+
 	return func(w http.ResponseWriter, r *http.Request) {
 		var req CreateProjectRequest
 
@@ -35,6 +40,22 @@ func CreateProject(s app.ApplicationServices) http.HandlerFunc {
 			return
 		}
 		defer r.Body.Close()
+
+		err = validate.Struct(req)
+		if err != nil {
+			var validateErrs validator.ValidationErrors
+			errs := map[string]string{}
+
+			if errors.As(err, &validateErrs) {
+				for _, e := range validateErrs {
+					errs[e.Field()] = e.Error()
+				}
+			}
+
+			app.WriteError(w, errs, http.StatusBadRequest)
+
+			return
+		}
 
 		p := projects.CreateProjectParams(req)
 

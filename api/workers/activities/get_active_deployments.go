@@ -10,6 +10,7 @@ type GetActiveDeploymentIds app.ApplicationServices
 
 type GetActiveDeploymentIdsParams struct {
 	ProjectId int64
+	Branch    string
 }
 
 type GetActiveDeploymentIdsResult struct {
@@ -19,8 +20,9 @@ type GetActiveDeploymentIdsResult struct {
 func (ad *GetActiveDeploymentIds) GetActiveDeploymentIds(ctx context.Context, p GetActiveDeploymentIdsParams) (*GetActiveDeploymentIdsResult, error) {
 	s := app.ApplicationServices(*ad)
 
-	params := deployments.FindActiveDeploymentsParams{
-		ProjectId: p.ProjectId,
+	params := deployments.FindActiveDeploymentsByBranchParams{
+		ProjectID: p.ProjectId,
+		Branch:    p.Branch,
 	}
 
 	deployments, err := params.Exec(ctx, &s)

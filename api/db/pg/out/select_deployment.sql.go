@@ -10,7 +10,7 @@ import (
 )
 
 const selectDeployment = `-- name: SelectDeployment :one
-SELECT id, project_id, url, status, sha, deployed_at, clone_path, service_entrypoint FROM deployments
+SELECT id, project_id, url, status, sha, deployed_at, clone_path, service_entrypoint, branch, env_vars FROM deployments
 WHERE id = $1 AND project_id = $2
 `
 
@@ -31,6 +31,8 @@ func (q *Queries) SelectDeployment(ctx context.Context, arg SelectDeploymentPara
 		&i.DeployedAt,
 		&i.ClonePath,
 		&i.ServiceEntrypoint,
+		&i.Branch,
+		&i.EnvVars,
 	)
 	return i, err
 }
