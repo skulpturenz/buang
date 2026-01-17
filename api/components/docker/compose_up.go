@@ -4,10 +4,10 @@ import (
 	"context"
 	"fmt"
 	"io"
+	"os"
 	"skulpture/buang/app"
 	"time"
 
-	"github.com/compose-spec/compose-go/v2/types"
 	"github.com/docker/cli/cli/command"
 	"github.com/docker/cli/cli/flags"
 	"github.com/docker/compose/v5/pkg/api"
@@ -56,19 +56,31 @@ func (c ComposeUpParams) Exec(ctx context.Context, s *app.ApplicationServices) (
 		return nil, nil, err
 	}
 
+	envfile, err := os.CreateTemp("", fmt.Sprintf("%v-env-*", c.ProjectName))
+	if err != nil {
+		return nil, nil, err
+	}
+	defer os.Remove(envfile.Name())
+	defer envfile.Close()
+
+	for k, v := range c.Environment {
+		if _, err := fmt.Fprintf(envfile, "%v=%v\n", k, v); err != nil {
+			return nil, nil, err
+		}
+	}
+
+	if err := envfile.Sync(); err != nil {
+		return nil, nil, err
+	}
+
 	project, err := svc.LoadProject(ctx, api.ProjectLoadOptions{
 		ConfigPaths: c.ConfigPaths,
 		ProjectName: c.ProjectName,
+		EnvFiles:    []string{envfile.Name()},
 	})
 	if err != nil {
 		return nil, nil, err
 	}
-	envVars := []string{}
-	for k, v := range c.Environment {
-		envVars = append(envVars, fmt.Sprintf("%v=%v", k, v))
-	}
-
-	project.Environment.Merge(types.NewMapping(envVars))
 
 	err = svc.Up(ctx, project, api.UpOptions{
 		Create: api.CreateOptions{
