@@ -12,7 +12,6 @@ import (
 
 type CloneParams struct {
 	URL               string
-	Depth             int
 	RecurseSubmodules int
 	Branch            string `validate:"required_without=Sha,excluded_with=Sha"`
 	Hash              string `validate:"required_without=Branch,excluded_with=Branch"`
@@ -40,7 +39,6 @@ func (c CloneParams) Exec(ctx context.Context, s *app.ApplicationServices) (*Clo
 		URL:               c.URL,
 		NoCheckout:        true,
 		InsecureSkipTLS:   true,
-		Depth:             c.Depth,
 		RecurseSubmodules: git.SubmoduleRecursivity(c.RecurseSubmodules),
 	}
 	if c.Username != nil && c.Password != nil {

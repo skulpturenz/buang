@@ -49,8 +49,7 @@ func (cd *CloneDeployment) CloneDeployment(ctx context.Context, d CloneDeploymen
 
 	cloneParams := git.CloneParams{
 		URL:               p.Project.GetRepository(),
-		Depth:             1,
-		RecurseSubmodules: 3,
+		RecurseSubmodules: 5,
 		Hash:              dply.Deployment.GetSha(),
 	}
 	if p.Project.GetRequiresAuthn() {
