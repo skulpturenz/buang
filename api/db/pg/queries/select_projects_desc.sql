@@ -9,6 +9,6 @@ WITH start AS (
 )
 
 SELECT * FROM projects
-WHERE (deleted = FALSE) AND (($1 = 1) OR (id < (SELECT min FROM start)))
+WHERE (deleted = FALSE) AND (($2 = 1) OR (id < (SELECT min FROM start)))
 ORDER BY id DESC
 LIMIT $1;
