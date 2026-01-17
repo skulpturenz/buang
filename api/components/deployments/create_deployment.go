@@ -8,8 +8,9 @@ import (
 )
 
 type CreateDeploymentParams struct {
-	ProjectID int64
-	Sha       *string
+	ProjectID         int64
+	Sha               *string
+	ServiceEntrypoint string
 }
 
 type CreateDeploymentResult struct {
@@ -20,9 +21,10 @@ func (d CreateDeploymentParams) Exec(ctx context.Context, s *app.ApplicationServ
 	q := *s.Queries
 
 	result, err := q.CreateDeployment(ctx, interfaces.CreateDeploymentParams{
-		ProjectID: d.ProjectID,
-		Sha:       d.Sha,
-		Status:    int16(enumsdeploymentstatus.New),
+		ProjectID:         d.ProjectID,
+		Sha:               d.Sha,
+		Status:            int16(enumsdeploymentstatus.New),
+		ServiceEntrypoint: d.ServiceEntrypoint,
 	})
 	if err != nil {
 		return nil, err

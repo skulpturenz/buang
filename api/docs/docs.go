@@ -258,6 +258,9 @@ const docTemplate = `{
         "projects.CreateDeploymentRequest": {
             "type": "object",
             "properties": {
+                "serviceEntrypoint": {
+                    "type": "string"
+                },
                 "sha": {
                     "type": "string"
                 }
@@ -266,6 +269,9 @@ const docTemplate = `{
         "projects.CreateProjectRequest": {
             "type": "object",
             "properties": {
+                "composePath": {
+                    "type": "string"
+                },
                 "password": {
                     "type": "string"
                 },

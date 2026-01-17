@@ -56,7 +56,7 @@ var (
 	DB_CONNECTION_STRING = ferrite.
 				String("DB_CONNECTION_STRING", "Database connection string").
 				WithSensitiveContent().
-				WithDefault(":memory:").
+				WithDefault("file:test.db?_foreign_keys=true&mode=memory").
 				Required()
 	TEMPORAL_ADDRESS = ferrite.
 				String("TEMPORAL_API_KEY", "Temporal API key").

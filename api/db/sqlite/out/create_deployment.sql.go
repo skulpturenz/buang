@@ -10,19 +10,25 @@ import (
 )
 
 const createDeployment = `-- name: CreateDeployment :one
-INSERT INTO deployments (project_id, sha, status) 
-	VALUES	(?1, ?2, ?3)
+INSERT INTO deployments (project_id, sha, status, service_entrypoint) 
+	VALUES	(?1, ?2, ?3, ?4)
 RETURNING id, project_id, url, status, sha, deployed_at, clone_path, service_entrypoint
 `
 
 type CreateDeploymentParams struct {
-	ProjectId int64   `json:"projectId"`
-	Sha       *string `json:"sha"`
-	Status    int16   `json:"status"`
+	ProjectId         int64   `json:"projectId"`
+	Sha               *string `json:"sha"`
+	Status            int16   `json:"status"`
+	ServiceEntrypoint string  `json:"service_entrypoint"`
 }
 
 func (q *Queries) CreateDeployment(ctx context.Context, arg CreateDeploymentParams) (Deployment, error) {
-	row := q.db.QueryRowContext(ctx, createDeployment, arg.ProjectId, arg.Sha, arg.Status)
+	row := q.db.QueryRowContext(ctx, createDeployment,
+		arg.ProjectId,
+		arg.Sha,
+		arg.Status,
+		arg.ServiceEntrypoint,
+	)
 	var i Deployment
 	err := row.Scan(
 		&i.ID,

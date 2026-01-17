@@ -53,6 +53,10 @@ func (cd *CloneDeployment) CloneDeployment(ctx context.Context, d CloneDeploymen
 		RecurseSubmodules: 3,
 		Hash:              *dply.Deployment.GetSha(),
 	}
+	if p.Project.GetRequiresAuthn() {
+		cloneParams.Username = p.Project.GetUsername()
+		cloneParams.Password = p.Project.GetPassword()
+	}
 
 	c, _, err := cloneParams.Exec(ctx, &s)
 	if err != nil {

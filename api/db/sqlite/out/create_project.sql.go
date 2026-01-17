@@ -10,16 +10,17 @@ import (
 )
 
 const createProject = `-- name: CreateProject :one
-INSERT INTO projects (repository, requires_authn, username, password) 
-	VALUES	(?, ?, ?, ?)
+INSERT INTO projects (repository, requires_authn, username, password, compose_path) 
+	VALUES	(?1, ?2, ?3, ?4, ?5)
 RETURNING id, repository, requires_authn, username, password, created_at, updated_at, compose_path, deleted
 `
 
 type CreateProjectParams struct {
 	Repository    string  `json:"repository"`
-	RequiresAuthn bool    `json:"requires_authn"`
+	RequiresAuthn bool    `json:"requiresAuthn"`
 	Username      *string `json:"username"`
 	Password      *string `json:"password"`
+	ComposePath   string  `json:"compose_path"`
 }
 
 func (q *Queries) CreateProject(ctx context.Context, arg CreateProjectParams) (Project, error) {
@@ -28,6 +29,7 @@ func (q *Queries) CreateProject(ctx context.Context, arg CreateProjectParams) (P
 		arg.RequiresAuthn,
 		arg.Username,
 		arg.Password,
+		arg.ComposePath,
 	)
 	var i Project
 	err := row.Scan(

@@ -250,6 +250,9 @@
         "projects.CreateDeploymentRequest": {
             "type": "object",
             "properties": {
+                "serviceEntrypoint": {
+                    "type": "string"
+                },
                 "sha": {
                     "type": "string"
                 }
@@ -258,6 +261,9 @@
         "projects.CreateProjectRequest": {
             "type": "object",
             "properties": {
+                "composePath": {
+                    "type": "string"
+                },
                 "password": {
                     "type": "string"
                 },

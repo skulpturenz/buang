@@ -11,6 +11,7 @@ type CreateProjectParams struct {
 	RequiresAuthn bool
 	Username      *string
 	Password      *string
+	ComposePath   string
 }
 
 type CreateProjectResult struct {

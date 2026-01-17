@@ -20,7 +20,7 @@ func Deploy(ctx workflow.Context, projectId int64, deploymentId int64) error {
 	var createDynamicConfigDir *activities.CreateDynamicConfigDir
 	var createDynamicConfigDirResult activities.CloneDeploymentResult
 
-	err := workflow.ExecuteActivity(ctx, createDynamicConfigDir.CreateDynamicConfigDir, activities.CreateDynamicConfigDirParams{}).Get(ctx, createDynamicConfigDirResult)
+	err := workflow.ExecuteActivity(ctx, createDynamicConfigDir.CreateDynamicConfigDir, activities.CreateDynamicConfigDirParams{}).Get(ctx, &createDynamicConfigDirResult)
 	if err != nil {
 		return err
 	}
@@ -28,7 +28,7 @@ func Deploy(ctx workflow.Context, projectId int64, deploymentId int64) error {
 	var cloneDeploymentParams *activities.CloneDeployment
 	var cloneDeploymentResult activities.CloneDeploymentResult
 
-	err = workflow.ExecuteActivity(ctx, cloneDeploymentParams.CloneDeployment, activities.CloneDeploymentParams{ProjectId: projectId, DeploymentId: deploymentId}).Get(ctx, cloneDeploymentResult)
+	err = workflow.ExecuteActivity(ctx, cloneDeploymentParams.CloneDeployment, activities.CloneDeploymentParams{ProjectId: projectId, DeploymentId: deploymentId}).Get(ctx, &cloneDeploymentResult)
 	if err != nil {
 		return err
 	}
@@ -36,7 +36,7 @@ func Deploy(ctx workflow.Context, projectId int64, deploymentId int64) error {
 	var deployProject *activities.DeployProject
 	var deployProjectResult activities.DeployProjectResult
 
-	err = workflow.ExecuteActivity(ctx, deployProject.DeployProject, activities.DeployProjectParams{ProjectId: projectId, DeploymentId: deploymentId}).Get(ctx, deployProjectResult)
+	err = workflow.ExecuteActivity(ctx, deployProject.DeployProject, activities.DeployProjectParams{ProjectId: projectId, DeploymentId: deploymentId}).Get(ctx, &deployProjectResult)
 	if err != nil {
 		return err
 	}

@@ -13,6 +13,7 @@ func (q Queries) CreateProject(ctx context.Context, arg interfaces.CreateProject
 		RequiresAuthn: arg.RequiresAuthn,
 		Username:      arg.Username,
 		Password:      arg.Password,
+		ComposePath:   arg.ComposePath,
 	})
 
 	return Project(ret), err

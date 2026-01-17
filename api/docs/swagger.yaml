@@ -2,11 +2,15 @@ basePath: /api/v1
 definitions:
   projects.CreateDeploymentRequest:
     properties:
+      serviceEntrypoint:
+        type: string
       sha:
         type: string
     type: object
   projects.CreateProjectRequest:
     properties:
+      composePath:
+        type: string
       password:
         type: string
       repository:

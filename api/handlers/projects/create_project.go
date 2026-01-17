@@ -14,6 +14,7 @@ type CreateProjectRequest struct {
 	RequiresAuthn bool    `json:"requiresAuthn"`
 	Username      *string `json:"username,omitempty"`
 	Password      *string `json:"password,omitempty"`
+	ComposePath   string  `json:"composePath"`
 }
 
 // @summary	Create a project

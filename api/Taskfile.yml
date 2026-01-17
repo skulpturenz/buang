@@ -49,6 +49,13 @@ tasks:
       - swag init -d ./,./handlers/projects
       - swag fmt
 
+  generate-all:
+    desc: Run all generators
+    deps:
+      - generate-models
+      - generate-swagger
+      - bundle-migrations
+
   run-temporal-dev:
     desc: Run Temporal dev server
     cmds:

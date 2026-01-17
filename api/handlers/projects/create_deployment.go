@@ -16,7 +16,8 @@ import (
 )
 
 type CreateDeploymentRequest struct {
-	Sha *string `json:"sha"`
+	Sha               *string `json:"sha"`
+	ServiceEntrypoint string  `json:"serviceEntrypoint"`
 }
 
 // @summary	Spin up a preview deployment
@@ -64,7 +65,7 @@ func CreateDeployment(s app.ApplicationServices) http.HandlerFunc {
 			TaskQueue: constantstaskqueues.QueueDeployment,
 		}
 
-		_, err = s.Temporal.ExecuteWorkflow(r.Context(), options, workflows.Deploy, projectId, res.Id)
+		_, err = s.Temporal.ExecuteWorkflow(r.Context(), options, workflows.Deploy, int64(projectId), int64(res.Id))
 		if err != nil {
 			slog.ErrorContext(r.Context(), "create deployment", "err", err.Error())
 			http.Error(w, err.Error(), http.StatusInternalServerError)
