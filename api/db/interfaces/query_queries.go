@@ -12,4 +12,5 @@ type Queries interface {
 	SelectProject(ctx context.Context, id int64) (Project, error)
 	SelectDeployment(ctx context.Context, arg SelectDeploymentParams) (Deployment, error)
 	SelectActiveDeploymentsByBranch(ctx context.Context, arg SelectActiveDeploymentsByBranchParams) ([]Deployment, error)
+	SelectStaleDeployments(ctx context.Context) ([]Deployment, error)
 }
