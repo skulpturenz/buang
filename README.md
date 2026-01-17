@@ -66,3 +66,11 @@ task dev
 # Documentation
 
 Swagger documentation is available [here](http://buang.skulpture.xyz/docs/index.html)
+
+
+# Demo
+
+https://github.com/user-attachments/assets/6237db24-73f1-4df1-83d1-034b6f5f899c
+
+
+
