@@ -20,7 +20,7 @@ import (
 type CreateDeploymentRequest struct {
 	Branch            string         `json:"branch" validate:"required"`
 	Sha               string         `json:"sha" validate:"required"`
-	ServiceEntrypoint string         `json:"serviceEntrypoint" validate:"required"`
+	ServiceEntrypoint string         `json:"serviceEntrypoint" validate:"required,hostname_port"`
 	Env               map[string]any `json:"env"`
 }
 
