@@ -1,0 +1,7 @@
+name: imigresen
+runtime: go
+description: Imigresen
+config:
+  pulumi:tags:
+    value:
+      pulumi:template: go
