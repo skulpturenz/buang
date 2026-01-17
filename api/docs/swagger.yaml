@@ -39,6 +39,21 @@ definitions:
     - composePath
     - repository
     type: object
+  projects.FindDeploymentByIdResponse:
+    properties:
+      deployedAt:
+        type: string
+      id:
+        type: integer
+      projectId:
+        type: integer
+      sha:
+        type: string
+      status:
+        type: integer
+      url:
+        type: string
+    type: object
   projects.FindProjectByRepositoryResponse:
     properties:
       composePath:
@@ -47,15 +62,11 @@ definitions:
         type: string
       id:
         type: integer
-      password:
-        type: string
       repository:
         type: string
       requiresAuthn:
         type: boolean
       updatedAt:
-        type: string
-      username:
         type: string
     type: object
   projects.ListAllDeploymentsItem:
@@ -81,15 +92,11 @@ definitions:
         type: string
       id:
         type: integer
-      password:
-        type: string
       repository:
         type: string
       requiresAuthn:
         type: boolean
       updatedAt:
-        type: string
-      username:
         type: string
     type: object
 info:
@@ -234,6 +241,35 @@ paths:
       security:
       - ApiKeyAuth: []
       summary: Spin down a preview deployment
+      tags:
+      - api.v1
+      - project
+    get:
+      parameters:
+      - description: Project ID
+        in: path
+        name: projectId
+        required: true
+        type: integer
+      - description: Deployment ID
+        in: path
+        name: deploymentId
+        required: true
+        type: integer
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/projects.FindDeploymentByIdResponse'
+        "401":
+          description: Unauthorized
+        "500":
+          description: Internal Server Error
+          schema:
+            type: string
+      security:
+      - ApiKeyAuth: []
+      summary: Find deployment by ID
       tags:
       - api.v1
       - project

@@ -20,8 +20,6 @@ type ListAllProjectsItem struct {
 	Id            int64     `json:"id"`
 	Repository    string    `json:"repository"`
 	RequiresAuthn bool      `json:"requiresAuthn"`
-	Username      *string   `json:"username,omitempty"`
-	Password      *string   `json:"password,omitempty"`
 	CreatedAt     time.Time `json:"createdAt"`
 	UpdatedAt     time.Time `json:"updatedAt"`
 	ComposePath   string    `json:"composePath"`
@@ -83,8 +81,6 @@ func ListAllProjects(s app.ApplicationServices) http.HandlerFunc {
 				Id:            x.GetId(),
 				Repository:    x.GetRepository(),
 				RequiresAuthn: x.GetRequiresAuthn(),
-				Username:      x.GetUsername(),
-				Password:      x.GetPassword(),
 				CreatedAt:     x.GetCreatedAt(),
 				UpdatedAt:     x.GetUpdatedAt(),
 				ComposePath:   x.GetComposePath(),

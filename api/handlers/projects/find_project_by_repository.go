@@ -19,8 +19,6 @@ type FindProjectByRepositoryResponse struct {
 	Id            int64     `json:"id"`
 	Repository    string    `json:"repository"`
 	RequiresAuthn bool      `json:"requiresAuthn"`
-	Username      *string   `json:"username,omitempty"`
-	Password      *string   `json:"password,omitempty"`
 	CreatedAt     time.Time `json:"createdAt"`
 	UpdatedAt     time.Time `json:"updatedAt"`
 	ComposePath   string    `json:"composePath"`
@@ -78,8 +76,6 @@ func FindProjectByRepository(s app.ApplicationServices) http.HandlerFunc {
 			Id:            res.Project.GetId(),
 			Repository:    res.Project.GetRepository(),
 			RequiresAuthn: res.Project.GetRequiresAuthn(),
-			Username:      res.Project.GetUsername(),
-			Password:      res.Project.GetPassword(),
 			CreatedAt:     res.Project.GetCreatedAt(),
 			UpdatedAt:     res.Project.GetUpdatedAt(),
 		}

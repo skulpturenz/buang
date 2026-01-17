@@ -16,6 +16,8 @@ func Router(s app.ApplicationServices, r chi.Router) {
 		r.Get("/", FindProjectByRepository(s))
 
 		r.Post("/{projectId}/deployment", CreateDeployment(s))
+
+		r.Get("/{projectId}/deployment/{deploymentId}", FindDeploymentById(s))
 		r.Delete("/{projectId}/deployment/{deploymentId}", BuangDeployment(s))
 
 		r.Get("/{projectId}/deployments", ListAllDeployments(s))

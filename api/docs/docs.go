@@ -194,6 +194,51 @@ const docTemplate = `{
             }
         },
         "/project/{projectId}/deployment/{deploymentId}": {
+            "get": {
+                "security": [
+                    {
+                        "ApiKeyAuth": []
+                    }
+                ],
+                "tags": [
+                    "api.v1",
+                    "project"
+                ],
+                "summary": "Find deployment by ID",
+                "parameters": [
+                    {
+                        "type": "integer",
+                        "description": "Project ID",
+                        "name": "projectId",
+                        "in": "path",
+                        "required": true
+                    },
+                    {
+                        "type": "integer",
+                        "description": "Deployment ID",
+                        "name": "deploymentId",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/projects.FindDeploymentByIdResponse"
+                        }
+                    },
+                    "401": {
+                        "description": "Unauthorized"
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "type": "string"
+                        }
+                    }
+                }
+            },
             "delete": {
                 "security": [
                     {
@@ -400,6 +445,29 @@ const docTemplate = `{
                 }
             }
         },
+        "projects.FindDeploymentByIdResponse": {
+            "type": "object",
+            "properties": {
+                "deployedAt": {
+                    "type": "string"
+                },
+                "id": {
+                    "type": "integer"
+                },
+                "projectId": {
+                    "type": "integer"
+                },
+                "sha": {
+                    "type": "string"
+                },
+                "status": {
+                    "type": "integer"
+                },
+                "url": {
+                    "type": "string"
+                }
+            }
+        },
         "projects.FindProjectByRepositoryResponse": {
             "type": "object",
             "properties": {
@@ -412,9 +480,6 @@ const docTemplate = `{
                 "id": {
                     "type": "integer"
                 },
-                "password": {
-                    "type": "string"
-                },
                 "repository": {
                     "type": "string"
                 },
@@ -422,9 +487,6 @@ const docTemplate = `{
                     "type": "boolean"
                 },
                 "updatedAt": {
-                    "type": "string"
-                },
-                "username": {
                     "type": "string"
                 }
             }
@@ -464,9 +526,6 @@ const docTemplate = `{
                 "id": {
                     "type": "integer"
                 },
-                "password": {
-                    "type": "string"
-                },
                 "repository": {
                     "type": "string"
                 },
@@ -474,9 +533,6 @@ const docTemplate = `{
                     "type": "boolean"
                 },
                 "updatedAt": {
-                    "type": "string"
-                },
-                "username": {
                     "type": "string"
                 }
             }
