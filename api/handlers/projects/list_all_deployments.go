@@ -28,11 +28,12 @@ type Deployment struct {
 
 // @summary	List all deployments
 // @tags		api.v1, project
+// @security	ApiKeyAuth
 // @param		projectId	path	int	true	"Project ID"
 // @param		limit		query	int	false	"Limit"
 // @param		page		query	int	false	"Page"
 // @success	200			{array}	Deployment
-// @failure	403
+// @failure	401
 // @failure	500	{object}	string
 // @router		/project/{projectId}/deployments [get]
 func ListAllDeployments(s app.ApplicationServices) http.HandlerFunc {

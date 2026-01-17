@@ -21,10 +21,11 @@ type CreateDeploymentRequest struct {
 
 // @summary	Spin up a preview deployment
 // @tags		api.v1, project
+// @security	ApiKeyAuth
 // @param		projectId			path		int						true	"Project ID"
 // @param		deploymentDetails	body		CreateDeploymentRequest	true	"Deployment details"
 // @success	200					{object}	int
-// @failure	403
+// @failure	401
 // @failure	500	{object}	string
 // @router		/project/{projectId}/deployment [post]
 func CreateDeployment(s app.ApplicationServices) http.HandlerFunc {

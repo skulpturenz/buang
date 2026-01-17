@@ -18,9 +18,10 @@ type CreateProjectRequest struct {
 
 // @summary	Create a project
 // @tags		api.v1, project
+// @security	ApiKeyAuth
 // @param		projectDetails	body		CreateProjectRequest	true	"Project details"
 // @success	200				{object}	int
-// @failure	403
+// @failure	401
 // @failure	500	{object}	string
 // @router		/project [post]
 func CreateProject(s app.ApplicationServices) http.HandlerFunc {

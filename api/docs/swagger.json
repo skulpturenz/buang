@@ -9,6 +9,11 @@
     "paths": {
         "/project": {
             "post": {
+                "security": [
+                    {
+                        "ApiKeyAuth": []
+                    }
+                ],
                 "tags": [
                     "api.v1",
                     "project"
@@ -32,8 +37,8 @@
                             "type": "integer"
                         }
                     },
-                    "403": {
-                        "description": "Forbidden"
+                    "401": {
+                        "description": "Unauthorized"
                     },
                     "500": {
                         "description": "Internal Server Error",
@@ -46,6 +51,11 @@
         },
         "/project/{projectId}/deployment": {
             "post": {
+                "security": [
+                    {
+                        "ApiKeyAuth": []
+                    }
+                ],
                 "tags": [
                     "api.v1",
                     "project"
@@ -76,8 +86,8 @@
                             "type": "integer"
                         }
                     },
-                    "403": {
-                        "description": "Forbidden"
+                    "401": {
+                        "description": "Unauthorized"
                     },
                     "500": {
                         "description": "Internal Server Error",
@@ -90,6 +100,11 @@
         },
         "/project/{projectId}/deployment/{deploymentId}": {
             "delete": {
+                "security": [
+                    {
+                        "ApiKeyAuth": []
+                    }
+                ],
                 "tags": [
                     "api.v1",
                     "project"
@@ -115,8 +130,8 @@
                     "204": {
                         "description": "No Content"
                     },
-                    "403": {
-                        "description": "Forbidden"
+                    "401": {
+                        "description": "Unauthorized"
                     },
                     "500": {
                         "description": "Internal Server Error",
@@ -129,6 +144,11 @@
         },
         "/project/{projectId}/deployments": {
             "get": {
+                "security": [
+                    {
+                        "ApiKeyAuth": []
+                    }
+                ],
                 "tags": [
                     "api.v1",
                     "project"
@@ -165,8 +185,8 @@
                             }
                         }
                     },
-                    "403": {
-                        "description": "Forbidden"
+                    "401": {
+                        "description": "Unauthorized"
                     },
                     "500": {
                         "description": "Internal Server Error",
@@ -179,6 +199,11 @@
         },
         "/projects": {
             "get": {
+                "security": [
+                    {
+                        "ApiKeyAuth": []
+                    }
+                ],
                 "tags": [
                     "api.v1",
                     "projects"
@@ -208,8 +233,8 @@
                             }
                         }
                     },
-                    "403": {
-                        "description": "Forbidden"
+                    "401": {
+                        "description": "Unauthorized"
                     },
                     "500": {
                         "description": "Internal Server Error",

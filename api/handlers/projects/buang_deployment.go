@@ -15,10 +15,11 @@ import (
 
 // @summary	Spin down a preview deployment
 // @tags		api.v1, project
+// @security	ApiKeyAuth
 // @param		projectId		path		int	true	"Project ID"
 // @param		deploymentId	path		int	true	"Deployment ID"
 // @success	204				{object}	nil
-// @failure	403
+// @failure	401
 // @failure	500	{object}	string
 // @router		/project/{projectId}/deployment/{deploymentId} [delete]
 func BuangDeployment(s app.ApplicationServices) http.HandlerFunc {

@@ -17,6 +17,11 @@ const docTemplate = `{
     "paths": {
         "/project": {
             "post": {
+                "security": [
+                    {
+                        "ApiKeyAuth": []
+                    }
+                ],
                 "tags": [
                     "api.v1",
                     "project"
@@ -40,8 +45,8 @@ const docTemplate = `{
                             "type": "integer"
                         }
                     },
-                    "403": {
-                        "description": "Forbidden"
+                    "401": {
+                        "description": "Unauthorized"
                     },
                     "500": {
                         "description": "Internal Server Error",
@@ -54,6 +59,11 @@ const docTemplate = `{
         },
         "/project/{projectId}/deployment": {
             "post": {
+                "security": [
+                    {
+                        "ApiKeyAuth": []
+                    }
+                ],
                 "tags": [
                     "api.v1",
                     "project"
@@ -84,8 +94,8 @@ const docTemplate = `{
                             "type": "integer"
                         }
                     },
-                    "403": {
-                        "description": "Forbidden"
+                    "401": {
+                        "description": "Unauthorized"
                     },
                     "500": {
                         "description": "Internal Server Error",
@@ -98,6 +108,11 @@ const docTemplate = `{
         },
         "/project/{projectId}/deployment/{deploymentId}": {
             "delete": {
+                "security": [
+                    {
+                        "ApiKeyAuth": []
+                    }
+                ],
                 "tags": [
                     "api.v1",
                     "project"
@@ -123,8 +138,8 @@ const docTemplate = `{
                     "204": {
                         "description": "No Content"
                     },
-                    "403": {
-                        "description": "Forbidden"
+                    "401": {
+                        "description": "Unauthorized"
                     },
                     "500": {
                         "description": "Internal Server Error",
@@ -137,6 +152,11 @@ const docTemplate = `{
         },
         "/project/{projectId}/deployments": {
             "get": {
+                "security": [
+                    {
+                        "ApiKeyAuth": []
+                    }
+                ],
                 "tags": [
                     "api.v1",
                     "project"
@@ -173,8 +193,8 @@ const docTemplate = `{
                             }
                         }
                     },
-                    "403": {
-                        "description": "Forbidden"
+                    "401": {
+                        "description": "Unauthorized"
                     },
                     "500": {
                         "description": "Internal Server Error",
@@ -187,6 +207,11 @@ const docTemplate = `{
         },
         "/projects": {
             "get": {
+                "security": [
+                    {
+                        "ApiKeyAuth": []
+                    }
+                ],
                 "tags": [
                     "api.v1",
                     "projects"
@@ -216,8 +241,8 @@ const docTemplate = `{
                             }
                         }
                     },
-                    "403": {
-                        "description": "Forbidden"
+                    "401": {
+                        "description": "Unauthorized"
                     },
                     "500": {
                         "description": "Internal Server Error",
