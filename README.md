@@ -45,7 +45,9 @@ curl --request POST \
 
 # About
 
-*Buang* is a service to deploy any application in preview environments. Preview environments are temporary environments which allow you to test and validate your changes before merging it. Deploying APIs to preview environments usually requires managing complex infrastructure and K8s, with Buang all that's required to get started is a VM and a few GitHub actions.
+*Buang* is a service to deploy any application in preview environments.
+Preview environments are temporary environments which allow you to test and validate your changes before merging it. 
+Deploying APIs to preview environments usually requires managing complex infrastructure and K8s, with Buang all that's required to get started is a VM and a few GitHub actions.
 
 
 # Development
@@ -73,4 +75,10 @@ Swagger documentation is available [here](http://buang.skulpture.xyz/docs/index.
 https://github.com/user-attachments/assets/6237db24-73f1-4df1-83d1-034b6f5f899c
 
 
+# Limitations & tradeoffs
 
+Buang is designed for single tenancy, using Docker Compose to do the heavy lifting means that the only way to scale is vertically.
+As it is meant to be hosted on your own infrastructure for temporary deployments,
+it is also light on security: tokens for private repository access are stored in plain text and any environment variables required for the deployment are sent in the request to deploy services.
+
+Ensure that any private repository access tokens are readonly with limited scope and assume that the preview environment will be compromised.
