@@ -17,12 +17,12 @@ func BuangBranch(ctx workflow.Context, projectId int64, branch string) error {
 	}
 	ctx = workflow.WithActivityOptions(ctx, ao)
 
-	var getActiveDeployments *activities.GetActiveDeploymentIds
+	var activeDeployments *activities.ActiveDeploymentIds
 	var getActiveDeploymentsResult activities.GetActiveDeploymentIdsResult
 
 	err := workflow.
 		ExecuteActivity(ctx,
-			getActiveDeployments.GetActiveDeploymentIds,
+			activeDeployments.GetActiveDeploymentIds,
 			activities.GetActiveDeploymentIdsParams{
 				ProjectId: projectId,
 				Branch:    branch,

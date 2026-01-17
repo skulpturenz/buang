@@ -156,7 +156,10 @@ func main() {
 		app.GetHttpApplication().AddRouters(r, projects.Router)
 	})
 
-	app.GetTemporalApplication().AddWorkers(workers.DeploymentWorker, workers.BuangWorker)
+	app.GetTemporalApplication().AddWorkers(workers.DeploymentWorker,
+		workers.BuangWorker,
+		workers.Housekeeping,
+	)
 
 	cleanup, err = app.Run(ctx)
 	if err != nil {

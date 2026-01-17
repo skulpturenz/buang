@@ -12,7 +12,7 @@ type CronResult struct {
 	RunTime time.Time
 }
 
-func BuangHouskeeping(ctx workflow.Context, projectId int64, branch string) (*CronResult, error) {
+func BuangHouskeeping(ctx workflow.Context) (*CronResult, error) {
 	ao := workflow.ActivityOptions{
 		ScheduleToCloseTimeout: time.Minute,
 		RetryPolicy: &temporal.RetryPolicy{

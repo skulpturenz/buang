@@ -6,7 +6,7 @@ import (
 	"skulpture/buang/components/deployments"
 )
 
-type GetActiveDeploymentIds app.ApplicationServices
+type ActiveDeploymentIds app.ApplicationServices
 
 type GetActiveDeploymentIdsParams struct {
 	ProjectId int64
@@ -17,7 +17,7 @@ type GetActiveDeploymentIdsResult struct {
 	DeploymentIds []int64
 }
 
-func (ad *GetActiveDeploymentIds) GetActiveDeploymentIds(ctx context.Context, p GetActiveDeploymentIdsParams) (*GetActiveDeploymentIdsResult, error) {
+func (ad *ActiveDeploymentIds) GetActiveDeploymentIds(ctx context.Context, p GetActiveDeploymentIdsParams) (*GetActiveDeploymentIdsResult, error) {
 	s := app.ApplicationServices(*ad)
 
 	params := deployments.FindActiveDeploymentsByBranchParams{

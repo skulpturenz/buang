@@ -27,7 +27,7 @@ func BuangDeployment(s app.ApplicationServices) http.HandlerFunc {
 		projectIdParam := chi.URLParam(r, "projectId")
 		projectId, err := strconv.Atoi(projectIdParam)
 		if err != nil {
-			slog.ErrorContext(r.Context(), "buang deployments", "err", err.Error())
+			slog.ErrorContext(r.Context(), "buang deployment", "err", err.Error())
 			http.Error(w, err.Error(), http.StatusBadRequest)
 			return
 		}
@@ -35,7 +35,7 @@ func BuangDeployment(s app.ApplicationServices) http.HandlerFunc {
 		deploymentIdParam := chi.URLParam(r, "deploymentId")
 		deploymentId, err := strconv.Atoi(deploymentIdParam)
 		if err != nil {
-			slog.ErrorContext(r.Context(), "buang deployments", "err", err.Error())
+			slog.ErrorContext(r.Context(), "buang deployment", "err", err.Error())
 			http.Error(w, err.Error(), http.StatusBadRequest)
 			return
 		}

@@ -1,5 +1,12 @@
 basePath: /api/v1
 definitions:
+  projects.BuangBranchRequest:
+    properties:
+      repository:
+        type: string
+    required:
+    - repository
+    type: object
   projects.CreateDeploymentRequest:
     properties:
       branch:
@@ -92,6 +99,35 @@ paths:
       security:
       - ApiKeyAuth: []
       summary: Create a project
+      tags:
+      - api.v1
+      - project
+  /project/{projectId}/branch:
+    delete:
+      parameters:
+      - description: Project ID
+        in: path
+        name: projectId
+        required: true
+        type: integer
+      - description: Branch details
+        in: body
+        name: branchDetails
+        required: true
+        schema:
+          $ref: '#/definitions/projects.BuangBranchRequest'
+      responses:
+        "204":
+          description: No Content
+        "401":
+          description: Unauthorized
+        "500":
+          description: Internal Server Error
+          schema:
+            type: string
+      security:
+      - ApiKeyAuth: []
+      summary: Spin down a preview branch
       tags:
       - api.v1
       - project

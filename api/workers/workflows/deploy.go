@@ -31,12 +31,12 @@ func Deploy(ctx workflow.Context, projectId int64, deploymentId int64) error {
 		return err
 	}
 
-	var getActiveDeployments *activities.GetActiveDeploymentIds
+	var activeDeploymentIds *activities.ActiveDeploymentIds
 	var getActiveDeploymentsResult activities.GetActiveDeploymentIdsResult
 
 	err = workflow.
 		ExecuteActivity(ctx,
-			getActiveDeployments.GetActiveDeploymentIds,
+			activeDeploymentIds.GetActiveDeploymentIds,
 			activities.GetActiveDeploymentIdsParams{
 				ProjectId: projectId,
 				Branch:    getDeploymentBranchResult.Branch,

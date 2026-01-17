@@ -57,6 +57,52 @@ const docTemplate = `{
                 }
             }
         },
+        "/project/{projectId}/branch": {
+            "delete": {
+                "security": [
+                    {
+                        "ApiKeyAuth": []
+                    }
+                ],
+                "tags": [
+                    "api.v1",
+                    "project"
+                ],
+                "summary": "Spin down a preview branch",
+                "parameters": [
+                    {
+                        "type": "integer",
+                        "description": "Project ID",
+                        "name": "projectId",
+                        "in": "path",
+                        "required": true
+                    },
+                    {
+                        "description": "Branch details",
+                        "name": "branchDetails",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/projects.BuangBranchRequest"
+                        }
+                    }
+                ],
+                "responses": {
+                    "204": {
+                        "description": "No Content"
+                    },
+                    "401": {
+                        "description": "Unauthorized"
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "type": "string"
+                        }
+                    }
+                }
+            }
+        },
         "/project/{projectId}/deployment": {
             "post": {
                 "security": [
@@ -255,6 +301,17 @@ const docTemplate = `{
         }
     },
     "definitions": {
+        "projects.BuangBranchRequest": {
+            "type": "object",
+            "required": [
+                "repository"
+            ],
+            "properties": {
+                "repository": {
+                    "type": "string"
+                }
+            }
+        },
         "projects.CreateDeploymentRequest": {
             "type": "object",
             "required": [
