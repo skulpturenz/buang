@@ -18,8 +18,8 @@ import (
 )
 
 type CreateDeploymentRequest struct {
-	Branch            string         `json:"branch"`
-	Sha               string         `json:"sha"`
+	Branch            string         `json:"branch" validate:"required"`
+	Sha               string         `json:"sha" validate:"required"`
 	ServiceEntrypoint string         `json:"serviceEntrypoint" validate:"required"`
 	Env               map[string]any `json:"env"`
 }
@@ -71,9 +71,11 @@ func CreateDeployment(s app.ApplicationServices) http.HandlerFunc {
 		}
 
 		p := deployments.CreateDeploymentParams{
-			ProjectID: int64(projectId),
-			Branch:    req.Branch,
-			Sha:       req.Sha,
+			ProjectID:         int64(projectId),
+			Branch:            req.Branch,
+			Sha:               req.Sha,
+			ServiceEntrypoint: req.ServiceEntrypoint,
+			Env:               req.Env,
 		}
 
 		res, err := p.Exec(r.Context(), &s)

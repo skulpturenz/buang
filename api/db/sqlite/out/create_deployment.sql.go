@@ -19,7 +19,7 @@ type CreateDeploymentParams struct {
 	ProjectId         int64  `json:"projectId"`
 	Sha               string `json:"sha"`
 	Status            int16  `json:"status"`
-	ServiceEntrypoint string `json:"service_entrypoint"`
+	ServiceEntrypoint string `json:"serviceEntrypoint"`
 	Branch            string `json:"branch"`
 	EnvVars           []byte `json:"envVars"`
 }

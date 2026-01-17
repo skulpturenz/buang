@@ -18,14 +18,14 @@ func DeploymentWorker(s app.ApplicationServices, c *client.Client) (worker.Worke
 	deployProject := activities.DeployProject(s)
 	getActiveDeploymentIds := activities.GetActiveDeploymentIds(s)
 	buangDeployment := activities.BuangDeployment(s)
-	getDeployment := activities.GetDeployment(s)
+	getDeploymentBranch := activities.GetDeploymentBranch(s)
 
 	w.RegisterActivity(createDynamicConfigDir.CreateDynamicConfigDir)
 	w.RegisterActivity(cloneDeployment.CloneDeployment)
 	w.RegisterActivity(deployProject.DeployProject)
 	w.RegisterActivity(getActiveDeploymentIds.GetActiveDeploymentIds)
 	w.RegisterActivity(buangDeployment.BuangDeployment)
-	w.RegisterActivity(getDeployment.GetDeployment)
+	w.RegisterActivity(getDeploymentBranch.GetDeploymentBranch)
 
 	w.RegisterWorkflow(workflows.Deploy)
 

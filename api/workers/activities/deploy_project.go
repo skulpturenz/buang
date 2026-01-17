@@ -73,8 +73,10 @@ func (dp *DeployProject) DeployProject(ctx context.Context, d DeployProjectParam
 		return nil, err
 	}
 
+	sha := fmt.Sprintf("%.*s", 8, dply.Deployment.GetSha())
+	projectName := fmt.Sprintf("%v_%v_%v_%v", p.Project.GetId(), dply.Deployment.GetId(), dply.Deployment.GetBranch(), sha)
 	upParams := docker.ComposeUpParams{
-		ProjectName: fmt.Sprintf("%v-%v", p.Project.GetId(), dply.Deployment.GetSha()),
+		ProjectName: projectName,
 		ConfigPaths: []string{
 			filepath.Join(d.Dir, p.Project.GetComposePath()),
 		},
@@ -86,31 +88,33 @@ func (dp *DeployProject) DeployProject(ctx context.Context, d DeployProjectParam
 		return nil, err
 	}
 
-	entrypointName := fmt.Sprintf("%v-%v-%v", p.Project.GetId(), dply.Deployment.GetId(), dply.Deployment.GetSha())
 	serviceEntrypoint := strings.Split(dply.Deployment.GetServiceEntrypoint(), ":")
-	url := fmt.Sprintf("/deployment/%v", dply.Deployment.GetSha())
+	url := fmt.Sprintf("/deployment/%v", projectName)
+
+	passHostHeader := true
 	config := dynamic.Configuration{
 		HTTP: &dynamic.HTTPConfiguration{
 			Routers: map[string]*dynamic.Router{
-				entrypointName: {
+				projectName: {
 					EntryPoints: []string{"http"},
-					Rule:        fmt.Sprintf("/deployment/%v", dply.Deployment.GetSha()),
-					Service:     dply.Deployment.GetSha(),
+					Rule:        url,
+					Service:     projectName,
 				},
 			},
 			Services: map[string]*dynamic.Service{
-				dply.Deployment.GetSha(): {
+				projectName: {
 					LoadBalancer: &dynamic.ServersLoadBalancer{
 						Servers: []dynamic.Server{
 							{URL: serviceEntrypoint[0], Port: serviceEntrypoint[1]},
 						},
+						PassHostHeader: &passHostHeader,
 					},
 				},
 			},
 			Middlewares: map[string]*dynamic.Middleware{
-				fmt.Sprintf("%v-stripprefix", entrypointName): &dynamic.Middleware{
+				fmt.Sprintf("%v-stripprefix", projectName): &dynamic.Middleware{
 					StripPrefix: &dynamic.StripPrefix{
-						Prefixes: []string{fmt.Sprintf("/deployment/%v", dply.Deployment.GetSha())},
+						Prefixes: []string{url},
 					},
 				},
 			},
@@ -133,6 +137,7 @@ func (dp *DeployProject) DeployProject(ctx context.Context, d DeployProjectParam
 		Url:        &url,
 		DeployedAt: &deployedAt,
 		Status:     int16(enumsdeploymentstatus.Deployed),
+		ClonePath:  dply.Deployment.GetClonePath(),
 	}
 
 	_, err = deployedParams.Exec(ctx, &s)

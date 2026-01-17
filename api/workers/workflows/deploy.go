@@ -17,16 +17,16 @@ func Deploy(ctx workflow.Context, projectId int64, deploymentId int64) error {
 	}
 	ctx = workflow.WithActivityOptions(ctx, ao)
 
-	var getDeployment *activities.GetDeployment
-	var getDeploymentResult activities.GetDeploymentResult
+	var getDeploymentBranch *activities.GetDeploymentBranch
+	var getDeploymentBranchResult activities.GetDeploymentBranchResult
 
 	err := workflow.
 		ExecuteActivity(ctx,
-			getDeployment.GetDeployment,
-			activities.GetDeploymentParams{
+			getDeploymentBranch.GetDeploymentBranch,
+			activities.GetDeploymentBranchParams{
 				ProjectId: projectId, ID: deploymentId,
 			}).
-		Get(ctx, &getDeploymentResult)
+		Get(ctx, &getDeploymentBranchResult)
 	if err != nil {
 		return err
 	}
@@ -39,7 +39,7 @@ func Deploy(ctx workflow.Context, projectId int64, deploymentId int64) error {
 			getActiveDeployments.GetActiveDeploymentIds,
 			activities.GetActiveDeploymentIdsParams{
 				ProjectId: projectId,
-				Branch:    getDeploymentResult.Deployment.GetBranch(),
+				Branch:    getDeploymentBranchResult.Branch,
 			}).
 		Get(ctx, &getActiveDeploymentsResult)
 	if err != nil {

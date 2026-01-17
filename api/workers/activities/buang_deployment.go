@@ -44,7 +44,8 @@ func (bd *BuangDeployment) BuangDeployment(ctx context.Context, b BuangDeploymen
 
 	clonePath := ""
 	deploymentConfigPath := filepath.Join(TRAEFIK_DYNAMIC_CONFIG, fmt.Sprintf("project-%v-deployment-%v", p.Project.GetId(), dply.Deployment.GetId()))
-	projectName := fmt.Sprintf("%v-%v", p.Project.GetId(), dply.Deployment.GetSha())
+	sha := fmt.Sprintf("%.*s", 8, dply.Deployment.GetSha())
+	projectName := fmt.Sprintf("%v_%v_%v_%v", p.Project.GetId(), dply.Deployment.GetId(), dply.Deployment.GetBranch(), sha)
 	configPath := filepath.Join(clonePath, p.Project.GetComposePath())
 
 	err = os.RemoveAll(deploymentConfigPath)
