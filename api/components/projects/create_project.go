@@ -2,6 +2,8 @@ package projects
 
 import (
 	"context"
+	"database/sql"
+	"errors"
 	"fmt"
 	"skulpture/buang/app"
 	"skulpture/buang/db/interfaces"
@@ -23,11 +25,11 @@ func (p CreateProjectParams) Exec(ctx context.Context, s *app.ApplicationService
 	q := *s.Queries
 
 	activeProject, err := q.SelectProjectByRepository(ctx, p.Repository)
-	if err != nil {
+	if err != nil && !errors.Is(sql.ErrNoRows, err) {
 		return nil, err
 	}
 
-	if !activeProject.GetDeleted() {
+	if err == nil && !activeProject.GetDeleted() {
 		return nil, fmt.Errorf("repository %v already has an active project with id %v", activeProject.GetRepository(), activeProject.GetId())
 	}
 

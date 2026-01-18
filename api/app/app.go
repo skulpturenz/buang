@@ -8,26 +8,31 @@ import (
 	"os"
 	"os/signal"
 	"skulpture/buang/db/interfaces"
+	enumsdurableexecutors "skulpture/buang/enums/durable_executors"
 	"sync"
 	"syscall"
 
+	"github.com/dbos-inc/dbos-transact-golang/dbos"
 	"github.com/go-chi/chi/v5"
 	"github.com/gorilla/schema"
-	"go.temporal.io/sdk/client"
+	"github.com/negrel/assert"
+	temporalclient "go.temporal.io/sdk/client"
 	"go.temporal.io/sdk/contrib/envconfig"
 	temporallog "go.temporal.io/sdk/log"
 	"go.temporal.io/sdk/worker"
 )
 
 type ApplicationConfig struct {
-	HttpPort string
-	Services ApplicationServices
+	HttpPort        string
+	Services        ApplicationServices
+	DurableExecutor enumsdurableexecutors.DurableExecutor
 }
 
 type Application struct {
 	http     HttpApplication
-	temporal TemporalApplication
+	temporal *TemporalApplication
 	config   ApplicationConfig
+	dbos     *DbosApplication
 }
 
 type HttpApplication struct {
@@ -36,48 +41,93 @@ type HttpApplication struct {
 }
 
 type TemporalApplication struct {
-	client   *client.Client
+	client   *temporalclient.Client
 	Services ApplicationServices
 	workers  []TemporalWorker
 }
 
+type DbosApplication struct {
+	ctx       dbos.DBOSContext
+	Services  ApplicationServices
+	workflows []DbosWorkflow[any, any]
+}
+
 type ApplicationServices struct {
-	Queries       *interfaces.Queries
-	SchemaDecoder *schema.Decoder
-	SchemaEncoder *schema.Encoder
-	Temporal      client.Client
+	Queries         *interfaces.Queries
+	SchemaDecoder   *schema.Decoder
+	SchemaEncoder   *schema.Encoder
+	durableExecutor enumsdurableexecutors.DurableExecutor
+	temporal        *temporalclient.Client
+	dbos            dbos.DBOSContext
 }
 
 func (a ApplicationConfig) New(ctx context.Context, chi *chi.Mux) (*Application, error) {
-	opts := envconfig.MustLoadDefaultClientOptions()
-	opts.Logger = temporallog.NewStructuredLogger(slog.Default())
-
-	tc, err := client.NewLazyClient(opts)
-	if err != nil {
-		return nil, err
-	}
-
-	hc, err := client.NewLazyClient(opts)
-	if err != nil {
-		return nil, err
-	}
-
 	services := a.Services
 	services.SchemaDecoder = schema.NewDecoder()
 	services.SchemaEncoder = schema.NewEncoder()
-	services.Temporal = hc
 
-	return &Application{
-		http: HttpApplication{
-			chi:      chi,
-			Services: services,
-		},
-		temporal: TemporalApplication{
+	httpApp := HttpApplication{
+		chi:      chi,
+		Services: services,
+	}
+	app := Application{
+		config: a,
+	}
+
+	// so that attaching workers does not throw
+	initialTemporal := &TemporalApplication{}
+	initialDbos := &DbosApplication{}
+	app.temporal = initialTemporal
+	app.dbos = initialDbos
+
+	if a.DurableExecutor == enumsdurableexecutors.Temporal {
+		opts := envconfig.MustLoadDefaultClientOptions()
+		opts.Logger = temporallog.NewStructuredLogger(slog.Default())
+
+		tc, err := temporalclient.NewLazyClient(opts) // used by the workers
+		if err != nil {
+			return nil, err
+		}
+
+		hc, err := temporalclient.NewLazyClient(opts) // used by the routes
+		if err != nil {
+			return nil, err
+		}
+		services.temporal = &hc
+		httpApp.Services.temporal = &hc
+
+		app.http = httpApp
+		app.temporal = &TemporalApplication{
 			Services: services,
 			client:   &tc,
-		},
-		config: a,
-	}, nil
+		}
+	} else {
+		dbosContext, err := dbos.NewDBOSContext(context.Background(), dbos.Config{
+			AppName:     os.Getenv("OTEL_SERVICE_NAME"),
+			DatabaseURL: os.Getenv("DB_CONNECTION_STRING"),
+		})
+		if err != nil {
+			return nil, err
+		}
+		services.dbos = dbosContext
+		httpApp.Services.dbos = dbosContext
+
+		app.http = httpApp
+		app.dbos = &DbosApplication{
+			ctx:      dbosContext,
+			Services: services,
+		}
+	}
+
+	assert.True(app.http != HttpApplication{}, "app initialized incorrectly")
+	assert.True(app.http.Services.dbos != nil, "dbos is injected to be used by handlers")
+	assert.True(app.http.Services.temporal != nil, "temporal is injected to be used by handlers")
+	assert.True(app.temporal != initialTemporal && app.dbos != initialDbos, "must use one durable executor")
+
+	assert.True(app.config.DurableExecutor == enumsdurableexecutors.Temporal && app.temporal.client != nil,
+		"must have a client if temporal application")
+
+	return &app, nil
 }
 
 func (a *Application) Run(ctx context.Context) (func(ctx context.Context), error) {
@@ -130,11 +180,32 @@ func (a *Application) Run(ctx context.Context) (func(ctx context.Context), error
 		slog.InfoContext(ctx, "started temporal workers")
 	}
 
+	addDbosWorkflows := func(ctx context.Context, wg *sync.WaitGroup) {
+		defer wg.Done()
+
+		for _, w := range a.dbos.workflows {
+			w(a.dbos.Services, a.dbos.ctx)
+		}
+
+		err := dbos.Launch(a.dbos.ctx)
+		if err != nil {
+			slog.ErrorContext(ctx, fmt.Sprintf("unable to start dbos: %v", err.Error()))
+
+			cancel()
+		}
+	}
+
 	wg.Add(1)
 	go startHttpServer(ctx, &wg)
 
-	wg.Add(1)
-	go runTemporalWorkers(ctx, &wg)
+	if a.config.DurableExecutor == enumsdurableexecutors.Temporal {
+		wg.Add(1)
+		go runTemporalWorkers(ctx, &wg)
+
+	} else {
+		wg.Add(1)
+		go addDbosWorkflows(ctx, &wg)
+	}
 
 	go func() {
 		_ = <-sigs
@@ -157,7 +228,11 @@ func (a *Application) GetHttpApplication() *HttpApplication {
 }
 
 func (a *Application) GetTemporalApplication() *TemporalApplication {
-	return &a.temporal
+	return a.temporal
+}
+
+func (a *Application) GetDbosApplication() *DbosApplication {
+	return a.dbos
 }
 
 type HttpRouter func(s ApplicationServices, r chi.Router)
@@ -168,8 +243,26 @@ func (a *HttpApplication) AddRouters(r chi.Router, x ...HttpRouter) {
 	}
 }
 
-type TemporalWorker func(s ApplicationServices, c *client.Client) (worker.Worker, error)
+type TemporalWorker func(s ApplicationServices, c *temporalclient.Client) (worker.Worker, error)
 
 func (a *TemporalApplication) AddWorkers(ws ...TemporalWorker) {
 	a.workers = ws
 }
+
+type DbosWorkflow[P any, R any] func(s ApplicationServices, c dbos.DBOSContext)
+
+func (a *DbosApplication) AddWorkflows(ws ...DbosWorkflow[any, any]) {
+	a.workflows = ws
+}
+
+func (s *ApplicationServices) GetDurableExecutor() (any, enumsdurableexecutors.DurableExecutor) {
+	if s.durableExecutor == enumsdurableexecutors.Temporal {
+		return *s.temporal, s.durableExecutor
+	}
+
+	return s.dbos, s.durableExecutor
+}
+
+type TemporalClient = temporalclient.Client
+
+type DbosContext = dbos.DBOSContext

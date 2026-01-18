@@ -1,16 +1,13 @@
 package projects
 
 import (
-	"fmt"
 	"log/slog"
 	"net/http"
 	"skulpture/buang/app"
-	constantstaskqueues "skulpture/buang/constants/task_queues"
-	"skulpture/buang/workers/workflows"
+	workflowwrappers "skulpture/buang/workers/workflow_wrappers"
 	"strconv"
 
 	"github.com/go-chi/chi/v5"
-	"go.temporal.io/sdk/client"
 )
 
 // @summary	Spin down a preview deployment
@@ -40,13 +37,12 @@ func BuangDeployment(s app.ApplicationServices) http.HandlerFunc {
 			return
 		}
 
-		workflowId := fmt.Sprintf("buang-project-%v-deployment-%v", projectId, deploymentId)
-		options := client.StartWorkflowOptions{
-			ID:        workflowId,
-			TaskQueue: constantstaskqueues.QueueBuang,
+		wp := workflowwrappers.BuangDeploymentParams{
+			ProjectId:    int64(projectId),
+			DeploymentId: int64(deploymentId),
 		}
 
-		_, err = s.Temporal.ExecuteWorkflow(r.Context(), options, workflows.BuangDeployment, int64(projectId), int64(deploymentId))
+		err = wp.Exec(r.Context(), s)
 		if err != nil {
 			slog.ErrorContext(r.Context(), "buang deployment", "err", err.Error())
 			http.Error(w, err.Error(), http.StatusInternalServerError)

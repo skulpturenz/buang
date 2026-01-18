@@ -5,7 +5,7 @@ import (
 	"fmt"
 	"skulpture/buang/app"
 	constantstaskqueues "skulpture/buang/constants/task_queues"
-	"skulpture/buang/workers/workflows"
+	temporalworkflows "skulpture/buang/workers/temporal/workflows"
 
 	"github.com/google/uuid"
 	"go.temporal.io/sdk/client"
@@ -24,7 +24,7 @@ func Housekeeping(s app.ApplicationServices, c *client.Client) (worker.Worker, e
 
 	cl := *c
 
-	_, err := cl.ExecuteWorkflow(context.Background(), options, workflows.BuangHouskeeping)
+	_, err := cl.ExecuteWorkflow(context.Background(), options, temporalworkflows.BuangHouskeeping)
 	if err != nil {
 		return nil, err
 	}

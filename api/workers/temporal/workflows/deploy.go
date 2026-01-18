@@ -1,4 +1,4 @@
-package workflows
+package temporalworkflows
 
 import (
 	"skulpture/buang/workers/activities"

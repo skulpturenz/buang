@@ -3,17 +3,14 @@ package projects
 import (
 	"encoding/json"
 	"errors"
-	"fmt"
 	"log/slog"
 	"net/http"
 	"skulpture/buang/app"
-	constantstaskqueues "skulpture/buang/constants/task_queues"
-	"skulpture/buang/workers/workflows"
+	workflowwrappers "skulpture/buang/workers/workflow_wrappers"
 	"strconv"
 
 	"github.com/go-chi/chi/v5"
 	"github.com/go-playground/validator/v10"
-	"go.temporal.io/sdk/client"
 )
 
 type BuangBranchRequest struct {
@@ -66,13 +63,12 @@ func BuangBranch(s app.ApplicationServices) http.HandlerFunc {
 			return
 		}
 
-		workflowId := fmt.Sprintf("buang-project-%v-branch-%v", projectId, req.Branch)
-		options := client.StartWorkflowOptions{
-			ID:        workflowId,
-			TaskQueue: constantstaskqueues.QueueBuang,
+		wp := workflowwrappers.BuangBranchParams{
+			ProjectId: int64(projectId),
+			Branch:    req.Branch,
 		}
 
-		_, err = s.Temporal.ExecuteWorkflow(r.Context(), options, workflows.BuangBranch, int64(projectId), req.Branch)
+		err = wp.Exec(r.Context(), s)
 		if err != nil {
 			slog.ErrorContext(r.Context(), "buang branch", "err", err.Error())
 			http.Error(w, err.Error(), http.StatusInternalServerError)

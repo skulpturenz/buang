@@ -4,7 +4,7 @@ import (
 	"skulpture/buang/app"
 	constantstaskqueues "skulpture/buang/constants/task_queues"
 	"skulpture/buang/workers/activities"
-	"skulpture/buang/workers/workflows"
+	temporalworkflows "skulpture/buang/workers/temporal/workflows"
 
 	"go.temporal.io/sdk/client"
 	"go.temporal.io/sdk/worker"
@@ -27,7 +27,7 @@ func DeploymentWorker(s app.ApplicationServices, c *client.Client) (worker.Worke
 	w.RegisterActivity(buangDeployment.BuangDeployment)
 	w.RegisterActivity(getDeploymentBranch.GetDeploymentBranch)
 
-	w.RegisterWorkflow(workflows.Deploy)
+	w.RegisterWorkflow(temporalworkflows.Deploy)
 
 	err := w.Run(worker.InterruptCh())
 	if err != nil {

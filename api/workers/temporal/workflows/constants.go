@@ -1,4 +1,4 @@
-package workflows
+package temporalworkflows
 
 type NonRetryableError int
 

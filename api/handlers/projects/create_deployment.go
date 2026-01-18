@@ -8,13 +8,11 @@ import (
 	"net/http"
 	"skulpture/buang/app"
 	"skulpture/buang/components/deployments"
-	constantstaskqueues "skulpture/buang/constants/task_queues"
-	"skulpture/buang/workers/workflows"
+	workflowwrappers "skulpture/buang/workers/workflow_wrappers"
 	"strconv"
 
 	"github.com/go-chi/chi/v5"
 	"github.com/go-playground/validator/v10"
-	"go.temporal.io/sdk/client"
 )
 
 type CreateDeploymentRequest struct {
@@ -85,13 +83,12 @@ func CreateDeployment(s app.ApplicationServices) http.HandlerFunc {
 			return
 		}
 
-		workflowId := fmt.Sprintf("create-project-%v-deployment-%v", projectId, res.Id)
-		options := client.StartWorkflowOptions{
-			ID:        workflowId,
-			TaskQueue: constantstaskqueues.QueueDeployment,
+		wp := workflowwrappers.CreateDeploymentParams{
+			ProjectId:    p.ProjectID,
+			DeploymentId: res.Id,
 		}
 
-		_, err = s.Temporal.ExecuteWorkflow(r.Context(), options, workflows.Deploy, int64(projectId), int64(res.Id))
+		err = wp.Exec(r.Context(), s)
 		if err != nil {
 			slog.ErrorContext(r.Context(), "create deployment", "err", err.Error())
 			http.Error(w, err.Error(), http.StatusInternalServerError)

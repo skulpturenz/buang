@@ -7,11 +7,13 @@ import (
 	"skulpture/buang/db"
 	_ "skulpture/buang/docs"
 	enumsdbtypes "skulpture/buang/enums/db_types"
+	enumsdurableexecutors "skulpture/buang/enums/durable_executors"
 	enumsenv "skulpture/buang/enums/env"
 	"skulpture/buang/handlers/projects"
 	authn "skulpture/buang/middleware/authn"
 	limiter "skulpture/buang/middleware/limiter"
-	"skulpture/buang/workers"
+	"skulpture/buang/workers/dbos"
+	workers "skulpture/buang/workers/temporal"
 	"time"
 
 	"github.com/dogmatiq/ferrite"
@@ -49,7 +51,7 @@ var (
 					WithDefault("").
 					Optional()
 	DB_TYPE = ferrite.
-		Enum("DB_TYPE", "DB_TYPE").
+		Enum("DB_TYPE", "Database type").
 		WithMembers(enumsdbtypes.Pg.String(), enumsdbtypes.Sqlite.String()).
 		WithDefault(enumsdbtypes.Sqlite.String()).
 		Required()
@@ -68,6 +70,11 @@ var (
 	TEMPORAL_API_KEY = ferrite.
 				String("TEMPORAL_ADDRESS", "Temporal address").
 				Optional()
+	DURABLE_EXECUTOR = ferrite.
+				Enum("DURABLE_EXECUTOR", "Durable executor").
+				WithMembers(enumsdurableexecutors.Temporal.String(), enumsdurableexecutors.Dbos.String()).
+				WithDefault(enumsdurableexecutors.Temporal.String()).
+				Required()
 )
 
 func init() {
@@ -134,11 +141,18 @@ func main() {
 		ApiKey: API_KEY.Value(),
 	}
 
+	durableExecutor, err := enumsdurableexecutors.Parse(DURABLE_EXECUTOR.Value())
+	if err != nil {
+		slog.ErrorContext(ctx, "error", "err", err.Error())
+		panic(err)
+	}
+
 	appConfig := app.ApplicationConfig{
 		HttpPort: ":80",
 		Services: app.ApplicationServices{
 			Queries: &queries,
 		},
+		DurableExecutor: durableExecutor,
 	}
 	app, err := appConfig.New(ctx, r)
 	if err != nil {
@@ -160,6 +174,10 @@ func main() {
 		workers.BuangWorker,
 		workers.Housekeeping,
 	)
+
+	app.GetDbosApplication().AddWorkflows(dbos.Deployment,
+		dbos.Buang,
+		dbos.Housekeping)
 
 	cleanup, err = app.Run(ctx)
 	if err != nil {
