@@ -13,6 +13,8 @@ import (
 )
 
 func Housekeeping(s app.ApplicationServices, c *client.Client) (worker.Worker, error) {
+	w := worker.New(*c, constantstaskqueues.QueueCron, worker.Options{})
+
 	id := fmt.Sprintf("housekeeping_cron_%v", uuid.New())
 	options := client.StartWorkflowOptions{
 		ID:           id,
@@ -27,5 +29,10 @@ func Housekeeping(s app.ApplicationServices, c *client.Client) (worker.Worker, e
 		return nil, err
 	}
 
-	return nil, nil
+	err = w.Run(worker.InterruptCh())
+	if err != nil {
+		return nil, err
+	}
+
+	return w, nil
 }
