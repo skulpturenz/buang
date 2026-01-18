@@ -53,5 +53,15 @@ func BuangHouskeeping(ctx workflow.Context) (*CronResult, error) {
 		}
 	}
 
+	var prune *activities.Prune
+	var pruneResult activities.PruneResult
+
+	workflow.
+		ExecuteActivity(ctx,
+			prune.Prune,
+			activities.PruneParams{},
+		).
+		Get(ctx, &pruneResult)
+
 	return &CronResult{RunTime: now}, nil
 }
