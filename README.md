@@ -49,8 +49,24 @@ curl --request POST \
 Preview environments are temporary environments which allow you to test and validate your changes before merging it. 
 Deploying APIs to preview environments usually requires managing complex infrastructure and K8s, with Buang all that's required to get started is a VM and a few GitHub actions.
 
+Buang deploys services using Docker Compose and dynamically updates a Traefik instance to route traffic to the preview services.
+
+
+# Requirements
+
+Buang aims to be a deploy and forget service which is fairly low maintenance, we don't want to spend more time fixing issues with the preview server than developing.
+To this end, Buang employs the use of durable executors such as [Temporal](https://temporal.io/) or [DBOS](https://docs.dbos.dev/) so that it is resilient to most failures. Durable executors make it convenient for a service to recover from failure from its last successful point. Buang also prunes unused containers and images periodically to ensure the system does not run out of storage.
+
+Using Buang with Temporal requires a Temporal deployment by either using [Temporal Cloud](https://temporal.io/cloud) or [self-hosting](https://docs.temporal.io/self-hosted-guide). Temporal can be used with either Postgres or SQLite.
+
+DBOS runs in-process so all that's required to use Buang is a Postgres database. DBOS does not support SQLite.
+
+Buang runs using an in memory SQLite database by default with Temporal.
+
 
 # Development
+
+## Temporal
 
 1. Run the dev temporal server with:
 
@@ -64,6 +80,27 @@ task run-temporal-dev-server
 task dev
 ```
 
+## DBOS
+
+1. Run the dev Postgres server with:
+
+```bash
+task run-pg
+```
+
+2. Set the correct environment variables
+
+```bash
+export DB_CONNECTION_STRING="postgresql://postgres:mysecretpassword@localhost/buang?sslmode=disable"
+export DB_TYPE="postgres"
+export DURABLE_EXECUTOR="dbos"
+```
+
+3. Run Buang:
+
+```bash
+task dev
+```
 
 # Documentation
 
