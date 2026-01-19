@@ -3,12 +3,14 @@ package activities
 import (
 	"context"
 	"fmt"
+	"log/slog"
 	"os"
 	"path/filepath"
 	"skulpture/buang/app"
 	"skulpture/buang/components/deployments"
 	"skulpture/buang/components/docker"
 	"skulpture/buang/components/projects"
+	enumsdeploymentstatus "skulpture/buang/enums/deployment_status"
 )
 
 type BuangDeployment app.ApplicationServices
@@ -60,7 +62,20 @@ func (bd *BuangDeployment) BuangDeployment(ctx context.Context, b BuangDeploymen
 
 	_, err = downParams.Exec(ctx, &s)
 	if err != nil {
-		return nil, err
+		slog.ErrorContext(ctx, fmt.Sprintf("unable to compose down deployment %v for project %v: %v", dply.Deployment.GetId(), dply.Deployment.GetProjectId(), err.Error()))
+
+		p := deployments.UpdateDeploymentParams{
+			ID:         dply.Deployment.GetId(),
+			Url:        dply.Deployment.GetUrl(),
+			Status:     int16(enumsdeploymentstatus.Error),
+			DeployedAt: dply.Deployment.GetDeployedAt(),
+			ClonePath:  dply.Deployment.GetClonePath(),
+		}
+
+		_, err := p.Exec(ctx, &s)
+		if err != nil {
+			return nil, err
+		}
 	}
 
 	err = os.RemoveAll(clonePath)
