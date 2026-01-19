@@ -24,7 +24,8 @@ func Housekeeping(s app.ApplicationServices, c *client.Client) (worker.Worker, e
 
 	cl := *c
 
-	_, err := cl.ExecuteWorkflow(context.Background(), options, temporalworkflows.BuangHouskeeping)
+	buangHousekeeping := temporalworkflows.BuangHousekeeping(s)
+	_, err := cl.ExecuteWorkflow(context.Background(), options, buangHousekeeping.BuangHousekeeping)
 	if err != nil {
 		return nil, err
 	}

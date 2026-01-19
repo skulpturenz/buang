@@ -1,6 +1,7 @@
 package temporalworkflows
 
 import (
+	"skulpture/buang/app"
 	"skulpture/buang/workers/activities"
 	"time"
 
@@ -8,11 +9,15 @@ import (
 	"go.temporal.io/sdk/workflow"
 )
 
+type BuangHousekeeping app.ApplicationServices
+
 type CronResult struct {
 	RunTime time.Time
 }
 
-func BuangHouskeeping(ctx workflow.Context) (*CronResult, error) {
+func (bh BuangHousekeeping) BuangHousekeeping(ctx workflow.Context) (*CronResult, error) {
+	s := app.ApplicationServices(bh)
+
 	ao := workflow.ActivityOptions{
 		ScheduleToCloseTimeout: time.Minute,
 		RetryPolicy: &temporal.RetryPolicy{
@@ -23,7 +28,7 @@ func BuangHouskeeping(ctx workflow.Context) (*CronResult, error) {
 
 	now := workflow.Now(ctx)
 
-	var getStaleDeployments *activities.GetStaleDeployments
+	getStaleDeployments := activities.GetStaleDeployments(s)
 	var getStaleDeploymentsResult activities.GetStaleDeploymentsResult
 
 	err := workflow.
@@ -34,7 +39,7 @@ func BuangHouskeeping(ctx workflow.Context) (*CronResult, error) {
 		return nil, err
 	}
 
-	var buangDeployment *activities.BuangDeployment
+	buangDeployment := activities.BuangDeployment(s)
 	var buangDeploymentResult activities.BuangDeploymentResult
 
 	for _, d := range getStaleDeploymentsResult.Deployments {
@@ -53,7 +58,7 @@ func BuangHouskeeping(ctx workflow.Context) (*CronResult, error) {
 		}
 	}
 
-	var prune *activities.Prune
+	prune := activities.Prune(s)
 	var pruneResult activities.PruneResult
 
 	workflow.
