@@ -9,6 +9,6 @@ SELECT
 	$envVars AS env_vars
 WHERE NOT EXISTS (SELECT 1
 				  FROM deployments
-				  WHERE deployments.project_id = project_id AND status IN (0, 1) -- New, Deploying
+				  WHERE deployments.project_id = project_id AND deployments.branch = branch AND status IN (0, 1) -- New, Deploying
 				  )
 RETURNING *;
