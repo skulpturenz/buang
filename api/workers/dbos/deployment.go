@@ -8,5 +8,6 @@ import (
 )
 
 func Deployment(s app.ApplicationServices, ctx dbos.DBOSContext) {
-	dbos.RegisterWorkflow(ctx, dbosworkflows.Deploy)
+	d := dbosworkflows.Deploy(s)
+	dbos.RegisterWorkflow(ctx, d.Deploy)
 }

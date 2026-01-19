@@ -2,20 +2,25 @@ package dbosworkflows
 
 import (
 	"context"
+	"skulpture/buang/app"
 	"skulpture/buang/workers/activities"
 
 	"github.com/dbos-inc/dbos-transact-golang/dbos"
 )
+
+type BuangBranch app.ApplicationServices
 
 type BuangBranchParams struct {
 	ProjectId int64
 	Branch    string
 }
 
-func BuangBranch(ctx dbos.DBOSContext, p BuangBranchParams) (bool, error) {
+func (bb BuangBranch) BuangBranch(ctx dbos.DBOSContext, p BuangBranchParams) (bool, error) {
+	s := app.ApplicationServices(bb)
+
 	activeDeploymentIds, err := dbos.RunAsStep(ctx,
 		func(ctx context.Context) (*activities.GetActiveDeploymentIdsResult, error) {
-			getActiveDeploymentIds := activities.ActiveDeploymentIds{}
+			getActiveDeploymentIds := activities.ActiveDeploymentIds(s)
 			res, err := getActiveDeploymentIds.GetActiveDeploymentIds(ctx, activities.GetActiveDeploymentIdsParams{
 				ProjectId: p.ProjectId,
 				Branch:    p.Branch,
@@ -25,14 +30,14 @@ func BuangBranch(ctx dbos.DBOSContext, p BuangBranchParams) (bool, error) {
 			}
 
 			return res, nil
-		})
+		}, dbos.WithStepMaxRetries(3))
 	if err != nil {
 		return false, err
 	}
 
 	_, err = dbos.RunAsStep(ctx,
 		func(ctx context.Context) (*activities.BuangDeploymentResult, error) {
-			buangDeployment := activities.BuangDeployment{}
+			buangDeployment := activities.BuangDeployment(s)
 
 			for _, id := range activeDeploymentIds.DeploymentIds {
 				_, err := buangDeployment.BuangDeployment(ctx, activities.BuangDeploymentParams{
@@ -45,8 +50,7 @@ func BuangBranch(ctx dbos.DBOSContext, p BuangBranchParams) (bool, error) {
 			}
 
 			return &activities.BuangDeploymentResult{}, nil
-		},
-	)
+		}, dbos.WithStepMaxRetries(3))
 	if err != nil {
 		return false, err
 	}

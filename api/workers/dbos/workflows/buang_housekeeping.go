@@ -2,14 +2,18 @@ package dbosworkflows
 
 import (
 	"context"
+	"skulpture/buang/app"
 	"skulpture/buang/workers/activities"
+	"time"
 
 	"github.com/dbos-inc/dbos-transact-golang/dbos"
 )
 
-type BuangHousekeepingParams struct{}
+type BuangHousekeeping app.ApplicationServices
 
-func BuangHousekeeping(ctx dbos.DBOSContext, _ BuangHousekeepingParams) (bool, error) {
+func (h BuangHousekeeping) BuangHousekeeping(ctx dbos.DBOSContext, scheduledTime time.Time) (bool, error) {
+	s := app.ApplicationServices(h)
+
 	staleDeployments, err := dbos.RunAsStep(ctx,
 		func(ctx context.Context) (*activities.GetStaleDeploymentsResult, error) {
 			getStaleDeployments := activities.GetStaleDeployments{}
@@ -20,15 +24,14 @@ func BuangHousekeeping(ctx dbos.DBOSContext, _ BuangHousekeepingParams) (bool, e
 			}
 
 			return res, nil
-		},
-	)
+		}, dbos.WithStepMaxRetries(3))
 	if err != nil {
 		return false, err
 	}
 
 	_, err = dbos.RunAsStep(ctx,
 		func(ctx context.Context) (*activities.BuangDeploymentResult, error) {
-			buangDeployment := activities.BuangDeployment{}
+			buangDeployment := activities.BuangDeployment(s)
 
 			for _, d := range staleDeployments.Deployments {
 				_, err := buangDeployment.BuangDeployment(ctx, activities.BuangDeploymentParams{
@@ -41,15 +44,14 @@ func BuangHousekeeping(ctx dbos.DBOSContext, _ BuangHousekeepingParams) (bool, e
 			}
 
 			return &activities.BuangDeploymentResult{}, nil
-		},
-	)
+		}, dbos.WithStepMaxRetries(3))
 	if err != nil {
 		return false, err
 	}
 
 	_, err = dbos.RunAsStep(ctx,
 		func(ctx context.Context) (*activities.PruneResult, error) {
-			prune := activities.Prune{}
+			prune := activities.Prune(s)
 
 			res, err := prune.Prune(ctx)
 			if err != nil {
@@ -57,8 +59,7 @@ func BuangHousekeeping(ctx dbos.DBOSContext, _ BuangHousekeepingParams) (bool, e
 			}
 
 			return res, nil
-		},
-	)
+		}, dbos.WithStepMaxRetries(3))
 
 	return true, nil
 }

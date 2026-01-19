@@ -35,15 +35,12 @@ func (p CreateDeploymentParams) Exec(ctx context.Context, s app.ApplicationServi
 
 		return nil
 	} else {
-		handle, err := dbos.RunWorkflow(executor.(app.DbosContext), dbosworkflows.Deploy, dbosworkflows.DeployParams{
+		d := dbosworkflows.Deploy(s)
+
+		_, err := dbos.RunWorkflow(executor.(app.DbosContext), d.Deploy, dbosworkflows.DeployParams{
 			ProjectId:    p.ProjectId,
 			DeploymentId: p.DeploymentId,
 		})
-		if err != nil {
-			return err
-		}
-
-		_, err = handle.GetResult()
 		if err != nil {
 			return err
 		}

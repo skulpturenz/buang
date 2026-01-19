@@ -8,6 +8,8 @@ import (
 )
 
 func Housekeping(s app.ApplicationServices, ctx dbos.DBOSContext) {
-	dbos.RegisterWorkflow(ctx, dbosworkflows.BuangHousekeeping,
-		dbos.WithSchedule("0 0 */2 * *")) // every 2 days
+	bh := dbosworkflows.BuangHousekeeping(s)
+
+	dbos.RegisterWorkflow(ctx, bh.BuangHousekeeping,
+		dbos.WithSchedule("0 0 */2 * * *")) // every 2 days
 }

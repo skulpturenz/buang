@@ -12,7 +12,7 @@ import (
 const selectProjectByRepository = `-- name: SelectProjectByRepository :one
 SELECT id, repository, requires_authn, username, password, created_at, updated_at, compose_path, deleted FROM projects
 WHERE repository = $1 AND
-	  deleted = 0
+	  deleted = FALSE
 `
 
 func (q *Queries) SelectProjectByRepository(ctx context.Context, repository string) (Project, error) {

@@ -8,6 +8,9 @@ import (
 )
 
 func Buang(s app.ApplicationServices, ctx dbos.DBOSContext) {
-	dbos.RegisterWorkflow(ctx, dbosworkflows.BuangDeployment)
-	dbos.RegisterWorkflow(ctx, dbosworkflows.BuangBranch)
+	bd := dbosworkflows.BuangDeployment(s)
+	dbos.RegisterWorkflow(ctx, bd.BuangDeployment)
+
+	bb := dbosworkflows.BuangBranch(s)
+	dbos.RegisterWorkflow(ctx, bb.BuangBranch)
 }

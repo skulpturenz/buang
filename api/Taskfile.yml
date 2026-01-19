@@ -64,9 +64,11 @@ tasks:
   run-pg:
     desc: Run Postgres for development
     cmds:
-      - docker run --rm -e POSTGRES_PASSWORD=mysecretpassword -p 5432:5432 -d postgres
-      - echo "Connection string = postgresql://localhost"
+      - echo "Connection string = postgresql://postgres:mysecretpassword@localhost/buang?sslmode=disable"
+      - echo "User = postgres"
       - echo "Password = mysecretpassword"
+      - echo "Database = buang"
+      - docker run --rm -e POSTGRES_PASSWORD=mysecretpassword -p 5432:5432 -e POSTGRES_DB=buang postgres
 
   deploy-prod:
     desc: Deploy compose service in production

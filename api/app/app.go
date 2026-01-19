@@ -65,6 +65,7 @@ func (a ApplicationConfig) New(ctx context.Context, chi *chi.Mux) (*Application,
 	services := a.Services
 	services.SchemaDecoder = schema.NewDecoder()
 	services.SchemaEncoder = schema.NewEncoder()
+	services.durableExecutor = a.DurableExecutor
 
 	httpApp := HttpApplication{
 		chi:      chi,

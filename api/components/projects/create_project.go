@@ -8,6 +8,7 @@ import (
 	"skulpture/buang/app"
 	"skulpture/buang/db/interfaces"
 
+	"github.com/jackc/pgx/v5"
 	"github.com/negrel/assert"
 )
 
@@ -27,7 +28,7 @@ func (p CreateProjectParams) Exec(ctx context.Context, s *app.ApplicationService
 	q := *s.Queries
 
 	activeProject, err := q.SelectProjectByRepository(ctx, p.Repository)
-	if err != nil && !errors.Is(sql.ErrNoRows, err) {
+	if err != nil && !errors.Is(sql.ErrNoRows, err) && !errors.Is(pgx.ErrNoRows, err) {
 		return nil, err
 	}
 

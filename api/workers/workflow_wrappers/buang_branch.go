@@ -35,15 +35,12 @@ func (p BuangBranchParams) Exec(ctx context.Context, s app.ApplicationServices) 
 
 		return nil
 	} else {
-		handle, err := dbos.RunWorkflow(executor.(dbos.DBOSContext), dbosworkflows.BuangBranch, dbosworkflows.BuangBranchParams{
+		bb := dbosworkflows.BuangBranch(s)
+
+		_, err := dbos.RunWorkflow(executor.(dbos.DBOSContext), bb.BuangBranch, dbosworkflows.BuangBranchParams{
 			ProjectId: p.ProjectId,
 			Branch:    p.Branch,
 		})
-		if err != nil {
-			return err
-		}
-
-		_, err = handle.GetResult()
 		if err != nil {
 			return err
 		}
