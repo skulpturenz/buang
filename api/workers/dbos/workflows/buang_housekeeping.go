@@ -2,6 +2,8 @@ package dbosworkflows
 
 import (
 	"context"
+	"fmt"
+	"log/slog"
 	"skulpture/buang/app"
 	"skulpture/buang/workers/activities"
 	"time"
@@ -12,6 +14,12 @@ import (
 type BuangHousekeeping app.ApplicationServices
 
 func (h BuangHousekeeping) BuangHousekeeping(ctx dbos.DBOSContext, scheduledTime time.Time) (bool, error) {
+	defer func() {
+		if r := recover(); r != nil {
+			slog.ErrorContext(context.Background(), fmt.Sprintf("buang housekeeping panic: %v", r))
+		}
+	}()
+
 	s := app.ApplicationServices(h)
 
 	staleDeployments, err := dbos.RunAsStep(ctx,

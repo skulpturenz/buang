@@ -1,6 +1,9 @@
 package temporalworkflows
 
 import (
+	"context"
+	"fmt"
+	"log/slog"
 	"skulpture/buang/workers/activities"
 	"time"
 
@@ -9,6 +12,12 @@ import (
 )
 
 func BuangDeployment(ctx workflow.Context, projectId int64, deploymentId int64) error {
+	defer func() {
+		if r := recover(); r != nil {
+			slog.ErrorContext(context.Background(), fmt.Sprintf("buang deployment panic: %v", r))
+		}
+	}()
+
 	ao := workflow.ActivityOptions{
 		ScheduleToCloseTimeout: time.Minute,
 		RetryPolicy: &temporal.RetryPolicy{

@@ -3,6 +3,7 @@ package workflowwrappers
 import (
 	"context"
 	"fmt"
+	"log/slog"
 	"skulpture/buang/app"
 	constantstaskqueues "skulpture/buang/constants/task_queues"
 	enumsdurableexecutors "skulpture/buang/enums/durable_executors"
@@ -19,6 +20,12 @@ type CreateDeploymentParams struct {
 }
 
 func (p CreateDeploymentParams) Exec(ctx context.Context, s app.ApplicationServices) error {
+	defer func() {
+		if r := recover(); r != nil {
+			slog.ErrorContext(context.Background(), fmt.Sprintf("create deployment panic: %v", r))
+		}
+	}()
+
 	executor, durableExecutor := s.GetDurableExecutor()
 
 	if durableExecutor == enumsdurableexecutors.Temporal {
@@ -35,8 +42,6 @@ func (p CreateDeploymentParams) Exec(ctx context.Context, s app.ApplicationServi
 
 		return nil
 	} else {
-		defer recover()
-
 		d := dbosworkflows.Deploy(s)
 
 		_, err := dbos.RunWorkflow(executor.(app.DbosContext), d.Deploy, dbosworkflows.DeployParams{

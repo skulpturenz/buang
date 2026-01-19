@@ -1,6 +1,9 @@
 package temporalworkflows
 
 import (
+	"context"
+	"fmt"
+	"log/slog"
 	"skulpture/buang/workers/activities"
 	"time"
 
@@ -9,6 +12,12 @@ import (
 )
 
 func BuangBranch(ctx workflow.Context, projectId int64, branch string) error {
+	defer func() {
+		if r := recover(); r != nil {
+			slog.ErrorContext(context.Background(), fmt.Sprintf("buang branch panic: %v", r))
+		}
+	}()
+
 	ao := workflow.ActivityOptions{
 		ScheduleToCloseTimeout: time.Minute,
 		RetryPolicy: &temporal.RetryPolicy{

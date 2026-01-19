@@ -1,6 +1,9 @@
 package temporalworkflows
 
 import (
+	"context"
+	"fmt"
+	"log/slog"
 	"skulpture/buang/app"
 	"skulpture/buang/workers/activities"
 	"time"
@@ -16,6 +19,12 @@ type CronResult struct {
 }
 
 func (bh BuangHousekeeping) BuangHousekeeping(ctx workflow.Context) (*CronResult, error) {
+	defer func() {
+		if r := recover(); r != nil {
+			slog.ErrorContext(context.Background(), fmt.Sprintf("buang housekeeping panic: %v", r))
+		}
+	}()
+
 	s := app.ApplicationServices(bh)
 
 	ao := workflow.ActivityOptions{

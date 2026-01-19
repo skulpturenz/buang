@@ -2,6 +2,8 @@ package dbosworkflows
 
 import (
 	"context"
+	"fmt"
+	"log/slog"
 	"skulpture/buang/app"
 	"skulpture/buang/workers/activities"
 
@@ -16,6 +18,12 @@ type BuangDeploymentParams struct {
 }
 
 func (bd BuangDeployment) BuangDeployment(ctx dbos.DBOSContext, p BuangDeploymentParams) (bool, error) {
+	defer func() {
+		if r := recover(); r != nil {
+			slog.ErrorContext(context.Background(), fmt.Sprintf("buang deployment panic: %v", r))
+		}
+	}()
+
 	s := app.ApplicationServices(bd)
 
 	_, err := dbos.RunAsStep(ctx,
