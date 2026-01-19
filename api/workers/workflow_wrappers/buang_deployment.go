@@ -35,6 +35,8 @@ func (p BuangDeploymentParams) Exec(ctx context.Context, s app.ApplicationServic
 
 		return nil
 	} else {
+		defer recover()
+
 		bd := dbosworkflows.BuangDeployment(s)
 
 		handle, err := dbos.RunWorkflow(executor.(app.DbosContext), bd.BuangDeployment, dbosworkflows.BuangDeploymentParams{

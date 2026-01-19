@@ -35,6 +35,8 @@ func (p BuangBranchParams) Exec(ctx context.Context, s app.ApplicationServices) 
 
 		return nil
 	} else {
+		defer recover()
+
 		bb := dbosworkflows.BuangBranch(s)
 
 		_, err := dbos.RunWorkflow(executor.(dbos.DBOSContext), bb.BuangBranch, dbosworkflows.BuangBranchParams{

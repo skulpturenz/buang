@@ -35,6 +35,8 @@ func (p CreateDeploymentParams) Exec(ctx context.Context, s app.ApplicationServi
 
 		return nil
 	} else {
+		defer recover()
+
 		d := dbosworkflows.Deploy(s)
 
 		_, err := dbos.RunWorkflow(executor.(app.DbosContext), d.Deploy, dbosworkflows.DeployParams{
