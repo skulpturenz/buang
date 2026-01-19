@@ -21,5 +21,5 @@ func Parse(s string) (DurableExecutor, error) {
 		return Dbos, nil
 	}
 
-	return Temporal, fmt.Errorf("unrecognized deployment status: %s", s)
+	return Temporal, fmt.Errorf("unrecognized durable executor: %s", s)
 }

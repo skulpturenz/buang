@@ -4,6 +4,8 @@ import (
 	"context"
 	"skulpture/buang/app"
 	"skulpture/buang/db/interfaces"
+
+	"github.com/negrel/assert"
 )
 
 type ListDeploymentsParams struct {
@@ -17,6 +19,9 @@ type ListDeploymentsResult struct {
 }
 
 func (d ListDeploymentsParams) Exec(ctx context.Context, s *app.ApplicationServices) (*ListDeploymentsResult, error) {
+	assert.True(d.Limit > 0, "invalid limit")
+	assert.True(d.Page > 0, "invalid page")
+
 	q := *s.Queries
 
 	result, err := q.SelectDeploymentsDesc(ctx, interfaces.SelectDeploymentsDescParams(d))

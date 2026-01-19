@@ -4,6 +4,8 @@ import (
 	"context"
 	"skulpture/buang/app"
 	"skulpture/buang/db/interfaces"
+
+	"github.com/negrel/assert"
 )
 
 type FindProjectByIdParams struct {
@@ -21,6 +23,8 @@ func (p FindProjectByIdParams) Exec(ctx context.Context, s *app.ApplicationServi
 	if err != nil {
 		return nil, err
 	}
+
+	assert.True(result.GetId() > 0, "invalid result")
 
 	ret := FindProjectByIdResult{
 		Project: result,

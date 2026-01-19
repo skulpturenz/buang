@@ -2,11 +2,14 @@ package wrappers
 
 import (
 	"encoding/json"
+	"skulpture/buang/db/interfaces"
 	sqlite_models "skulpture/buang/db/sqlite/out"
 	"time"
 )
 
 type Deployment sqlite_models.Deployment
+
+var _ interfaces.Deployment = (*Deployment)(nil)
 
 func (d Deployment) GetId() int64 {
 	return d.ID

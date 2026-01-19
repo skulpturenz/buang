@@ -3,7 +3,6 @@ package workflowwrappers
 import (
 	"context"
 	"fmt"
-	"log/slog"
 	"skulpture/buang/app"
 	constantstaskqueues "skulpture/buang/constants/task_queues"
 	enumsdurableexecutors "skulpture/buang/enums/durable_executors"
@@ -31,7 +30,7 @@ func (p BuangDeploymentParams) Exec(ctx context.Context, s app.ApplicationServic
 
 		_, err := executor.(app.TemporalClient).ExecuteWorkflow(ctx, options, temporalworkflows.BuangDeployment, p.ProjectId, p.DeploymentId)
 		if err != nil {
-			slog.ErrorContext(ctx, "buang deployment", "err", err.Error())
+			return err
 		}
 
 		return nil

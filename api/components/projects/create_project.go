@@ -7,6 +7,8 @@ import (
 	"fmt"
 	"skulpture/buang/app"
 	"skulpture/buang/db/interfaces"
+
+	"github.com/negrel/assert"
 )
 
 type CreateProjectParams struct {
@@ -37,6 +39,8 @@ func (p CreateProjectParams) Exec(ctx context.Context, s *app.ApplicationService
 	if err != nil {
 		return nil, err
 	}
+
+	assert.True(result.GetId() > 0, "invalid result")
 
 	ret := CreateProjectResult{
 		Id: result.GetId(),

@@ -1,10 +1,13 @@
 package wrappers
 
 import (
+	"skulpture/buang/db/interfaces"
 	sqlite_models "skulpture/buang/db/sqlite/out"
 )
 
 type DeploymentLog sqlite_models.DeploymentLog
+
+var _ interfaces.DeploymentLog = (*DeploymentLog)(nil)
 
 func (dl DeploymentLog) GetId() int64 {
 	return dl.ID

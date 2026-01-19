@@ -61,6 +61,13 @@ tasks:
     cmds:
       - docker run --rm -p 7233:7233 -p 8233:8233 temporalio/temporal server start-dev --ip 0.0.0.0
 
+  run-pg:
+    desc: Run Postgres for development
+    cmds:
+      - docker run --rm -e POSTGRES_PASSWORD=mysecretpassword -p 5432:5432 -d postgres
+      - echo "Connection string = postgresql://localhost"
+      - echo "Password = mysecretpassword"
+
   deploy-prod:
     desc: Deploy compose service in production
     cmds:

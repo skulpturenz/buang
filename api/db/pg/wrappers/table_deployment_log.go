@@ -1,10 +1,13 @@
 package wrappers
 
 import (
+	"skulpture/buang/db/interfaces"
 	pg_models "skulpture/buang/db/pg/out"
 )
 
 type DeploymentLog pg_models.DeploymentLog
+
+var _ interfaces.DeploymentLog = (*DeploymentLog)(nil)
 
 func (dl DeploymentLog) GetId() int64 {
 	return dl.ID

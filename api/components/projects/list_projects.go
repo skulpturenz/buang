@@ -4,6 +4,8 @@ import (
 	"context"
 	"skulpture/buang/app"
 	"skulpture/buang/db/interfaces"
+
+	"github.com/negrel/assert"
 )
 
 type ListProjectParams struct {
@@ -16,6 +18,9 @@ type ListProjectsResult struct {
 }
 
 func (p ListProjectParams) Exec(ctx context.Context, s *app.ApplicationServices) (*ListProjectsResult, error) {
+	assert.True(p.Limit > 0, "invalid limit")
+	assert.True(p.Page > 0, "invalid page")
+
 	q := *s.Queries
 
 	result, err := q.SelectProjectsDesc(ctx, interfaces.SelectProjectsDescParams(p))

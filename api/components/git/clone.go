@@ -3,11 +3,13 @@ package git
 import (
 	"context"
 	"os"
+	"reflect"
 	"skulpture/buang/app"
 
 	"github.com/go-git/go-git/v6"
 	"github.com/go-git/go-git/v6/plumbing"
 	"github.com/go-git/go-git/v6/plumbing/transport/http"
+	"github.com/negrel/assert"
 )
 
 type CloneParams struct {
@@ -26,10 +28,13 @@ type CloneResult struct {
 }
 
 func (c CloneParams) Exec(ctx context.Context, s *app.ApplicationServices) (*CloneResult, func(ctx context.Context), error) {
+	assert.True(!reflect.ValueOf(c.Hash).IsZero() && !reflect.ValueOf(c.Branch).IsZero(), "hash and branch are mutually exclusive")
+
 	dir, err := os.MkdirTemp("", "buang-*")
 	cleanup := func(ctx context.Context) {
 		os.RemoveAll(dir)
 	}
+	assert.DirExists(dir, "invalid dir")
 
 	if err != nil {
 		return nil, cleanup, err

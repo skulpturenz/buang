@@ -1,11 +1,14 @@
 package wrappers
 
 import (
+	"skulpture/buang/db/interfaces"
 	sqlite_models "skulpture/buang/db/sqlite/out"
 	"time"
 )
 
 type Project sqlite_models.Project
+
+var _ interfaces.Project = (*Project)(nil)
 
 func (p Project) GetId() int64 {
 	return p.ID

@@ -2,11 +2,14 @@ package wrappers
 
 import (
 	"encoding/json"
+	"skulpture/buang/db/interfaces"
 	pg_models "skulpture/buang/db/pg/out"
 	"time"
 )
 
 type Deployment pg_models.Deployment
+
+var _ interfaces.Deployment = (*Deployment)(nil)
 
 func (d Deployment) GetId() int64 {
 	return d.ID
