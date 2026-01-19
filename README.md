@@ -119,3 +119,5 @@ As it is meant to be hosted on your own infrastructure for temporary deployments
 it is also light on security: tokens for private repository access are stored in plain text and any environment variables required for the deployment are sent in the request to deploy services.
 
 Ensure that any private repository access tokens are readonly with limited scope and assume that the preview environment will be compromised.
+
+Each deployment gets a unique path instead of a subdomain to minimize the configuration required to deploy Buang, so if the service depends on the base URL, it can be derived by checking the `X-Forwarded-Prefix` header.
