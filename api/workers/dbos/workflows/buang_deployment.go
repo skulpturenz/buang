@@ -21,6 +21,20 @@ func (bd BuangDeployment) BuangDeployment(ctx dbos.DBOSContext, p BuangDeploymen
 	defer func() {
 		if r := recover(); r != nil {
 			slog.ErrorContext(context.Background(), fmt.Sprintf("buang deployment panic: %v", r))
+
+			_, _ = dbos.RunAsStep(ctx,
+				func(ctx context.Context) (*activities.ErrorDeploymentResult, error) {
+					errorDeployment := activities.ErrorDeployment(bd)
+					res, err := errorDeployment.ErrorDeployment(ctx, activities.ErrorDeploymentParams{
+						ProjectId:    p.ProjectId,
+						DeploymentId: p.DeploymentId,
+					})
+					if err != nil {
+						return nil, err
+					}
+
+					return res, err
+				}, dbos.WithStepMaxRetries(3))
 		}
 	}()
 
