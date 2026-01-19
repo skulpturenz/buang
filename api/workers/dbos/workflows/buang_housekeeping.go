@@ -24,7 +24,7 @@ func (h BuangHousekeeping) BuangHousekeeping(ctx dbos.DBOSContext, scheduledTime
 
 	staleDeployments, err := dbos.RunAsStep(ctx,
 		func(ctx context.Context) (*activities.GetStaleDeploymentsResult, error) {
-			getStaleDeployments := activities.GetStaleDeployments{}
+			getStaleDeployments := activities.GetStaleDeployments(s)
 
 			res, err := getStaleDeployments.GetStaleDeployments(ctx, activities.GetStaleDeploymentsParams{})
 			if err != nil {

@@ -2,9 +2,14 @@ package deployments
 
 import (
 	"context"
+	"database/sql"
+	"errors"
+	"fmt"
 	"skulpture/buang/app"
 	"skulpture/buang/db/interfaces"
 	enumsdeploymentstatus "skulpture/buang/enums/deployment_status"
+
+	"github.com/jackc/pgx/v5"
 )
 
 type CreateDeploymentParams struct {
@@ -30,6 +35,9 @@ func (d CreateDeploymentParams) Exec(ctx context.Context, s *app.ApplicationServ
 		ServiceEntrypoint: d.ServiceEntrypoint,
 		EnvVars:           d.Env,
 	})
+	if errors.Is(sql.ErrNoRows, err) || errors.Is(pgx.ErrNoRows, err) {
+		return nil, fmt.Errorf("too many concurrent deployments, try again later")
+	}
 	if err != nil {
 		return nil, err
 	}

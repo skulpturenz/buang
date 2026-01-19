@@ -1,4 +1,14 @@
 -- name: CreateDeployment :one
 INSERT INTO deployments (project_id, sha, status, service_entrypoint, branch, env_vars) 
-	VALUES	($projectId, $sha, $status, $serviceEntrypoint, $branch, $envVars)
+SELECT
+	$projectId AS project_id,
+	$sha AS sha,
+	$status AS status,
+	$serviceEntrypoint AS service_entrypoint,
+	$branch AS branch,
+	$envVars AS env_vars
+WHERE NOT EXISTS (SELECT 1
+				  FROM deployments
+				  WHERE deployments.project_id = project_id AND status IN (0, 1) -- New, Deploying
+				  )
 RETURNING *;
