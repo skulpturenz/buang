@@ -49,12 +49,18 @@ tasks:
       - swag init -d ./,./handlers/projects
       - swag fmt
 
+  generate-env-docs:
+    desc: Generate docs for env configuration
+    cmds:
+      - FERRITE_MODE="usage/markdown" go run . > configuration.md
+
   generate-all:
     desc: Run all generators
     deps:
       - generate-models
       - generate-swagger
       - bundle-migrations
+      - generate-env-docs
 
   run-temporal-dev:
     desc: Run Temporal dev server

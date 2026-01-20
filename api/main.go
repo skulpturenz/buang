@@ -30,7 +30,7 @@ var (
 		WithDefault(enumsenv.Development.String()).
 		Required()
 	API_KEY = ferrite.
-		String("API_KEY", "API key").
+		String("API_KEY", "Buang API key").
 		WithSensitiveContent().
 		WithDefault("supersecureapikey").
 		Required()
@@ -43,7 +43,7 @@ var (
 				WithDefault(false).
 				Required()
 	OTEL_SERVICE_NAME = ferrite.
-				String("OTEL_SERVICE_NAME", "OpenTelemetry service name").
+				String("OTEL_SERVICE_NAME", "OpenTelemetry service name. This is also the DBOS application name which is required when using DBOS").
 				WithDefault("skulpture-buang").
 				Required()
 	OTEL_EXPORTER_OTLP_ENDPOINT = ferrite.
@@ -60,15 +60,15 @@ var (
 				WithSensitiveContent().
 				WithDefault("file:test.db?_foreign_keys=true&mode=memory").
 				Required()
-	TEMPORAL_ADDRESS = ferrite.
+	TEMPORAL_API_KEY = ferrite.
 				String("TEMPORAL_API_KEY", "Temporal API key").
 				WithSensitiveContent().
 				Optional()
 	TEMPORAL_NAMESPACE = ferrite.
 				String("TEMPORAL_NAMESPACE", "Temporal namespace").
 				Optional()
-	TEMPORAL_API_KEY = ferrite.
-				String("TEMPORAL_ADDRESS", "Temporal address").
+	TEMPORAL_ADDRESS = ferrite.
+				String("TEMPORAL_ADDRESS", "Temporal address. You can either use Temporal Cloud or self host it").
 				Optional()
 	DURABLE_EXECUTOR = ferrite.
 				Enum("DURABLE_EXECUTOR", "Durable executor").
@@ -76,13 +76,14 @@ var (
 				WithDefault(enumsdurableexecutors.Temporal.String()).
 				Required()
 	DBOS_CONDUCTOR_API_KEY = ferrite.
-				String("DBOS_CONDUCTOR_API_KEY", "DBOS conductor API key").
+				String("DBOS_CONDUCTOR_API_KEY", "DBOS conductor API key. Optional to use DBOS").
+				WithSensitiveContent().
 				Optional()
 	DBOS_CONDUCTOR_URL = ferrite.
-				String("DBOS_CONDUCTOR_URL", "DBOS conductor url").
+				String("DBOS_CONDUCTOR_URL", "DBOS conductor url. Optional to use DBOS. You can use either the DBOS console or self host it").
 				Optional()
 	DBOS_ADMIN_SERVER_PORT = ferrite.
-				Signed[int]("DBOS_ADMIN_SERVER_PORT", "DBOS admin server port").
+				Signed[int]("DBOS_ADMIN_SERVER_PORT", "DBOS admin server port. Optional to use DBOS. Specify a port to enable the admin server, DBOS default is 3001").
 				Optional()
 )
 
