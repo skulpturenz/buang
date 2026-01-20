@@ -3,6 +3,7 @@ package workers
 import (
 	"context"
 	"fmt"
+	"log/slog"
 	"skulpture/buang/app"
 	constantstaskqueues "skulpture/buang/constants/task_queues"
 	temporalworkflows "skulpture/buang/workers/temporal/workflows"
@@ -13,6 +14,12 @@ import (
 )
 
 func Housekeeping(s app.ApplicationServices, c *client.Client) (worker.Worker, error) {
+	defer func() {
+		if r := recover(); r != nil {
+			slog.ErrorContext(context.Background(), fmt.Sprintf("housekeeping panic: %v", r))
+		}
+	}()
+
 	w := worker.New(*c, constantstaskqueues.QueueCron, worker.Options{})
 
 	id := fmt.Sprintf("housekeeping_cron_%v", uuid.New())

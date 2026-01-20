@@ -1,6 +1,9 @@
 package workers
 
 import (
+	"context"
+	"fmt"
+	"log/slog"
 	"skulpture/buang/app"
 	constantstaskqueues "skulpture/buang/constants/task_queues"
 	"skulpture/buang/workers/activities"
@@ -11,6 +14,12 @@ import (
 )
 
 func DeploymentWorker(s app.ApplicationServices, c *client.Client) (worker.Worker, error) {
+	defer func() {
+		if r := recover(); r != nil {
+			slog.ErrorContext(context.Background(), fmt.Sprintf("deployment panic: %v", r))
+		}
+	}()
+
 	w := worker.New(*c, constantstaskqueues.QueueDeployment, worker.Options{})
 
 	createDynamicConfigDir := activities.CreateDynamicConfigDir(s)

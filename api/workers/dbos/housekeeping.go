@@ -11,5 +11,6 @@ func Housekeping(s app.ApplicationServices, ctx dbos.DBOSContext) {
 	bh := dbosworkflows.BuangHousekeeping(s)
 
 	dbos.RegisterWorkflow(ctx, bh.BuangHousekeeping,
-		dbos.WithSchedule("0 0 */2 * * *")) // every 2 days
+		dbos.WithSchedule("0 0 */2 * * *"), // every 2 days
+		dbos.WithMaxRetries(3))
 }
