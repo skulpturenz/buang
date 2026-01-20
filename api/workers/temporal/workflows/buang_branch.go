@@ -2,6 +2,7 @@ package temporalworkflows
 
 import (
 	"context"
+	"errors"
 	"fmt"
 	"log/slog"
 	"skulpture/buang/workers/activities"
@@ -56,6 +57,20 @@ func BuangBranch(ctx workflow.Context, projectId int64, branch string) error {
 			Get(ctx, &buangDeploymentResult)
 
 		if err != nil {
+			var errorDeployment *activities.ErrorDeployment
+			var errorDeploymentResult activities.ErrorDeploymentResult
+
+			errErrorDeployment := workflow.ExecuteActivity(ctx,
+				errorDeployment.ErrorDeployment,
+				activities.ErrorDeploymentParams{
+					ProjectId:    projectId,
+					DeploymentId: id,
+				}).
+				Get(ctx, &errorDeploymentResult)
+			if errErrorDeployment != nil {
+				return errors.Join(err, errErrorDeployment)
+			}
+
 			return err
 		}
 	}

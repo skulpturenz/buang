@@ -56,7 +56,7 @@ func (c ComposeUpParams) Exec(ctx context.Context, s *app.ApplicationServices) (
 		return nil, nil, err
 	}
 
-	envfile, err := os.CreateTemp("", fmt.Sprintf("%v-env-*", c.ProjectName))
+	envfile, err := os.CreateTemp("/var/tmp", fmt.Sprintf("%v-env-*", c.ProjectName))
 	if err != nil {
 		return nil, nil, err
 	}

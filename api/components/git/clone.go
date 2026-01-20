@@ -30,7 +30,7 @@ type CloneResult struct {
 func (c CloneParams) Exec(ctx context.Context, s *app.ApplicationServices) (*CloneResult, func(ctx context.Context), error) {
 	assert.True(!reflect.ValueOf(c.Hash).IsZero() && !reflect.ValueOf(c.Branch).IsZero(), "hash and branch are mutually exclusive")
 
-	dir, err := os.MkdirTemp("", "buang-*")
+	dir, err := os.MkdirTemp("/var/tmp", "buang-*")
 	cleanup := func(ctx context.Context) {
 		os.RemoveAll(dir)
 	}

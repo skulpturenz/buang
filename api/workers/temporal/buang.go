@@ -24,9 +24,12 @@ func BuangWorker(s app.ApplicationServices, c *client.Client) (worker.Worker, er
 
 	buangDeployment := activities.BuangDeployment(s)
 	activeDeployments := activities.ActiveDeploymentIds(s)
+	errorDeployment := activities.ErrorDeployment(s)
 
 	w.RegisterActivity(buangDeployment.BuangDeployment)
 	w.RegisterActivity(activeDeployments.GetActiveDeploymentIds)
+	w.RegisterActivity(errorDeployment.ErrorDeployment)
+
 	w.RegisterWorkflow(temporalworkflows.BuangDeployment)
 	w.RegisterWorkflow(temporalworkflows.BuangBranch)
 

@@ -2,6 +2,7 @@ package dbosworkflows
 
 import (
 	"context"
+	"errors"
 	"fmt"
 	"log/slog"
 	"skulpture/buang/app"
@@ -46,6 +47,7 @@ func (bb BuangBranch) BuangBranch(ctx dbos.DBOSContext, p BuangBranchParams) (bo
 	_, err = dbos.RunAsStep(ctx,
 		func(ctx context.Context) (*activities.BuangDeploymentResult, error) {
 			buangDeployment := activities.BuangDeployment(s)
+			errorDeployment := activities.ErrorDeployment(s)
 
 			for _, id := range activeDeploymentIds.DeploymentIds {
 				_, err := buangDeployment.BuangDeployment(ctx, activities.BuangDeploymentParams{
@@ -53,6 +55,14 @@ func (bb BuangBranch) BuangBranch(ctx dbos.DBOSContext, p BuangBranchParams) (bo
 					DeploymentId: id,
 				})
 				if err != nil {
+					_, errErrorDeployment := errorDeployment.ErrorDeployment(ctx, activities.ErrorDeploymentParams{
+						ProjectId:    p.ProjectId,
+						DeploymentId: id,
+					})
+					if errErrorDeployment != nil {
+						return nil, errors.Join(err, errErrorDeployment)
+					}
+
 					return nil, err
 				}
 			}
