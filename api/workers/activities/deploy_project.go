@@ -6,6 +6,7 @@ import (
 	"os"
 	"path/filepath"
 	"skulpture/buang/app"
+	deploymentlogs "skulpture/buang/components/deployment_logs"
 	"skulpture/buang/components/deployments"
 	"skulpture/buang/components/docker"
 	"skulpture/buang/components/projects"
@@ -58,6 +59,16 @@ func (dp *DeployProject) DeployProject(ctx context.Context, d DeployProjectParam
 		return nil, fmt.Errorf("deployment %v for project %v is invalid", d.DeploymentId, d.ProjectId)
 	}
 
+	deploymentLogsParams := deploymentlogs.DeploymentLogWriterParams{
+		ProjectID:    dply.Deployment.GetProjectId(),
+		DeploymentID: dply.Deployment.GetId(),
+	}
+
+	_, err = deploymentLogsParams.Exec(ctx, &s)
+	if err != nil {
+		return nil, err
+	}
+
 	deployingParams := deployments.UpdateDeploymentParams{
 		ID:     dply.Deployment.GetId(),
 		Status: int16(enumsdeploymentstatus.Deploying),
@@ -75,13 +86,16 @@ func (dp *DeployProject) DeployProject(ctx context.Context, d DeployProjectParam
 
 	sha := fmt.Sprintf("%.*s", 8, dply.Deployment.GetSha())
 	projectName := fmt.Sprintf("%v_%v_%v_%v", p.Project.GetId(), dply.Deployment.GetId(), dply.Deployment.GetBranch(), sha)
+	writer := deploymentlogs.CreateBufferedWriter(deploymentLogsParams)
 	upParams := docker.ComposeUpParams{
 		ProjectName: projectName,
 		ConfigPaths: []string{
 			filepath.Join(d.Dir, p.Project.GetComposePath()),
 		},
 		Environment: env,
+		Writer:      writer,
 	}
+	defer writer.Flush()
 
 	_, _, err = upParams.Exec(ctx, &s)
 	if err != nil {

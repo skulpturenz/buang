@@ -2,6 +2,7 @@ package docker
 
 import (
 	"context"
+	"errors"
 	"fmt"
 	"io"
 	"os"
@@ -30,7 +31,28 @@ type ComposeUpResult struct {
 	ServiceNames []string
 }
 
+type logConsumer struct {
+	Writer io.Writer
+}
+
+func (c logConsumer) Log(containerName, message string) {
+	c.Writer.Write(fmt.Appendf(nil, "[%v] %v", containerName, message))
+}
+
+func (c logConsumer) Err(containerName, message string) {
+	c.Writer.Write(fmt.Appendf(nil, "[%v] %v", containerName, message))
+}
+
+func (c logConsumer) Status(containerName, message string) {
+	c.Writer.Write(fmt.Appendf(nil, "[%v] %v", containerName, message))
+}
+
 func (c ComposeUpParams) Exec(ctx context.Context, s *app.ApplicationServices) (*ComposeUpResult, func(ctx context.Context), error) {
+	cliOptions := []command.CLIOption{}
+	if c.Writer != nil {
+		cliOptions = append(cliOptions, command.WithCombinedStreams(c.Writer))
+	}
+
 	cli, err := command.NewDockerCli()
 	if err != nil {
 		return nil, nil, err
@@ -40,8 +62,13 @@ func (c ComposeUpParams) Exec(ctx context.Context, s *app.ApplicationServices) (
 		return nil, nil, err
 	}
 
-	options := []compose.Option{}
+	options := []compose.Option{
+		compose.WithPrompt(compose.AlwaysOkPrompt()),
+	}
 	if c.Writer != nil {
+		// TODO: idk what this output stream is supposed to be but its not logs when the service is deploying
+		// docker cli? might make more sense
+		// but not sure how `docker-compose` streams service logs
 		options = append(options, compose.WithOutputStream(c.Writer), compose.WithErrorStream(c.Writer))
 	}
 	if c.DryRun == true {
@@ -82,6 +109,13 @@ func (c ComposeUpParams) Exec(ctx context.Context, s *app.ApplicationServices) (
 		return nil, nil, err
 	}
 
+	// this writes logs all at once right now
+	// ideally we can pass an `io.Writer` and it just writes each time there is a new log message
+	// docker pushes instead of we pull if that makes more sense
+	logConsumer := logConsumer{
+		Writer: c.Writer,
+	}
+
 	err = svc.Up(ctx, project, api.UpOptions{
 		Create: api.CreateOptions{
 			Build: &api.BuildOptions{
@@ -96,6 +130,11 @@ func (c ComposeUpParams) Exec(ctx context.Context, s *app.ApplicationServices) (
 		},
 	})
 	if err != nil {
+		logsErr := svc.Logs(ctx, project.Name, logConsumer, api.LogOptions{})
+		if logsErr != nil {
+			return nil, nil, errors.Join(logsErr, err)
+		}
+
 		return nil, nil, err
 	}
 
@@ -106,6 +145,11 @@ func (c ComposeUpParams) Exec(ctx context.Context, s *app.ApplicationServices) (
 		}
 
 		down.Exec(ctx, s)
+	}
+
+	err = svc.Logs(ctx, project.Name, logConsumer, api.LogOptions{})
+	if err != nil {
+		return nil, nil, errors.Join(err, err)
 	}
 
 	return &ComposeUpResult{
