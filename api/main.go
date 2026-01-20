@@ -75,6 +75,15 @@ var (
 				WithMembers(enumsdurableexecutors.Temporal.String(), enumsdurableexecutors.Dbos.String()).
 				WithDefault(enumsdurableexecutors.Temporal.String()).
 				Required()
+	DBOS_CONDUCTOR_API_KEY = ferrite.
+				String("DBOS_CONDUCTOR_API_KEY", "DBOS conductor API key").
+				Optional()
+	DBOS_CONDUCTOR_URL = ferrite.
+				String("DBOS_CONDUCTOR_URL", "DBOS conductor url").
+				Optional()
+	DBOS_ADMIN_SERVER_PORT = ferrite.
+				Signed[int]("DBOS_ADMIN_SERVER_PORT", "DBOS admin server port").
+				Optional()
 )
 
 func init() {

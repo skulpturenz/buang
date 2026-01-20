@@ -9,6 +9,7 @@ import (
 	"os/signal"
 	"skulpture/buang/db/interfaces"
 	enumsdurableexecutors "skulpture/buang/enums/durable_executors"
+	"strconv"
 	"sync"
 	"syscall"
 
@@ -103,10 +104,28 @@ func (a ApplicationConfig) New(ctx context.Context, chi *chi.Mux) (*Application,
 			client:   &tc,
 		}
 	} else {
-		dbosContext, err := dbos.NewDBOSContext(context.Background(), dbos.Config{
+		cfg := dbos.Config{
 			AppName:     os.Getenv("OTEL_SERVICE_NAME"),
 			DatabaseURL: os.Getenv("DB_CONNECTION_STRING"),
-		})
+		}
+		if os.Getenv("DBOS_CONDUCTOR_API_KEY") != "" {
+			cfg.ConductorAPIKey = os.Getenv("DBOS_CONDUCTOR_API_KEY")
+		}
+		if os.Getenv("DBOS_CONDUCTOR_URL") != "" {
+			cfg.ConductorURL = os.Getenv("DBOS_CONDUCTOR_URL")
+		}
+		if os.Getenv("DBOS_ADMIN_SERVER_PORT") != "" {
+			p := os.Getenv("DBOS_ADMIN_SERVER_PORT")
+			port, err := strconv.Atoi(p)
+			if err != nil {
+				return nil, err
+			}
+
+			cfg.AdminServer = true
+			cfg.AdminServerPort = port
+		}
+
+		dbosContext, err := dbos.NewDBOSContext(context.Background(), cfg)
 		if err != nil {
 			return nil, err
 		}
