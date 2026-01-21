@@ -2,6 +2,7 @@ package workflowwrappers
 
 import (
 	"context"
+	"errors"
 	"fmt"
 	"log/slog"
 	"skulpture/buang/app"
@@ -19,10 +20,17 @@ type BuangBranchParams struct {
 	Branch    string
 }
 
-func (p BuangBranchParams) Exec(ctx context.Context, s app.ApplicationServices) error {
+func (p BuangBranchParams) Exec(ctx context.Context, s app.ApplicationServices) (err error) {
 	defer func() {
 		if r := recover(); r != nil {
 			slog.ErrorContext(context.Background(), fmt.Sprintf("buang branch panic: %v", r))
+
+			switch x := r.(type) {
+			case error:
+				err = x
+			default:
+				err = errors.New("buang branch panic")
+			}
 		}
 	}()
 

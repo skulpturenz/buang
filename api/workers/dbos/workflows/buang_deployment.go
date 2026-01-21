@@ -18,16 +18,23 @@ type BuangDeploymentParams struct {
 	DeploymentId int64
 }
 
-func (bd BuangDeployment) BuangDeployment(ctx dbos.DBOSContext, p BuangDeploymentParams) (bool, error) {
+func (bd BuangDeployment) BuangDeployment(ctx dbos.DBOSContext, p BuangDeploymentParams) (res bool, err error) {
 	defer func() {
 		if r := recover(); r != nil {
 			slog.ErrorContext(context.Background(), fmt.Sprintf("buang deployment panic: %v", r))
+
+			switch x := r.(type) {
+			case error:
+				err = x
+			default:
+				err = errors.New("buang deployment panic")
+			}
 		}
 	}()
 
 	s := app.ApplicationServices(bd)
 
-	_, err := dbos.RunAsStep(ctx,
+	_, err = dbos.RunAsStep(ctx,
 		func(ctx context.Context) (*activities.BuangDeploymentResult, error) {
 			buangDeployment := activities.BuangDeployment(s)
 

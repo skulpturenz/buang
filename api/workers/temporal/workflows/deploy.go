@@ -2,6 +2,7 @@ package temporalworkflows
 
 import (
 	"context"
+	"errors"
 	"fmt"
 	"log/slog"
 	"skulpture/buang/workers/activities"
@@ -11,12 +12,22 @@ import (
 	"go.temporal.io/sdk/workflow"
 )
 
-func Deploy(ctx workflow.Context, projectId int64, deploymentId int64) error {
+func Deploy(ctx workflow.Context, projectId int64, deploymentId int64) (err error) {
 	defer func() {
 		if r := recover(); r != nil {
 			slog.ErrorContext(context.Background(), fmt.Sprintf("deploy panic: %v", r))
+
+			switch x := r.(type) {
+			case error:
+				err = x
+			default:
+				err = errors.New("deploy panic")
+			}
 		}
 	}()
+
+	// the convoluted error handling is because if this fails somewhere
+	// and the deployment is still marked as new or deploying then no other deployments for the branch can happen
 
 	ao := workflow.ActivityOptions{
 		ScheduleToCloseTimeout: time.Minute,
@@ -29,7 +40,7 @@ func Deploy(ctx workflow.Context, projectId int64, deploymentId int64) error {
 	var getDeploymentBranch *activities.GetDeploymentBranch
 	var getDeploymentBranchResult activities.GetDeploymentBranchResult
 
-	err := workflow.
+	err = workflow.
 		ExecuteActivity(ctx,
 			getDeploymentBranch.GetDeploymentBranch,
 			activities.GetDeploymentBranchParams{
@@ -52,6 +63,20 @@ func Deploy(ctx workflow.Context, projectId int64, deploymentId int64) error {
 			}).
 		Get(ctx, &getActiveDeploymentsResult)
 	if err != nil {
+		var errorDeployment *activities.ErrorDeployment
+		var errorDeploymentResult activities.ErrorDeploymentResult
+
+		errErrorDeployment := workflow.ExecuteActivity(ctx,
+			errorDeployment.ErrorDeployment,
+			activities.ErrorDeploymentParams{
+				ProjectId:    projectId,
+				DeploymentId: deploymentId,
+			}).
+			Get(ctx, &errorDeploymentResult)
+		if errErrorDeployment != nil {
+			return errors.Join(err, errErrorDeployment)
+		}
+
 		return err
 	}
 
@@ -70,6 +95,20 @@ func Deploy(ctx workflow.Context, projectId int64, deploymentId int64) error {
 			Get(ctx, &buangDeploymentResult)
 
 		if err != nil {
+			var errorDeployment *activities.ErrorDeployment
+			var errorDeploymentResult activities.ErrorDeploymentResult
+
+			errErrorDeployment := workflow.ExecuteActivity(ctx,
+				errorDeployment.ErrorDeployment,
+				activities.ErrorDeploymentParams{
+					ProjectId:    projectId,
+					DeploymentId: deploymentId,
+				}).
+				Get(ctx, &errorDeploymentResult)
+			if errErrorDeployment != nil {
+				return errors.Join(err, errErrorDeployment)
+			}
+
 			return err
 		}
 	}
@@ -84,6 +123,20 @@ func Deploy(ctx workflow.Context, projectId int64, deploymentId int64) error {
 		).
 		Get(ctx, &createDynamicConfigDirResult)
 	if err != nil {
+		var errorDeployment *activities.ErrorDeployment
+		var errorDeploymentResult activities.ErrorDeploymentResult
+
+		errErrorDeployment := workflow.ExecuteActivity(ctx,
+			errorDeployment.ErrorDeployment,
+			activities.ErrorDeploymentParams{
+				ProjectId:    projectId,
+				DeploymentId: deploymentId,
+			}).
+			Get(ctx, &errorDeploymentResult)
+		if errErrorDeployment != nil {
+			return errors.Join(err, errErrorDeployment)
+		}
+
 		return err
 	}
 
@@ -98,6 +151,20 @@ func Deploy(ctx workflow.Context, projectId int64, deploymentId int64) error {
 			}).
 		Get(ctx, &cloneDeploymentResult)
 	if err != nil {
+		var errorDeployment *activities.ErrorDeployment
+		var errorDeploymentResult activities.ErrorDeploymentResult
+
+		errErrorDeployment := workflow.ExecuteActivity(ctx,
+			errorDeployment.ErrorDeployment,
+			activities.ErrorDeploymentParams{
+				ProjectId:    projectId,
+				DeploymentId: deploymentId,
+			}).
+			Get(ctx, &errorDeploymentResult)
+		if errErrorDeployment != nil {
+			return errors.Join(err, errErrorDeployment)
+		}
+
 		return err
 	}
 
@@ -114,6 +181,20 @@ func Deploy(ctx workflow.Context, projectId int64, deploymentId int64) error {
 			}).
 		Get(ctx, &deployProjectResult)
 	if err != nil {
+		var errorDeployment *activities.ErrorDeployment
+		var errorDeploymentResult activities.ErrorDeploymentResult
+
+		errErrorDeployment := workflow.ExecuteActivity(ctx,
+			errorDeployment.ErrorDeployment,
+			activities.ErrorDeploymentParams{
+				ProjectId:    projectId,
+				DeploymentId: deploymentId,
+			}).
+			Get(ctx, &errorDeploymentResult)
+		if errErrorDeployment != nil {
+			return errors.Join(err, errErrorDeployment)
+		}
+
 		return err
 	}
 

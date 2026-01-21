@@ -2,6 +2,7 @@ package temporalworkflows
 
 import (
 	"context"
+	"errors"
 	"fmt"
 	"log/slog"
 	"skulpture/buang/app"
@@ -18,10 +19,17 @@ type CronResult struct {
 	RunTime time.Time
 }
 
-func (bh BuangHousekeeping) BuangHousekeeping(ctx workflow.Context) (*CronResult, error) {
+func (bh BuangHousekeeping) BuangHousekeeping(ctx workflow.Context) (res *CronResult, err error) {
 	defer func() {
 		if r := recover(); r != nil {
 			slog.ErrorContext(context.Background(), fmt.Sprintf("buang housekeeping panic: %v", r))
+
+			switch x := r.(type) {
+			case error:
+				err = x
+			default:
+				err = errors.New("buang housekeeping panic")
+			}
 		}
 	}()
 
@@ -40,7 +48,7 @@ func (bh BuangHousekeeping) BuangHousekeeping(ctx workflow.Context) (*CronResult
 	getStaleDeployments := activities.GetStaleDeployments(s)
 	var getStaleDeploymentsResult activities.GetStaleDeploymentsResult
 
-	err := workflow.
+	err = workflow.
 		ExecuteActivity(ctx,
 			getStaleDeployments.GetStaleDeployments).
 		Get(ctx, &getStaleDeploymentsResult)

@@ -12,10 +12,17 @@ import (
 	"go.temporal.io/sdk/workflow"
 )
 
-func BuangDeployment(ctx workflow.Context, projectId int64, deploymentId int64) error {
+func BuangDeployment(ctx workflow.Context, projectId int64, deploymentId int64) (err error) {
 	defer func() {
 		if r := recover(); r != nil {
 			slog.ErrorContext(context.Background(), fmt.Sprintf("buang deployment panic: %v", r))
+
+			switch x := r.(type) {
+			case error:
+				err = x
+			default:
+				err = errors.New("buang deployment panic")
+			}
 		}
 	}()
 
@@ -30,7 +37,7 @@ func BuangDeployment(ctx workflow.Context, projectId int64, deploymentId int64) 
 	var buangDeployment *activities.BuangDeployment
 	var buangDeploymentResult activities.BuangDeploymentResult
 
-	err := workflow.ExecuteActivity(ctx,
+	err = workflow.ExecuteActivity(ctx,
 		buangDeployment.BuangDeployment,
 		activities.BuangDeploymentParams{
 			ProjectId:    projectId,

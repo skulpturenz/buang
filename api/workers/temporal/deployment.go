@@ -28,6 +28,7 @@ func DeploymentWorker(s app.ApplicationServices, c *client.Client) (worker.Worke
 	activeDeploymentIds := activities.ActiveDeploymentIds(s)
 	buangDeployment := activities.BuangDeployment(s)
 	getDeploymentBranch := activities.GetDeploymentBranch(s)
+	errorDeployment := activities.ErrorDeployment(s)
 
 	w.RegisterActivity(createDynamicConfigDir.CreateDynamicConfigDir)
 	w.RegisterActivity(cloneDeployment.CloneDeployment)
@@ -35,6 +36,7 @@ func DeploymentWorker(s app.ApplicationServices, c *client.Client) (worker.Worke
 	w.RegisterActivity(activeDeploymentIds.GetActiveDeploymentIds)
 	w.RegisterActivity(buangDeployment.BuangDeployment)
 	w.RegisterActivity(getDeploymentBranch.GetDeploymentBranch)
+	w.RegisterActivity(errorDeployment.ErrorDeployment)
 
 	w.RegisterWorkflow(temporalworkflows.Deploy)
 

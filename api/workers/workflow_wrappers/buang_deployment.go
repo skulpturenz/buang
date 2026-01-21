@@ -2,6 +2,7 @@ package workflowwrappers
 
 import (
 	"context"
+	"errors"
 	"fmt"
 	"log/slog"
 	"skulpture/buang/app"
@@ -19,10 +20,17 @@ type BuangDeploymentParams struct {
 	DeploymentId int64
 }
 
-func (p BuangDeploymentParams) Exec(ctx context.Context, s app.ApplicationServices) error {
+func (p BuangDeploymentParams) Exec(ctx context.Context, s app.ApplicationServices) (err error) {
 	defer func() {
 		if r := recover(); r != nil {
 			slog.ErrorContext(context.Background(), fmt.Sprintf("buang deployment panic: %v", r))
+
+			switch x := r.(type) {
+			case error:
+				err = x
+			default:
+				err = errors.New("buang deployment panic")
+			}
 		}
 	}()
 

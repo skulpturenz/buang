@@ -18,10 +18,17 @@ type BuangBranchParams struct {
 	Branch    string
 }
 
-func (bb BuangBranch) BuangBranch(ctx dbos.DBOSContext, p BuangBranchParams) (bool, error) {
+func (bb BuangBranch) BuangBranch(ctx dbos.DBOSContext, p BuangBranchParams) (res bool, err error) {
 	defer func() {
 		if r := recover(); r != nil {
 			slog.ErrorContext(context.Background(), fmt.Sprintf("buang branch panic: %v", r))
+
+			switch x := r.(type) {
+			case error:
+				err = x
+			default:
+				err = errors.New("buang deployment panic")
+			}
 		}
 	}()
 

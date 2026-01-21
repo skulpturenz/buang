@@ -2,6 +2,7 @@ package dbosworkflows
 
 import (
 	"context"
+	"errors"
 	"fmt"
 	"log/slog"
 	"skulpture/buang/app"
@@ -13,10 +14,17 @@ import (
 
 type BuangHousekeeping app.ApplicationServices
 
-func (h BuangHousekeeping) BuangHousekeeping(ctx dbos.DBOSContext, scheduledTime time.Time) (bool, error) {
+func (h BuangHousekeeping) BuangHousekeeping(ctx dbos.DBOSContext, scheduledTime time.Time) (res bool, err error) {
 	defer func() {
 		if r := recover(); r != nil {
 			slog.ErrorContext(context.Background(), fmt.Sprintf("buang housekeeping panic: %v", r))
+
+			switch x := r.(type) {
+			case error:
+				err = x
+			default:
+				err = errors.New("buang housekeeping panic")
+			}
 		}
 	}()
 

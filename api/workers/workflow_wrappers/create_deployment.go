@@ -2,6 +2,7 @@ package workflowwrappers
 
 import (
 	"context"
+	"errors"
 	"fmt"
 	"log/slog"
 	"skulpture/buang/app"
@@ -20,10 +21,17 @@ type CreateDeploymentParams struct {
 	Block        bool
 }
 
-func (p CreateDeploymentParams) Exec(ctx context.Context, s app.ApplicationServices) error {
+func (p CreateDeploymentParams) Exec(ctx context.Context, s app.ApplicationServices) (err error) {
 	defer func() {
 		if r := recover(); r != nil {
 			slog.ErrorContext(context.Background(), fmt.Sprintf("create deployment panic: %v", r))
+
+			switch x := r.(type) {
+			case error:
+				err = x
+			default:
+				err = errors.New("create deployment panic")
+			}
 		}
 	}()
 

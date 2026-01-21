@@ -2,6 +2,7 @@ package dbosworkflows
 
 import (
 	"context"
+	"errors"
 	"fmt"
 	"log/slog"
 	"skulpture/buang/app"
@@ -17,37 +18,43 @@ type DeployParams struct {
 	DeploymentId int64
 }
 
-func (d Deploy) Deploy(ctx dbos.DBOSContext, p DeployParams) (bool, error) {
+func (d Deploy) Deploy(ctx dbos.DBOSContext, p DeployParams) (res bool, err error) {
 	defer func() {
 		if r := recover(); r != nil {
 			slog.ErrorContext(context.Background(), fmt.Sprintf("deploy panic: %v", r))
 
-			_, _ = dbos.RunAsStep(ctx,
-				func(ctx context.Context) (*activities.ErrorDeploymentResult, error) {
-					errorDeployment := activities.ErrorDeployment(d)
-					res, err := errorDeployment.ErrorDeployment(ctx, activities.ErrorDeploymentParams{
-						ProjectId:    p.ProjectId,
-						DeploymentId: p.DeploymentId,
-					})
-					if err != nil {
-						return nil, err
-					}
-
-					return res, err
-				}, dbos.WithStepMaxRetries(3))
+			switch x := r.(type) {
+			case error:
+				err = x
+			default:
+				err = errors.New("deploy panic")
+			}
 		}
 	}()
 
 	s := app.ApplicationServices(d)
 
+	// the convoluted error handling is because if this fails somewhere
+	// and the deployment is still marked as new or deploying then no other deployments can happen
+
 	deploymentBranch, err := dbos.RunAsStep(ctx,
 		func(ctx context.Context) (*activities.GetDeploymentBranchResult, error) {
 			getDeploymentBranch := activities.GetDeploymentBranch(s)
+			errorDeployment := activities.ErrorDeployment(s)
+
 			res, err := getDeploymentBranch.GetDeploymentBranch(ctx, activities.GetDeploymentBranchParams{
 				ProjectId: p.ProjectId,
 				ID:        p.DeploymentId,
 			})
 			if err != nil {
+				_, errErrorDeployment := errorDeployment.ErrorDeployment(ctx, activities.ErrorDeploymentParams{
+					ProjectId:    p.ProjectId,
+					DeploymentId: p.DeploymentId,
+				})
+				if errErrorDeployment != nil {
+					return nil, errors.Join(err, errErrorDeployment)
+				}
+
 				return nil, err
 			}
 
@@ -60,11 +67,21 @@ func (d Deploy) Deploy(ctx dbos.DBOSContext, p DeployParams) (bool, error) {
 	activeDeploymentIds, err := dbos.RunAsStep(ctx,
 		func(ctx context.Context) (*activities.GetActiveDeploymentIdsResult, error) {
 			getActiveDeploymentIds := activities.ActiveDeploymentIds(s)
+			errorDeployment := activities.ErrorDeployment(s)
+
 			res, err := getActiveDeploymentIds.GetActiveDeploymentIds(ctx, activities.GetActiveDeploymentIdsParams{
 				ProjectId: p.ProjectId,
 				Branch:    deploymentBranch.Branch,
 			})
 			if err != nil {
+				_, errErrorDeployment := errorDeployment.ErrorDeployment(ctx, activities.ErrorDeploymentParams{
+					ProjectId:    p.ProjectId,
+					DeploymentId: p.DeploymentId,
+				})
+				if errErrorDeployment != nil {
+					return nil, errors.Join(err, errErrorDeployment)
+				}
+
 				return nil, err
 			}
 
@@ -77,6 +94,7 @@ func (d Deploy) Deploy(ctx dbos.DBOSContext, p DeployParams) (bool, error) {
 	_, err = dbos.RunAsStep(ctx,
 		func(ctx context.Context) (*activities.BuangDeploymentResult, error) {
 			buangDeployment := activities.BuangDeployment(s)
+			errorDeployment := activities.ErrorDeployment(s)
 
 			for _, id := range activeDeploymentIds.DeploymentIds {
 				_, err := buangDeployment.BuangDeployment(ctx, activities.BuangDeploymentParams{
@@ -84,6 +102,14 @@ func (d Deploy) Deploy(ctx dbos.DBOSContext, p DeployParams) (bool, error) {
 					DeploymentId: id,
 				})
 				if err != nil {
+					_, errErrorDeployment := errorDeployment.ErrorDeployment(ctx, activities.ErrorDeploymentParams{
+						ProjectId:    p.ProjectId,
+						DeploymentId: p.DeploymentId,
+					})
+					if errErrorDeployment != nil {
+						return nil, errors.Join(err, errErrorDeployment)
+					}
+
 					return nil, err
 				}
 			}
@@ -97,9 +123,18 @@ func (d Deploy) Deploy(ctx dbos.DBOSContext, p DeployParams) (bool, error) {
 	_, err = dbos.RunAsStep(ctx,
 		func(ctx context.Context) (*activities.CreateDynamicConfigDirResult, error) {
 			createDynamicConfigDir := activities.CreateDynamicConfigDir(s)
+			errorDeployment := activities.ErrorDeployment(s)
 
 			err := createDynamicConfigDir.CreateDynamicConfigDir(ctx, activities.CreateDynamicConfigDirParams{})
 			if err != nil {
+				_, errErrorDeployment := errorDeployment.ErrorDeployment(ctx, activities.ErrorDeploymentParams{
+					ProjectId:    p.ProjectId,
+					DeploymentId: p.DeploymentId,
+				})
+				if errErrorDeployment != nil {
+					return nil, errors.Join(err, errErrorDeployment)
+				}
+
 				return nil, err
 			}
 
@@ -109,12 +144,21 @@ func (d Deploy) Deploy(ctx dbos.DBOSContext, p DeployParams) (bool, error) {
 	cloneDeployment, err := dbos.RunAsStep(ctx,
 		func(ctx context.Context) (*activities.CloneDeploymentResult, error) {
 			cloneDeployment := activities.CloneDeployment(s)
+			errorDeployment := activities.ErrorDeployment(s)
 
 			res, err := cloneDeployment.CloneDeployment(ctx, activities.CloneDeploymentParams{
 				ProjectId:    p.ProjectId,
 				DeploymentId: p.DeploymentId,
 			})
 			if err != nil {
+				_, errErrorDeployment := errorDeployment.ErrorDeployment(ctx, activities.ErrorDeploymentParams{
+					ProjectId:    p.ProjectId,
+					DeploymentId: p.DeploymentId,
+				})
+				if errErrorDeployment != nil {
+					return nil, errors.Join(err, errErrorDeployment)
+				}
+
 				return nil, err
 			}
 
@@ -124,6 +168,7 @@ func (d Deploy) Deploy(ctx dbos.DBOSContext, p DeployParams) (bool, error) {
 	_, err = dbos.RunAsStep(ctx,
 		func(ctx context.Context) (*activities.DeployProjectResult, error) {
 			deployProject := activities.DeployProject(s)
+			errorDeployment := activities.ErrorDeployment(s)
 
 			res, err := deployProject.DeployProject(ctx, activities.DeployProjectParams{
 				ProjectId:    p.ProjectId,
@@ -131,6 +176,14 @@ func (d Deploy) Deploy(ctx dbos.DBOSContext, p DeployParams) (bool, error) {
 				Dir:          cloneDeployment.Dir,
 			})
 			if err != nil {
+				_, errErrorDeployment := errorDeployment.ErrorDeployment(ctx, activities.ErrorDeploymentParams{
+					ProjectId:    p.ProjectId,
+					DeploymentId: p.DeploymentId,
+				})
+				if errErrorDeployment != nil {
+					return nil, errors.Join(err, errErrorDeployment)
+				}
+
 				return nil, err
 			}
 
