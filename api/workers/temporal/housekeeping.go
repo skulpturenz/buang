@@ -6,6 +6,7 @@ import (
 	"log/slog"
 	"skulpture/buang/app"
 	constantstaskqueues "skulpture/buang/constants/task_queues"
+	"skulpture/buang/workers/activities"
 	temporalworkflows "skulpture/buang/workers/temporal/workflows"
 
 	"github.com/google/uuid"
@@ -22,6 +23,16 @@ func Housekeeping(s app.ApplicationServices, c *client.Client) (worker.Worker, e
 
 	w := worker.New(*c, constantstaskqueues.QueueCron, worker.Options{})
 
+	getStaleDeployments := activities.GetStaleDeployments(s)
+	buangDeployment := activities.BuangDeployment(s)
+	prune := activities.Prune(s)
+	w.RegisterActivity(getStaleDeployments.GetStaleDeployments)
+	w.RegisterActivity(buangDeployment.BuangDeployment)
+	w.RegisterActivity(prune.Prune)
+
+	buangHousekeeping := temporalworkflows.BuangHousekeeping(s)
+	w.RegisterWorkflow(buangHousekeeping.BuangHousekeeping)
+
 	id := fmt.Sprintf("housekeeping_cron_%v", uuid.New())
 	options := client.StartWorkflowOptions{
 		ID:           id,
@@ -30,8 +41,6 @@ func Housekeeping(s app.ApplicationServices, c *client.Client) (worker.Worker, e
 	}
 
 	cl := *c
-
-	buangHousekeeping := temporalworkflows.BuangHousekeeping(s)
 	_, err := cl.ExecuteWorkflow(context.Background(), options, buangHousekeeping.BuangHousekeeping)
 	if err != nil {
 		return nil, err

@@ -130,7 +130,7 @@ func (c ComposeUpParams) Exec(ctx context.Context, s *app.ApplicationServices) (
 		},
 	})
 	if err != nil {
-		logsErr := svc.Logs(ctx, project.Name, logConsumer, api.LogOptions{})
+		logsErr := svc.Logs(ctx, project.Name, logConsumer, api.LogOptions{Timestamps: true})
 		if logsErr != nil {
 			return nil, nil, errors.Join(logsErr, err)
 		}
@@ -147,7 +147,7 @@ func (c ComposeUpParams) Exec(ctx context.Context, s *app.ApplicationServices) (
 		down.Exec(ctx, s)
 	}
 
-	err = svc.Logs(ctx, project.Name, logConsumer, api.LogOptions{})
+	err = svc.Logs(ctx, project.Name, logConsumer, api.LogOptions{Timestamps: true})
 	if err != nil {
 		return nil, nil, errors.Join(err, err)
 	}
