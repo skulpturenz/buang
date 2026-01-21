@@ -8,7 +8,8 @@ import (
 )
 
 type BuangDeploymentParams struct {
-	ID int64
+	ID        int64
+	ProjectID int64
 }
 
 type BuangDeploymentResult struct{}
@@ -17,8 +18,9 @@ func (d BuangDeploymentParams) Exec(ctx context.Context, s *app.ApplicationServi
 	q := *s.Queries
 
 	_, err := q.UpdateDeploymentStatus(ctx, interfaces.UpdateDeploymentStatusParams{
-		ID:     d.ID,
-		Status: int16(enumsdeploymentstatus.Buang),
+		ID:        d.ID,
+		Status:    int16(enumsdeploymentstatus.Buang),
+		ProjectID: d.ProjectID,
 	})
 	if err != nil {
 		return nil, err

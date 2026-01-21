@@ -1,4 +1,4 @@
 -- name: SelectProjectByRepository :one
 SELECT * FROM projects
-WHERE repository = $1 AND
+WHERE repository = @repository::text AND
 	  deleted = FALSE;

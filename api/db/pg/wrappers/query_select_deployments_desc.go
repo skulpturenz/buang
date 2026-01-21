@@ -11,7 +11,7 @@ func (q Queries) SelectDeploymentsDesc(ctx context.Context, args interfaces.Sele
 	res, err := m.SelectDeploymentsDesc(ctx, pgmodels.SelectDeploymentsDescParams{
 		ProjectID: args.ProjectID,
 		Limit:     args.Limit,
-		Column3:   args.Page,
+		Page:      args.Page,
 	})
 
 	ret := []interfaces.Deployment{}

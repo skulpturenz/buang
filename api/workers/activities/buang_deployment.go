@@ -70,6 +70,7 @@ func (bd *BuangDeployment) BuangDeployment(ctx context.Context, b BuangDeploymen
 			Status:     int16(enumsdeploymentstatus.Error),
 			DeployedAt: dply.Deployment.GetDeployedAt(),
 			ClonePath:  dply.Deployment.GetClonePath(),
+			ProjectID:  dply.Deployment.GetProjectId(),
 		}
 
 		_, err := p.Exec(ctx, &s)
@@ -84,7 +85,8 @@ func (bd *BuangDeployment) BuangDeployment(ctx context.Context, b BuangDeploymen
 	}
 
 	buangParams := deployments.BuangDeploymentParams{
-		ID: dply.Deployment.GetId(),
+		ID:        dply.Deployment.GetId(),
+		ProjectID: dply.Deployment.GetProjectId(),
 	}
 
 	_, err = buangParams.Exec(ctx, &s)

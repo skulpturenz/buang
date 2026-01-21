@@ -140,6 +140,9 @@ func (d Deploy) Deploy(ctx dbos.DBOSContext, p DeployParams) (res bool, err erro
 
 			return &activities.CreateDynamicConfigDirResult{}, nil
 		}, dbos.WithStepMaxRetries(3))
+	if err != nil {
+		return false, err
+	}
 
 	cloneDeployment, err := dbos.RunAsStep(ctx,
 		func(ctx context.Context) (*activities.CloneDeploymentResult, error) {
@@ -164,6 +167,9 @@ func (d Deploy) Deploy(ctx dbos.DBOSContext, p DeployParams) (res bool, err erro
 
 			return res, nil
 		}, dbos.WithStepMaxRetries(3))
+	if err != nil {
+		return false, err
+	}
 
 	_, err = dbos.RunAsStep(ctx,
 		func(ctx context.Context) (*activities.DeployProjectResult, error) {
@@ -189,6 +195,9 @@ func (d Deploy) Deploy(ctx dbos.DBOSContext, p DeployParams) (res bool, err erro
 
 			return res, nil
 		}, dbos.WithStepMaxRetries(3))
+	if err != nil {
+		return false, err
+	}
 
 	return true, nil
 }

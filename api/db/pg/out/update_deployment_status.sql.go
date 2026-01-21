@@ -11,18 +11,19 @@ import (
 
 const updateDeploymentStatus = `-- name: UpdateDeploymentStatus :one
 UPDATE deployments
-	SET status = $2
-WHERE id = $1
+	SET status = $1::smallint
+WHERE id = $2::bigint AND project_id = $3::bigint
 RETURNING id, project_id, url, status, sha, deployed_at, clone_path, service_entrypoint, branch, env_vars
 `
 
 type UpdateDeploymentStatusParams struct {
-	ID     int64 `json:"id"`
-	Status int16 `json:"status"`
+	Status    int16 `json:"status"`
+	ID        int64 `json:"id"`
+	ProjectID int64 `json:"project_id"`
 }
 
 func (q *Queries) UpdateDeploymentStatus(ctx context.Context, arg UpdateDeploymentStatusParams) (Deployment, error) {
-	row := q.db.QueryRow(ctx, updateDeploymentStatus, arg.ID, arg.Status)
+	row := q.db.QueryRow(ctx, updateDeploymentStatus, arg.Status, arg.ID, arg.ProjectID)
 	var i Deployment
 	err := row.Scan(
 		&i.ID,

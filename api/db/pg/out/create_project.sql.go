@@ -11,7 +11,7 @@ import (
 
 const createProject = `-- name: CreateProject :one
 INSERT INTO projects(repository, requires_authn, username, password, compose_path) 
-	VALUES ($1, $2, $3, $4, $5)
+	VALUES ($1::text, $2::bool, $3::text, $4::text, $5::text)
 RETURNING id, repository, requires_authn, username, password, created_at, updated_at, compose_path, deleted
 `
 

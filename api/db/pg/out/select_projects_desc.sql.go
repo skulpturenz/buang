@@ -15,22 +15,22 @@ WITH start AS (SELECT id
 		WHERE deleted = FALSE
 		ORDER BY id DESC
 		-- limit * (page - 1)
-		LIMIT ($1 * ($2 - 1))),
+		LIMIT ($2::int * ($1::int - 1))),
 	min AS (SELECT MIN(id) AS min FROM START)
 
 SELECT id, repository, requires_authn, username, password, created_at, updated_at, compose_path, deleted FROM projects
-WHERE (deleted = FALSE) AND (($2 = 1) OR (id < (SELECT min FROM min)))
+WHERE (deleted = FALSE) AND (($1::int = 1) OR (id < (SELECT min FROM min)))
 ORDER BY id DESC
-LIMIT $1
+LIMIT $2::int
 `
 
 type SelectProjectsDescParams struct {
-	Limit   int32       `json:"limit"`
-	Column2 interface{} `json:"column_2"`
+	Page  int32 `json:"page"`
+	Limit int32 `json:"limit"`
 }
 
 func (q *Queries) SelectProjectsDesc(ctx context.Context, arg SelectProjectsDescParams) ([]Project, error) {
-	rows, err := q.db.Query(ctx, selectProjectsDesc, arg.Limit, arg.Column2)
+	rows, err := q.db.Query(ctx, selectProjectsDesc, arg.Page, arg.Limit)
 	if err != nil {
 		return nil, err
 	}

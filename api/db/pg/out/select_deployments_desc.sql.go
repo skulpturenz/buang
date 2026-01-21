@@ -12,27 +12,27 @@ import (
 const selectDeploymentsDesc = `-- name: SelectDeploymentsDesc :many
 WITH start AS (SELECT id
 		FROM deployments
-		WHERE project_id = $1
+		WHERE project_id = $1::bigint
 		ORDER BY id DESC
 		-- limit * (page - 1)
-		LIMIT ($2 * ($3 - 1))),
+		LIMIT ($3::int * ($2::int - 1))),
 	min AS (SELECT MIN(id) AS min FROM START)
 
 
 SELECT id, project_id, url, status, sha, deployed_at, clone_path, service_entrypoint, branch, env_vars FROM deployments
-WHERE (deployments.project_id = $1) AND (($3 = 1) OR (id < (SELECT min FROM min)))
+WHERE (deployments.project_id = $1::bigint) AND (($2::int = 1) OR (id < (SELECT min FROM min)))
 ORDER BY id DESC
-LIMIT $2
+LIMIT $3::int
 `
 
 type SelectDeploymentsDescParams struct {
-	ProjectID int64       `json:"project_id"`
-	Limit     int32       `json:"limit"`
-	Column3   interface{} `json:"column_3"`
+	ProjectID int64 `json:"project_id"`
+	Page      int32 `json:"page"`
+	Limit     int32 `json:"limit"`
 }
 
 func (q *Queries) SelectDeploymentsDesc(ctx context.Context, arg SelectDeploymentsDescParams) ([]Deployment, error) {
-	rows, err := q.db.Query(ctx, selectDeploymentsDesc, arg.ProjectID, arg.Limit, arg.Column3)
+	rows, err := q.db.Query(ctx, selectDeploymentsDesc, arg.ProjectID, arg.Page, arg.Limit)
 	if err != nil {
 		return nil, err
 	}

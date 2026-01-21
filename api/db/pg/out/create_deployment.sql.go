@@ -12,15 +12,15 @@ import (
 const createDeployment = `-- name: CreateDeployment :one
 INSERT INTO deployments (project_id, sha, status, service_entrypoint, branch, env_vars) 
 SELECT
-	$1 AS project_id,
-	$2 AS sha,
-	$3 AS status,
-	$4 AS service_entrypoint,
-	$5 AS branch,
-	$6 AS env_vars
+	$1::bigint AS project_id,
+	$2::text AS sha,
+	$3::smallint AS status,
+	$4::text AS service_entrypoint,
+	$5::text AS branch,
+	$6::jsonb AS env_vars
 WHERE NOT EXISTS (SELECT 1
 				  FROM deployments
-				  WHERE project_id = $1 AND branch = $5 AND status IN (0, 1) -- New, Deploying
+				  WHERE project_id = $1::bigint AND branch = $5::text AND status IN (0, 1) -- New, Deploying
 				)
 RETURNING id, project_id, url, status, sha, deployed_at, clone_path, service_entrypoint, branch, env_vars
 `

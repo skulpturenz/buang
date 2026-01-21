@@ -1,5 +1,5 @@
 -- name: UpdateDeploymentStatus :one
 UPDATE deployments
 	SET status = $status
-WHERE id = $id
+WHERE id = $id AND project_id = $projectId
 RETURNING *;

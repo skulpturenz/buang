@@ -1,6 +1,7 @@
 package interfaces
 
 type UpdateDeploymentStatusParams struct {
-	ID     int64
-	Status int16
+	Status    int16
+	ID        int64
+	ProjectID int64
 }

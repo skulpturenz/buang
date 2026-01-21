@@ -1,9 +1,9 @@
 -- name: UpdateDeployment :one
 UPDATE deployments
 	SET 
-		url = $2,
-		status = $3,
-		deployed_at = $4,
-		clone_path = $5
-WHERE id = $1
+		url = sqlc.narg('url'),
+		status = @status::smallint,
+		deployed_at = sqlc.narg('deployed_at'),
+		clone_path = sqlc.narg('clone_path')
+WHERE id = @id::bigint AND project_id = (SELECT id FROM projects WHERE projects.id = @project_id::bigint)
 RETURNING *;

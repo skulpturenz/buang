@@ -35,6 +35,7 @@ func (bd *ErrorDeployment) ErrorDeployment(ctx context.Context, b ErrorDeploymen
 		Status:     int16(enumsdeploymentstatus.Error),
 		DeployedAt: dply.Deployment.GetDeployedAt(),
 		ClonePath:  dply.Deployment.GetClonePath(),
+		ProjectID:  dply.Deployment.GetProjectId(),
 	}
 
 	_, err = updateParams.Exec(ctx, &s)

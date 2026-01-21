@@ -5,5 +5,5 @@ UPDATE deployments
 		status = $status,
 		deployed_at = $deployedAt,
 		clone_path = $clonePath
-WHERE id = $id
+WHERE id = $id AND project_id = $projectId
 RETURNING *;

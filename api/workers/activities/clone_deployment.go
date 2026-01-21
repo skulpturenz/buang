@@ -66,6 +66,7 @@ func (cd *CloneDeployment) CloneDeployment(ctx context.Context, d CloneDeploymen
 		ID:        dply.Deployment.GetId(),
 		Status:    int16(enumsdeploymentstatus.Deploying),
 		ClonePath: &c.Dir,
+		ProjectID: dply.Deployment.GetProjectId(),
 	}
 
 	_, err = deployingParams.Exec(ctx, &s)

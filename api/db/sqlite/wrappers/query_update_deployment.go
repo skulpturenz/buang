@@ -14,6 +14,7 @@ func (q Queries) UpdateDeployment(ctx context.Context, arg interfaces.UpdateDepl
 		Status:     arg.Status,
 		DeployedAt: arg.DeployedAt,
 		ClonePath:  arg.ClonePath,
+		ProjectId:  arg.ProjectID,
 	})
 
 	return Deployment(ret), err

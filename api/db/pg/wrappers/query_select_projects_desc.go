@@ -9,8 +9,8 @@ import (
 func (q Queries) SelectProjectsDesc(ctx context.Context, args interfaces.SelectProjectsDescParams) ([]interfaces.Project, error) {
 	m := pgmodels.Queries(q)
 	res, err := m.SelectProjectsDesc(ctx, pgmodels.SelectProjectsDescParams{
-		Limit:   args.Limit,
-		Column2: args.Page,
+		Limit: args.Limit,
+		Page:  args.Page,
 	})
 
 	ret := []interfaces.Project{}

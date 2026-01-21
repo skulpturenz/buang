@@ -11,7 +11,7 @@ import (
 
 const selectProject = `-- name: SelectProject :one
 SELECT id, repository, requires_authn, username, password, created_at, updated_at, compose_path, deleted FROM projects
-WHERE id = $1 AND deleted = FALSE
+WHERE id = $1::bigint AND deleted = FALSE
 `
 
 func (q *Queries) SelectProject(ctx context.Context, id int64) (Project, error) {

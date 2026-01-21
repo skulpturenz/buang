@@ -17,7 +17,7 @@ UPDATE deployments
 		status = ?2,
 		deployed_at = ?3,
 		clone_path = ?4
-WHERE id = ?5
+WHERE id = ?5 AND project_id = ?6
 RETURNING id, project_id, url, status, sha, deployed_at, clone_path, service_entrypoint, branch, env_vars
 `
 
@@ -27,6 +27,7 @@ type UpdateDeploymentParams struct {
 	DeployedAt *time.Time `json:"deployedAt"`
 	ClonePath  *string    `json:"clonePath"`
 	ID         int64      `json:"id"`
+	ProjectId  int64      `json:"projectId"`
 }
 
 func (q *Queries) UpdateDeployment(ctx context.Context, arg UpdateDeploymentParams) (Deployment, error) {
@@ -36,6 +37,7 @@ func (q *Queries) UpdateDeployment(ctx context.Context, arg UpdateDeploymentPara
 		arg.DeployedAt,
 		arg.ClonePath,
 		arg.ID,
+		arg.ProjectId,
 	)
 	var i Deployment
 	err := row.Scan(

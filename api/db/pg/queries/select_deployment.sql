@@ -1,3 +1,3 @@
 -- name: SelectDeployment :one
 SELECT * FROM deployments
-WHERE id = $1 AND project_id = $2;
+WHERE deployments.id = @id::bigint AND project_id = @project_id::bigint;

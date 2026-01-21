@@ -12,17 +12,18 @@ import (
 const updateDeploymentStatus = `-- name: UpdateDeploymentStatus :one
 UPDATE deployments
 	SET status = ?1
-WHERE id = ?2
+WHERE id = ?2 AND project_id = ?3
 RETURNING id, project_id, url, status, sha, deployed_at, clone_path, service_entrypoint, branch, env_vars
 `
 
 type UpdateDeploymentStatusParams struct {
-	Status int16 `json:"status"`
-	ID     int64 `json:"id"`
+	Status    int16 `json:"status"`
+	ID        int64 `json:"id"`
+	ProjectId int64 `json:"projectId"`
 }
 
 func (q *Queries) UpdateDeploymentStatus(ctx context.Context, arg UpdateDeploymentStatusParams) (Deployment, error) {
-	row := q.db.QueryRowContext(ctx, updateDeploymentStatus, arg.Status, arg.ID)
+	row := q.db.QueryRowContext(ctx, updateDeploymentStatus, arg.Status, arg.ID, arg.ProjectId)
 	var i Deployment
 	err := row.Scan(
 		&i.ID,

@@ -70,8 +70,9 @@ func (dp *DeployProject) DeployProject(ctx context.Context, d DeployProjectParam
 	}
 
 	deployingParams := deployments.UpdateDeploymentParams{
-		ID:     dply.Deployment.GetId(),
-		Status: int16(enumsdeploymentstatus.Deploying),
+		ID:        dply.Deployment.GetId(),
+		Status:    int16(enumsdeploymentstatus.Deploying),
+		ProjectID: p.Project.GetId(),
 	}
 
 	_, err = deployingParams.Exec(ctx, &s)
@@ -153,6 +154,7 @@ func (dp *DeployProject) DeployProject(ctx context.Context, d DeployProjectParam
 		DeployedAt: &deployedAt,
 		Status:     int16(enumsdeploymentstatus.Deployed),
 		ClonePath:  dply.Deployment.GetClonePath(),
+		ProjectID:  p.Project.GetId(),
 	}
 
 	_, err = deployedParams.Exec(ctx, &s)
