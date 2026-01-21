@@ -2,8 +2,9 @@ package git
 
 import (
 	"context"
+	"fmt"
+	"io"
 	"os"
-	"reflect"
 	"skulpture/buang/app"
 
 	"github.com/go-git/go-git/v6"
@@ -15,10 +16,11 @@ import (
 type CloneParams struct {
 	URL               string
 	RecurseSubmodules int
-	Branch            string `validate:"required_without=Sha,excluded_with=Sha"`
-	Hash              string `validate:"required_without=Branch,excluded_with=Branch"`
+	Branch            string
+	Hash              string
 	Username          *string
 	Password          *string
+	Writer            io.Writer
 }
 
 type CloneResult struct {
@@ -27,9 +29,7 @@ type CloneResult struct {
 	Dir  string
 }
 
-func (c CloneParams) Exec(ctx context.Context, s *app.ApplicationServices) (*CloneResult, func(ctx context.Context), error) {
-	assert.True(!reflect.ValueOf(c.Hash).IsZero() && !reflect.ValueOf(c.Branch).IsZero(), "hash and branch are mutually exclusive")
-
+func (c *CloneParams) Exec(ctx context.Context, s *app.ApplicationServices) (*CloneResult, func(ctx context.Context), error) {
 	dir, err := os.MkdirTemp("/var/tmp", "buang-*")
 	cleanup := func(ctx context.Context) {
 		os.RemoveAll(dir)
@@ -42,9 +42,12 @@ func (c CloneParams) Exec(ctx context.Context, s *app.ApplicationServices) (*Clo
 
 	opts := git.CloneOptions{
 		URL:               c.URL,
-		NoCheckout:        true,
+		NoCheckout:        false,
 		InsecureSkipTLS:   true,
+		ReferenceName:     plumbing.NewHashReference(plumbing.ReferenceName(c.Branch), plumbing.NewHash(c.Hash)).Name(),
 		RecurseSubmodules: git.SubmoduleRecursivity(c.RecurseSubmodules),
+		Progress:          c.Writer,
+		SingleBranch:      true,
 	}
 	if c.Username != nil && c.Password != nil {
 		opts.Auth = &http.BasicAuth{
@@ -64,9 +67,18 @@ func (c CloneParams) Exec(ctx context.Context, s *app.ApplicationServices) (*Clo
 	}
 
 	err = w.Checkout(&git.CheckoutOptions{
-		Branch: plumbing.ReferenceName(c.Branch),
-		Hash:   plumbing.NewHash(c.Hash),
+		Hash: plumbing.NewHash(c.Hash),
 	})
+	if err != nil {
+		return nil, cleanup, err
+	}
+
+	head, err := r.Head()
+	if err != nil {
+		return nil, cleanup, err
+	}
+
+	_, err = fmt.Fprintf(c.Writer, "Checked out commit %v, branch %v", head.Hash(), c.Branch)
 	if err != nil {
 		return nil, cleanup, err
 	}
