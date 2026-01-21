@@ -11,7 +11,7 @@ import (
 
 const selectDeployment = `-- name: SelectDeployment :one
 SELECT id, project_id, url, status, sha, deployed_at, clone_path, service_entrypoint, branch, env_vars FROM deployments
-WHERE id = ?1 AND project_id = ?2
+WHERE deployments.id = ?1 AND project_id = (SELECT id FROM projects WHERE projects.id = ?2 AND projects.deleted = FALSE)
 `
 
 type SelectDeploymentParams struct {

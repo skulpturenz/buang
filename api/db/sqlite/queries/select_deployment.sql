@@ -1,3 +1,3 @@
 -- name: SelectDeployment :one
 SELECT * FROM deployments
-WHERE id = $id AND project_id = $projectId;
+WHERE deployments.id = $id AND project_id = (SELECT id FROM projects WHERE projects.id = $projectId AND projects.deleted = FALSE);

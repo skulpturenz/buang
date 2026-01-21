@@ -17,7 +17,7 @@ UPDATE deployments
 		status = ?2,
 		deployed_at = ?3,
 		clone_path = ?4
-WHERE id = ?5 AND project_id = ?6
+WHERE deployments.id = ?5 AND project_id = (SELECT id FROM projects WHERE projects.id = ?6 AND projects.deleted = FALSE)
 RETURNING id, project_id, url, status, sha, deployed_at, clone_path, service_entrypoint, branch, env_vars
 `
 

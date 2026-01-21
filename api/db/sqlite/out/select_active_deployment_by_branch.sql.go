@@ -11,7 +11,7 @@ import (
 
 const selectActiveDeploymentsByBranch = `-- name: SelectActiveDeploymentsByBranch :many
 SELECT id, project_id, url, status, sha, deployed_at, clone_path, service_entrypoint, branch, env_vars FROM deployments
-WHERE project_id = ?1 AND
+WHERE project_id = (SELECT id FROM projects WHERE projects.id = ?1 AND projects.deleted = FALSE) AND
 	  branch = ?2 AND
 	  clone_path IS NOT NULL AND
 	  status IN (0, 1, 2)

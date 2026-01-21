@@ -12,7 +12,7 @@ import (
 const selectDeploymentsDesc = `-- name: SelectDeploymentsDesc :many
 WITH start AS (SELECT id
 		FROM deployments
-		WHERE project_id = ?1
+		WHERE project_id = (SELECT id FROM projects WHERE projects.id = ?1 AND projects.deleted = FALSE)
 		ORDER BY id DESC
 		-- limit * (page - 1)
 		LIMIT (?3 * (?2 - 1))),
@@ -20,7 +20,7 @@ WITH start AS (SELECT id
 
 
 SELECT id, project_id, url, status, sha, deployed_at, clone_path, service_entrypoint, branch, env_vars FROM deployments
-WHERE (deployments.project_id = ?1) AND ((?2 = 1) OR (id < (SELECT min FROM min)))
+WHERE (deployments.project_id = (SELECT id FROM projects WHERE projects.id = ?1 AND projects.deleted = FALSE)) AND ((?2 = 1) OR (id < (SELECT min FROM min)))
 ORDER BY id DESC
 LIMIT ?3
 `

@@ -12,7 +12,7 @@ import (
 const updateDeploymentStatus = `-- name: UpdateDeploymentStatus :one
 UPDATE deployments
 	SET status = $1::smallint
-WHERE id = $2::bigint AND project_id = $3::bigint
+WHERE id = $2::bigint AND project_id = (SELECT id FROM projects WHERE id = $3::bigint AND deleted = FALSE)
 RETURNING id, project_id, url, status, sha, deployed_at, clone_path, service_entrypoint, branch, env_vars
 `
 

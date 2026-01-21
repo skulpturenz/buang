@@ -16,4 +16,6 @@ type Queries interface {
 	SelectProjectByRepository(ctx context.Context, repository string) (Project, error)
 	UpsertDeploymentLog(ctx context.Context, arg UpsertDeploymentLogParams) (DeploymentLog, error)
 	SelectDeploymentLog(ctx context.Context, arg SelectDeploymentLogParams) (DeploymentLog, error)
+	DeleteProject(ctx context.Context, projectID int64) (Project, error)
+	UpdateProject(ctx context.Context, arg UpdateProjectParams) (Project, error)
 }

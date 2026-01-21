@@ -17,7 +17,7 @@ UPDATE deployments
 		status = $2::smallint,
 		deployed_at = $3,
 		clone_path = $4
-WHERE id = $5::bigint AND project_id = (SELECT id FROM projects WHERE projects.id = $6::bigint)
+WHERE id = $5::bigint AND project_id = (SELECT id FROM projects WHERE id = $6::bigint AND deleted = FALSE)
 RETURNING id, project_id, url, status, sha, deployed_at, clone_path, service_entrypoint, branch, env_vars
 `
 

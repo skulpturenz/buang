@@ -5,5 +5,5 @@ UPDATE deployments
 		status = $status,
 		deployed_at = $deployedAt,
 		clone_path = $clonePath
-WHERE id = $id AND project_id = $projectId
+WHERE deployments.id = $id AND project_id = (SELECT id FROM projects WHERE projects.id = $projectId AND projects.deleted = FALSE)
 RETURNING *;

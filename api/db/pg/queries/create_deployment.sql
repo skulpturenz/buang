@@ -9,6 +9,6 @@ SELECT
 	@env_vars::jsonb AS env_vars
 WHERE NOT EXISTS (SELECT 1
 				  FROM deployments
-				  WHERE project_id = @project_id::bigint AND branch = @branch::text AND status IN (0, 1) -- New, Deploying
+				  WHERE project_id = (SELECT id FROM projects WHERE id = @project_id::bigint AND deleted = FALSE) AND branch = @branch::text AND status IN (0, 1) -- New, Deploying
 				)
 RETURNING *;

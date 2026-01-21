@@ -20,7 +20,7 @@ SELECT
 	$6::jsonb AS env_vars
 WHERE NOT EXISTS (SELECT 1
 				  FROM deployments
-				  WHERE project_id = $1::bigint AND branch = $5::text AND status IN (0, 1) -- New, Deploying
+				  WHERE project_id = (SELECT id FROM projects WHERE id = $1::bigint AND deleted = FALSE) AND branch = $5::text AND status IN (0, 1) -- New, Deploying
 				)
 RETURNING id, project_id, url, status, sha, deployed_at, clone_path, service_entrypoint, branch, env_vars
 `

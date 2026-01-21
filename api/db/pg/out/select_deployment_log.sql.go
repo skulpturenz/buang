@@ -11,7 +11,7 @@ import (
 
 const selectDeploymentLog = `-- name: SelectDeploymentLog :one
 SELECT id, deployment_id, log FROM deployment_logs
-WHERE deployment_id = (SELECT id FROM deployments WHERE id = $1::bigint AND project_id = $2::bigint)
+WHERE deployment_id = (SELECT id FROM deployments WHERE id = $1::bigint AND project_id = (SELECT id FROM projects WHERE id = $2::bigint AND deleted = FALSE))
 `
 
 type SelectDeploymentLogParams struct {
