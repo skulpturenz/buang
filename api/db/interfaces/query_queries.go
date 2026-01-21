@@ -15,4 +15,5 @@ type Queries interface {
 	SelectStaleDeployments(ctx context.Context) ([]Deployment, error)
 	SelectProjectByRepository(ctx context.Context, repository string) (Project, error)
 	UpsertDeploymentLog(ctx context.Context, arg UpsertDeploymentLogParams) (DeploymentLog, error)
+	SelectDeploymentLog(ctx context.Context, arg SelectDeploymentLogParams) (DeploymentLog, error)
 }

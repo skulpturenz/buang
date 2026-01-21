@@ -23,5 +23,7 @@ func Router(s app.ApplicationServices, r chi.Router) {
 		r.Get("/{projectId}/deployments", ListAllDeployments(s))
 
 		r.Delete("/{projectId}/branch", BuangBranch(s))
+
+		r.Get("/{projectId}/deployment/{deploymentId}/logs", GetDeploymentLogs(s))
 	})
 }
