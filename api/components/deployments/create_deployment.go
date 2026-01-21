@@ -36,7 +36,7 @@ func (d CreateDeploymentParams) Exec(ctx context.Context, s *app.ApplicationServ
 		EnvVars:           d.Env,
 	})
 	if errors.Is(sql.ErrNoRows, err) || errors.Is(pgx.ErrNoRows, err) {
-		return nil, fmt.Errorf("too many concurrent deployments, try again later")
+		return nil, fmt.Errorf("deployment for this branch in progress, try again later")
 	}
 	if err != nil {
 		return nil, err

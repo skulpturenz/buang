@@ -18,6 +18,8 @@ definitions:
         type: string
       sha:
         type: string
+      waitForDeployment:
+        type: boolean
     required:
     - branch
     - serviceEntrypoint
@@ -199,6 +201,10 @@ paths:
         required: true
         schema:
           $ref: '#/definitions/projects.CreateDeploymentRequest'
+      - description: Wait for deployment completion
+        in: query
+        name: waitForDeployment
+        type: boolean
       responses:
         "200":
           description: OK

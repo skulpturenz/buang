@@ -172,6 +172,12 @@ const docTemplate = `{
                         "schema": {
                             "$ref": "#/definitions/projects.CreateDeploymentRequest"
                         }
+                    },
+                    {
+                        "type": "boolean",
+                        "description": "Wait for deployment completion",
+                        "name": "waitForDeployment",
+                        "in": "query"
                     }
                 ],
                 "responses": {
@@ -418,6 +424,9 @@ const docTemplate = `{
                 },
                 "sha": {
                     "type": "string"
+                },
+                "waitForDeployment": {
+                    "type": "boolean"
                 }
             }
         },

@@ -16,10 +16,11 @@ import (
 )
 
 type CreateDeploymentRequest struct {
-	Branch            string         `json:"branch" validate:"required"`
-	Sha               string         `json:"sha" validate:"required"`
-	ServiceEntrypoint string         `json:"serviceEntrypoint" validate:"required,hostname_port"`
-	Env               map[string]any `json:"env"`
+	Branch            string         `json:"branch" validate:"required" schema:"-"`
+	Sha               string         `json:"sha" validate:"required" schema:"-"`
+	ServiceEntrypoint string         `json:"serviceEntrypoint" validate:"required,hostname_port" schema:"-"`
+	Env               map[string]any `json:"env" schema:"-"`
+	WaitForDeployment bool           `schema:"waitForDeployment,default:false"`
 }
 
 // @summary	Spin up a preview deployment
@@ -27,6 +28,7 @@ type CreateDeploymentRequest struct {
 // @security	ApiKeyAuth
 // @param		projectId			path		int						true	"Project ID"
 // @param		deploymentDetails	body		CreateDeploymentRequest	true	"Deployment details"
+// @param		waitForDeployment	query		bool					false	"Wait for deployment completion"
 // @success	200					{object}	int
 // @failure	401
 // @failure	500	{object}	string
@@ -38,7 +40,7 @@ func CreateDeployment(s app.ApplicationServices) http.HandlerFunc {
 		projectIdParam := chi.URLParam(r, "projectId")
 		projectId, err := strconv.Atoi(projectIdParam)
 		if err != nil {
-			slog.ErrorContext(r.Context(), "buang deployments", "err", err.Error())
+			slog.ErrorContext(r.Context(), "create deployment", "err", err.Error())
 			http.Error(w, err.Error(), http.StatusBadRequest)
 			return
 		}
@@ -68,6 +70,13 @@ func CreateDeployment(s app.ApplicationServices) http.HandlerFunc {
 			return
 		}
 
+		err = s.SchemaDecoder.Decode(&req, r.URL.Query())
+		if err != nil {
+			slog.ErrorContext(r.Context(), "create deployment", "err", err.Error())
+			http.Error(w, err.Error(), http.StatusBadRequest)
+			return
+		}
+
 		p := deployments.CreateDeploymentParams{
 			ProjectID:         int64(projectId),
 			Branch:            req.Branch,
@@ -86,6 +95,7 @@ func CreateDeployment(s app.ApplicationServices) http.HandlerFunc {
 		wp := workflowwrappers.CreateDeploymentParams{
 			ProjectId:    p.ProjectID,
 			DeploymentId: res.Id,
+			Block:        req.WaitForDeployment,
 		}
 
 		err = wp.Exec(r.Context(), s)

@@ -17,6 +17,7 @@ import (
 type CreateDeploymentParams struct {
 	ProjectId    int64
 	DeploymentId int64
+	Block        bool
 }
 
 func (p CreateDeploymentParams) Exec(ctx context.Context, s app.ApplicationServices) error {
@@ -35,21 +36,35 @@ func (p CreateDeploymentParams) Exec(ctx context.Context, s app.ApplicationServi
 			TaskQueue: constantstaskqueues.QueueDeployment,
 		}
 
-		_, err := executor.(app.TemporalClient).ExecuteWorkflow(ctx, options, temporalworkflows.Deploy, p.ProjectId, p.DeploymentId)
+		run, err := executor.(app.TemporalClient).ExecuteWorkflow(ctx, options, temporalworkflows.Deploy, p.ProjectId, p.DeploymentId)
 		if err != nil {
 			return err
+		}
+
+		if p.Block {
+			err = run.Get(ctx, nil)
+			if err != nil {
+				return err
+			}
 		}
 
 		return nil
 	} else {
 		d := dbosworkflows.Deploy(s)
 
-		_, err := dbos.RunWorkflow(executor.(app.DbosContext), d.Deploy, dbosworkflows.DeployParams{
+		handle, err := dbos.RunWorkflow(executor.(app.DbosContext), d.Deploy, dbosworkflows.DeployParams{
 			ProjectId:    p.ProjectId,
 			DeploymentId: p.DeploymentId,
 		})
 		if err != nil {
 			return err
+		}
+
+		if p.Block {
+			_, err := handle.GetResult()
+			if err != nil {
+				return err
+			}
 		}
 
 		return nil
