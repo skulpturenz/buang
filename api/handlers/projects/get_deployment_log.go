@@ -5,14 +5,16 @@ import (
 	"net/http"
 	"skulpture/buang/app"
 	deploymentlogs "skulpture/buang/components/deployment_logs"
+	workflowwrappers "skulpture/buang/workers/workflow_wrappers"
 	"strconv"
 
 	"github.com/go-chi/chi/v5"
 )
 
 type GetDeploymentLogsRequest struct {
-	ProjectId    int64
-	DeploymentId int64
+	ProjectId         int64 `schema:"-"`
+	DeploymentId      int64 `schema:"-"`
+	WaitForDeployment bool  `schema:"waitForDeployment,default:false"`
 }
 
 type GetDeploymentLogsResult = string
@@ -20,15 +22,18 @@ type GetDeploymentLogsResult = string
 // @summary	Get deployment logs
 // @tags		api.v1, deployment
 // @security	ApiKeyAuth
-// @param		projectId		path		int	required	"Project ID"
-// @param		deploymentId	path		int	required	"Deployment ID"
-// @success	204				{object}	nil
-// @success	200				{object}	string
+// @param		projectId			path		int		required	"Project ID"
+// @param		deploymentId		path		int		required	"Deployment ID"
+// @param		waitForDeployment	query		bool	false		"Wait for deployment completion"
+// @success	204					{object}	nil
+// @success	200					{object}	string
 // @failure	401
 // @failure	500	{object}	string
 // @router		/project/{projectId}/deployment/{deploymentId}/logs [get]
 func GetDeploymentLogs(s app.ApplicationServices) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
+		var req GetDeploymentLogsRequest
+
 		projectIdParam := chi.URLParam(r, "projectId")
 		projectId, err := strconv.Atoi(projectIdParam)
 		if err != nil {
@@ -36,6 +41,7 @@ func GetDeploymentLogs(s app.ApplicationServices) http.HandlerFunc {
 			http.Error(w, err.Error(), http.StatusBadRequest)
 			return
 		}
+		req.ProjectId = int64(projectId)
 
 		deploymentIdParam := chi.URLParam(r, "deploymentId")
 		deploymentId, err := strconv.Atoi(deploymentIdParam)
@@ -43,6 +49,28 @@ func GetDeploymentLogs(s app.ApplicationServices) http.HandlerFunc {
 			slog.ErrorContext(r.Context(), "get deployment logs", "err", err.Error())
 			http.Error(w, err.Error(), http.StatusBadRequest)
 			return
+		}
+		req.DeploymentId = int64(deploymentId)
+
+		err = s.SchemaDecoder.Decode(&req, r.URL.Query())
+		if err != nil {
+			slog.ErrorContext(r.Context(), "get deployment logs", "err", err.Error())
+			http.Error(w, err.Error(), http.StatusBadRequest)
+			return
+		}
+
+		if req.WaitForDeployment {
+			wp := workflowwrappers.HasDeployedParams{
+				ProjectId:    req.ProjectId,
+				DeploymentId: req.DeploymentId,
+			}
+
+			err = wp.Exec(r.Context(), s)
+			if err != nil {
+				slog.ErrorContext(r.Context(), "get deployment logs", "err", err.Error())
+				http.Error(w, err.Error(), http.StatusInternalServerError)
+				return
+			}
 		}
 
 		p := deploymentlogs.GetDeploymentLogParams{

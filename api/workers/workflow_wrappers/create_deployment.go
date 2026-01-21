@@ -16,8 +16,8 @@ import (
 )
 
 type CreateDeploymentParams struct {
-	ProjectId    int64
-	DeploymentId int64
+	ProjectId    int64 // required for workflow id
+	DeploymentId int64 // required for workflow id
 	Block        bool
 }
 
@@ -38,9 +38,8 @@ func (p CreateDeploymentParams) Exec(ctx context.Context, s app.ApplicationServi
 	executor, durableExecutor := s.GetDurableExecutor()
 
 	if durableExecutor == enumsdurableexecutors.Temporal {
-		workflowId := fmt.Sprintf("create-project-%v-deployment-%v", p.ProjectId, p.DeploymentId)
 		options := temporalclient.StartWorkflowOptions{
-			ID:        workflowId,
+			ID:        p.GetWorkflowId(),
 			TaskQueue: constantstaskqueues.QueueDeployment,
 		}
 
@@ -63,7 +62,7 @@ func (p CreateDeploymentParams) Exec(ctx context.Context, s app.ApplicationServi
 		handle, err := dbos.RunWorkflow(executor.(app.DbosContext), d.Deploy, dbosworkflows.DeployParams{
 			ProjectId:    p.ProjectId,
 			DeploymentId: p.DeploymentId,
-		})
+		}, dbos.WithWorkflowID(p.GetWorkflowId()))
 		if err != nil {
 			return err
 		}
@@ -77,4 +76,8 @@ func (p CreateDeploymentParams) Exec(ctx context.Context, s app.ApplicationServi
 
 		return nil
 	}
+}
+
+func (p CreateDeploymentParams) GetWorkflowId() string {
+	return fmt.Sprintf("create-project-%v-deployment-%v", p.ProjectId, p.DeploymentId)
 }

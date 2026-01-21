@@ -314,6 +314,12 @@ const docTemplate = `{
                         "name": "deploymentId",
                         "in": "path",
                         "required": true
+                    },
+                    {
+                        "type": "boolean",
+                        "description": "Wait for deployment completion",
+                        "name": "waitForDeployment",
+                        "in": "query"
                     }
                 ],
                 "responses": {

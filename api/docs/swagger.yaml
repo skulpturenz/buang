@@ -292,6 +292,10 @@ paths:
         name: deploymentId
         required: true
         type: integer
+      - description: Wait for deployment completion
+        in: query
+        name: waitForDeployment
+        type: boolean
       responses:
         "200":
           description: OK
