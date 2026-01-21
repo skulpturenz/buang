@@ -122,4 +122,4 @@ it is also light on security: tokens for private repository access are stored in
 
 Ensure that any private repository access tokens are readonly with limited scope and assume that the preview environment will be compromised.
 
-Each deployment gets a unique path instead of a subdomain to minimize the configuration required to deploy Buang, so if the service depends on the base URL, it can be derived by checking the `X-Forwarded-Prefix` header.
+Each deployment gets a unique path instead of a subdomain to minimize the configuration required to deploy Buang, so if the service depends on the base URL (serving assets in particular), it can be derived by checking the `X-Forwarded-Prefix` header or using the `BUANG_DEPLOYMENT_PATH` environment variable when services are built.

@@ -87,6 +87,10 @@ func (dp *DeployProject) DeployProject(ctx context.Context, d DeployProjectParam
 
 	sha := fmt.Sprintf("%.*s", 8, dply.Deployment.GetSha())
 	projectName := fmt.Sprintf("%v_%v_%v_%v", p.Project.GetId(), dply.Deployment.GetId(), dply.Deployment.GetBranch(), sha)
+	url := fmt.Sprintf("/deployment/%v", projectName)
+
+	env["BUANG_DEPLOYMENT_PATH"] = url
+
 	writer := deploymentlogs.CreateBufferedWriter(deploymentLogsParams)
 	upParams := docker.ComposeUpParams{
 		ProjectName: projectName,
@@ -104,7 +108,6 @@ func (dp *DeployProject) DeployProject(ctx context.Context, d DeployProjectParam
 	}
 
 	serviceEntrypoint := strings.Split(dply.Deployment.GetServiceEntrypoint(), ":")
-	url := fmt.Sprintf("/deployment/%v", projectName)
 
 	passHostHeader := true
 	config := dynamic.Configuration{
