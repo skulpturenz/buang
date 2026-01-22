@@ -3,7 +3,9 @@ package main
 import (
 	"context"
 	"log/slog"
+	"os"
 	"skulpture/buang/app"
+	constantsfeaturetoggles "skulpture/buang/constants/feature_toggles"
 	"skulpture/buang/db"
 	_ "skulpture/buang/docs"
 	enumsdbtypes "skulpture/buang/enums/db_types"
@@ -85,6 +87,10 @@ var (
 	DBOS_ADMIN_SERVER_PORT = ferrite.
 				Signed[int]("DBOS_ADMIN_SERVER_PORT", "DBOS admin server port. Optional to use DBOS. Specify a port to enable the admin server, DBOS default is 3001").
 				Optional()
+	EXPERIMENTAL_BOOTSTRAP = ferrite.
+				Bool(constantsfeaturetoggles.EXPERIMENTAL_BOOTSTRAP, "Enable experimental bootstrap. Bootstrapping allows Buang to deploy itself and autoupdates on Saturdays at midnight every week").
+				WithDefault(false).
+				Optional()
 )
 
 func init() {
@@ -147,6 +153,20 @@ func main() {
 	}
 	defer cleanup(ctx)
 
+	s := app.ApplicationServices{
+		Queries: &queries,
+	}
+
+	isExperimentalBootstrapEnabled, ok := EXPERIMENTAL_BOOTSTRAP.Value()
+	if GO_ENV.Value() == enumsenv.Production.String() && ok && isExperimentalBootstrapEnabled { // TODO: test
+		err := bootstrap(ctx, &s)
+		if err != nil {
+			panic(err)
+		}
+
+		return
+	}
+
 	authnConfig := authn.AuthnMiddlewareConfig{
 		ApiKey: API_KEY.Value(),
 	}
@@ -158,10 +178,8 @@ func main() {
 	}
 
 	appConfig := app.ApplicationConfig{
-		HttpPort: ":80",
-		Services: app.ApplicationServices{
-			Queries: &queries,
-		},
+		HttpPort:        ":80",
+		Services:        s,
 		DurableExecutor: durableExecutor,
 	}
 	app, err := appConfig.New(ctx, r)
@@ -195,5 +213,14 @@ func main() {
 		panic(err)
 	}
 
-	defer cleanup(ctx)
+	c := func(ctx context.Context) {
+		cleanup(ctx)
+
+		buangComposePath, ok := os.LookupEnv("BUANG_BOOTSTRAP_DIR")
+		if ok && isExperimentalBootstrapEnabled {
+			os.RemoveAll(buangComposePath)
+		}
+	}
+
+	defer c(ctx)
 }

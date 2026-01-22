@@ -11,6 +11,7 @@ secrets:
 services:
   proxy:
     image: traefik
+    restart: unless-stopped
     command: >
       --providers.file.directory=/deployments
       --providers.file.watch=true
@@ -21,6 +22,9 @@ services:
       --entryPoints.websecure.asDefault=true
       --entryPoints.web.http.redirections.entryPoint.to=websecure
       --entryPoints.web.http.redirections.entryPoint.scheme=https
+    ports:
+      - "80:80"
+      - "443:443"
     volumes:
       - /var/run/docker.sock:/var/run/docker.sock
       - /deployments:/deployments
@@ -37,10 +41,11 @@ services:
       - buang
     deploy:
       mode: replicated
-      replicas: 1
+      replicas: 2
 
   buang:
     image: skulpture/buang
+    restart: unless-stopped
     environment:
       GO_ENV: "production"
       API_KEY: ${BUANG_API_KEY}
@@ -64,4 +69,4 @@ services:
       - buang
     deploy:
       mode: replicated
-      replicas: 1
+      replicas: 2

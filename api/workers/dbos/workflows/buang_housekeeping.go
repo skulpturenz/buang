@@ -76,6 +76,9 @@ func (h BuangHousekeeping) BuangHousekeeping(ctx dbos.DBOSContext, scheduledTime
 
 			return res, nil
 		}, dbos.WithStepMaxRetries(3))
+	if err != nil {
+		return false, err
+	}
 
 	return true, nil
 }

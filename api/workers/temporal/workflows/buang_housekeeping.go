@@ -15,11 +15,11 @@ import (
 
 type BuangHousekeeping app.ApplicationServices
 
-type CronResult struct {
+type BuangHousekeepingResult struct {
 	RunTime time.Time
 }
 
-func (bh BuangHousekeeping) BuangHousekeeping(ctx workflow.Context) (res *CronResult, err error) {
+func (bh BuangHousekeeping) BuangHousekeeping(ctx workflow.Context) (res *BuangHousekeepingResult, err error) {
 	defer func() {
 		if r := recover(); r != nil {
 			slog.ErrorContext(context.Background(), fmt.Sprintf("buang housekeeping panic: %v", r))
@@ -85,5 +85,5 @@ func (bh BuangHousekeeping) BuangHousekeeping(ctx workflow.Context) (res *CronRe
 		).
 		Get(ctx, &pruneResult)
 
-	return &CronResult{RunTime: now}, nil
+	return &BuangHousekeepingResult{RunTime: now}, nil
 }
