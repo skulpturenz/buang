@@ -5,9 +5,12 @@ import (
 	"fmt"
 	"log/slog"
 	"os"
+	"runtime/debug"
 	"skulpture/buang/app"
+	"skulpture/buang/components/o11y"
 	constantsfeaturetoggles "skulpture/buang/constants/feature_toggles"
 	constantstaskqueues "skulpture/buang/constants/task_queues"
+	enumsdiagnosticlogtype "skulpture/buang/enums/diagnostic_log_type"
 	enumsenv "skulpture/buang/enums/env"
 	"skulpture/buang/workers/activities"
 	temporalworkflows "skulpture/buang/workers/temporal/workflows"
@@ -22,6 +25,16 @@ func Housekeeping(s app.ApplicationServices, c *client.Client) (worker.Worker, e
 	defer func() {
 		if r := recover(); r != nil {
 			slog.ErrorContext(context.Background(), fmt.Sprintf("housekeeping panic: %v", r))
+
+			log := map[string]any{
+				"stack": debug.Stack(),
+			}
+
+			p := o11y.CreateDiagnosticLogParams{
+				Type: enumsdiagnosticlogtype.Panic,
+				Log:  log,
+			}
+			p.Exec(context.Background())
 		}
 	}()
 

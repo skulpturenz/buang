@@ -4,8 +4,11 @@ import (
 	"context"
 	"fmt"
 	"log/slog"
+	"runtime/debug"
 	"skulpture/buang/app"
+	"skulpture/buang/components/o11y"
 	constantstaskqueues "skulpture/buang/constants/task_queues"
+	enumsdiagnosticlogtype "skulpture/buang/enums/diagnostic_log_type"
 	"skulpture/buang/workers/activities"
 	temporalworkflows "skulpture/buang/workers/temporal/workflows"
 
@@ -17,6 +20,16 @@ func BuangWorker(s app.ApplicationServices, c *client.Client) (worker.Worker, er
 	defer func() {
 		if r := recover(); r != nil {
 			slog.ErrorContext(context.Background(), fmt.Sprintf("buang panic: %v", r))
+
+			log := map[string]any{
+				"stack": debug.Stack(),
+			}
+
+			p := o11y.CreateDiagnosticLogParams{
+				Type: enumsdiagnosticlogtype.Panic,
+				Log:  log,
+			}
+			p.Exec(context.Background())
 		}
 	}()
 

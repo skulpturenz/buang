@@ -5,7 +5,10 @@ import (
 	"errors"
 	"fmt"
 	"log/slog"
+	"runtime/debug"
 	"skulpture/buang/app"
+	"skulpture/buang/components/o11y"
+	enumsdiagnosticlogtype "skulpture/buang/enums/diagnostic_log_type"
 	"skulpture/buang/workers/activities"
 	"time"
 
@@ -23,6 +26,16 @@ func (bh BuangHousekeeping) BuangHousekeeping(ctx workflow.Context) (res *BuangH
 	defer func() {
 		if r := recover(); r != nil {
 			slog.ErrorContext(context.Background(), fmt.Sprintf("buang housekeeping panic: %v", r))
+
+			log := map[string]any{
+				"stack": debug.Stack(),
+			}
+
+			p := o11y.CreateDiagnosticLogParams{
+				Type: enumsdiagnosticlogtype.Panic,
+				Log:  log,
+			}
+			p.Exec(context.Background())
 
 			switch x := r.(type) {
 			case error:

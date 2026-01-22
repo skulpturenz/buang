@@ -5,8 +5,11 @@ import (
 	"errors"
 	"fmt"
 	"log/slog"
+	"runtime/debug"
 	"skulpture/buang/app"
+	"skulpture/buang/components/o11y"
 	constantstaskqueues "skulpture/buang/constants/task_queues"
+	enumsdiagnosticlogtype "skulpture/buang/enums/diagnostic_log_type"
 	enumsdurableexecutors "skulpture/buang/enums/durable_executors"
 	dbosworkflows "skulpture/buang/workers/dbos/workflows"
 	temporalworkflows "skulpture/buang/workers/temporal/workflows"
@@ -25,6 +28,16 @@ func (p CreateDeploymentParams) Exec(ctx context.Context, s app.ApplicationServi
 	defer func() {
 		if r := recover(); r != nil {
 			slog.ErrorContext(context.Background(), fmt.Sprintf("create deployment panic: %v", r))
+
+			log := map[string]any{
+				"stack": debug.Stack(),
+			}
+
+			p := o11y.CreateDiagnosticLogParams{
+				Type: enumsdiagnosticlogtype.Panic,
+				Log:  log,
+			}
+			p.Exec(ctx)
 
 			switch x := r.(type) {
 			case error:

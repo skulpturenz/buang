@@ -5,6 +5,7 @@ import (
 	"log/slog"
 	"os"
 	"skulpture/buang/app"
+	"skulpture/buang/components/o11y"
 	constantsfeaturetoggles "skulpture/buang/constants/feature_toggles"
 	"skulpture/buang/db"
 	_ "skulpture/buang/docs"
@@ -156,6 +157,8 @@ func main() {
 	s := app.ApplicationServices{
 		Queries: &queries,
 	}
+
+	_ = o11y.NewS(&queries) // singleton
 
 	isExperimentalBootstrapEnabled, ok := EXPERIMENTAL_BOOTSTRAP.Value()
 	if GO_ENV.Value() == enumsenv.Production.String() && ok && isExperimentalBootstrapEnabled { // TODO: test
