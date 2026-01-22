@@ -93,5 +93,7 @@ func (h BuangHousekeeping) BuangHousekeeping(ctx dbos.DBOSContext, scheduledTime
 		return false, err
 	}
 
+	_ = o11y.PruneStaleDiagnosticLogs(context.Background())
+
 	return true, nil
 }

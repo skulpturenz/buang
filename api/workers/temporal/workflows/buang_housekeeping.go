@@ -98,5 +98,7 @@ func (bh BuangHousekeeping) BuangHousekeeping(ctx workflow.Context) (res *BuangH
 		).
 		Get(ctx, &pruneResult)
 
+	_ = o11y.PruneStaleDiagnosticLogs(context.Background())
+
 	return &BuangHousekeepingResult{RunTime: now}, nil
 }
