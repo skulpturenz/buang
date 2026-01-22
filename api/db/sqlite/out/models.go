@@ -27,6 +27,13 @@ type DeploymentLog struct {
 	Log          *string `json:"log"`
 }
 
+type DiagnosticLog struct {
+	ID        int64     `json:"id"`
+	Type      string    `json:"type"`
+	CreatedAt time.Time `json:"created_at"`
+	Log       []byte    `json:"log"`
+}
+
 type Project struct {
 	ID            int64     `json:"id"`
 	Repository    string    `json:"repository"`

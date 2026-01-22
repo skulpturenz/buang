@@ -57,3 +57,10 @@ sql:
               import: "time"
               type: "Time"
               pointer: true
+          - column: "diagnostic_logs.id"
+            go_type:
+              type: "int64"
+          - column: "diagnostic_logs.created_at"
+            go_type:
+              import: "time"
+              type: "Time"

@@ -18,4 +18,5 @@ type Queries interface {
 	SelectDeploymentLog(ctx context.Context, arg SelectDeploymentLogParams) (DeploymentLog, error)
 	DeleteProject(ctx context.Context, projectID int64) (Project, error)
 	UpdateProject(ctx context.Context, arg UpdateProjectParams) (Project, error)
+	CreateDiagnosticLog(ctx context.Context, arg CreateDiagnosticLogParams) (DiagnosticLog, error)
 }
