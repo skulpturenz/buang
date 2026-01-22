@@ -130,6 +130,16 @@ func (dp *DeployProject) DeployProject(ctx context.Context, d DeployProjectParam
 							{URL: fmt.Sprintf("http://%v:%v", serviceEntrypoint[0], serviceEntrypoint[1])},
 						},
 						PassHostHeader: &passHostHeader,
+						// TODO: i'm not sure but i think once the initial request to the deployment is made, if we have sticky cookies
+						// enabled, then every subsequent request should get forwarded to the correct service even if we omit the deployment path
+						// since the domain stays the same, only the path changes
+						// need to check
+						Sticky: &dynamic.Sticky{
+							Cookie: &dynamic.Cookie{
+								Name:     projectName,
+								HTTPOnly: true,
+							},
+						},
 					},
 				},
 			},
