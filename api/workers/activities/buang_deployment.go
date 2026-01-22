@@ -44,7 +44,22 @@ func (bd *BuangDeployment) BuangDeployment(ctx context.Context, b BuangDeploymen
 		return nil, err
 	}
 
-	clonePath := *dply.Deployment.GetClonePath()
+	clonePathPtr := dply.Deployment.GetClonePath()
+	if clonePathPtr == nil {
+		buangParams := deployments.BuangDeploymentParams{
+			ID:        dply.Deployment.GetId(),
+			ProjectID: dply.Deployment.GetProjectId(),
+		}
+
+		_, err = buangParams.Exec(ctx, &s)
+		if err != nil {
+			return nil, err
+		}
+
+		return &BuangDeploymentResult{}, nil
+	}
+
+	clonePath := *clonePathPtr
 	deploymentConfigPath := filepath.Join(TRAEFIK_DYNAMIC_CONFIG, fmt.Sprintf("project-%v-deployment-%v.yaml", p.Project.GetId(), dply.Deployment.GetId()))
 	sha := fmt.Sprintf("%.*s", 8, dply.Deployment.GetSha())
 	projectName := fmt.Sprintf("%v_%v_%v_%v", p.Project.GetId(), dply.Deployment.GetId(), dply.Deployment.GetBranch(), sha)
