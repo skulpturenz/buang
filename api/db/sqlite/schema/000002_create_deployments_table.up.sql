@@ -10,5 +10,5 @@ CREATE TABLE IF NOT EXISTS deployments (
 	service_entrypoint TEXT NOT NULL,
 	branch TEXT NOT NULL,
 	env_vars BLOB,
-	CONSTRAINT pk_deployments UNIQUE(id, project_id, branch)
+	CONSTRAINT unique_deployments UNIQUE(id, project_id, branch)
 );
