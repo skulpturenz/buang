@@ -1,6 +1,7 @@
 package workers
 
 import (
+	"bytes"
 	"context"
 	"fmt"
 	"log/slog"
@@ -16,6 +17,7 @@ import (
 	temporalworkflows "skulpture/buang/workers/temporal/workflows"
 	"strconv"
 
+	"github.com/DataDog/gostackparse"
 	"github.com/google/uuid"
 	"go.temporal.io/sdk/client"
 	"go.temporal.io/sdk/worker"
@@ -26,8 +28,11 @@ func Housekeeping(s app.ApplicationServices, c *client.Client) (worker.Worker, e
 		if r := recover(); r != nil {
 			slog.ErrorContext(context.Background(), fmt.Sprintf("housekeeping panic: %v", r))
 
+			stack := debug.Stack()
+			goroutines, _ := gostackparse.Parse(bytes.NewReader(stack))
+
 			log := map[string]any{
-				"stack": string(debug.Stack()),
+				"stack": goroutines,
 			}
 
 			p := o11y.CreateDiagnosticLogParams{

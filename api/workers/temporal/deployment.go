@@ -1,6 +1,7 @@
 package workers
 
 import (
+	"bytes"
 	"context"
 	"fmt"
 	"log/slog"
@@ -12,6 +13,7 @@ import (
 	"skulpture/buang/workers/activities"
 	temporalworkflows "skulpture/buang/workers/temporal/workflows"
 
+	"github.com/DataDog/gostackparse"
 	"go.temporal.io/sdk/client"
 	"go.temporal.io/sdk/worker"
 )
@@ -21,8 +23,11 @@ func DeploymentWorker(s app.ApplicationServices, c *client.Client) (worker.Worke
 		if r := recover(); r != nil {
 			slog.ErrorContext(context.Background(), fmt.Sprintf("deployment panic: %v", r))
 
+			stack := debug.Stack()
+			goroutines, _ := gostackparse.Parse(bytes.NewReader(stack))
+
 			log := map[string]any{
-				"stack": string(debug.Stack()),
+				"stack": goroutines,
 			}
 
 			p := o11y.CreateDiagnosticLogParams{

@@ -1,6 +1,7 @@
 package temporalworkflows
 
 import (
+	"bytes"
 	"context"
 	"errors"
 	"fmt"
@@ -11,6 +12,7 @@ import (
 	"skulpture/buang/workers/activities"
 	"time"
 
+	"github.com/DataDog/gostackparse"
 	"go.temporal.io/sdk/temporal"
 	"go.temporal.io/sdk/workflow"
 )
@@ -20,8 +22,11 @@ func Deploy(ctx workflow.Context, projectId int64, deploymentId int64) (err erro
 		if r := recover(); r != nil {
 			slog.ErrorContext(context.Background(), fmt.Sprintf("deploy panic: %v", r))
 
+			stack := debug.Stack()
+			goroutines, _ := gostackparse.Parse(bytes.NewReader(stack))
+
 			log := map[string]any{
-				"stack": string(debug.Stack()),
+				"stack": goroutines,
 			}
 
 			p := o11y.CreateDiagnosticLogParams{

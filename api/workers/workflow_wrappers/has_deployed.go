@@ -1,6 +1,7 @@
 package workflowwrappers
 
 import (
+	"bytes"
 	"context"
 	"errors"
 	"fmt"
@@ -11,6 +12,7 @@ import (
 	enumsdiagnosticlogtype "skulpture/buang/enums/diagnostic_log_type"
 	enumsdurableexecutors "skulpture/buang/enums/durable_executors"
 
+	"github.com/DataDog/gostackparse"
 	"github.com/dbos-inc/dbos-transact-golang/dbos"
 )
 
@@ -25,8 +27,11 @@ func (p HasDeployedParams) Exec(ctx context.Context, s app.ApplicationServices) 
 		if r := recover(); r != nil {
 			slog.ErrorContext(context.Background(), fmt.Sprintf("has deployed panic: %v", r))
 
+			stack := debug.Stack()
+			goroutines, _ := gostackparse.Parse(bytes.NewReader(stack))
+
 			log := map[string]any{
-				"stack": string(debug.Stack()),
+				"stack": goroutines,
 			}
 
 			p := o11y.CreateDiagnosticLogParams{

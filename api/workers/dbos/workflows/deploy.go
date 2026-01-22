@@ -1,6 +1,7 @@
 package dbosworkflows
 
 import (
+	"bytes"
 	"context"
 	"errors"
 	"fmt"
@@ -11,6 +12,7 @@ import (
 	enumsdiagnosticlogtype "skulpture/buang/enums/diagnostic_log_type"
 	"skulpture/buang/workers/activities"
 
+	"github.com/DataDog/gostackparse"
 	"github.com/dbos-inc/dbos-transact-golang/dbos"
 )
 
@@ -26,8 +28,11 @@ func (d Deploy) Deploy(ctx dbos.DBOSContext, p DeployParams) (res bool, err erro
 		if r := recover(); r != nil {
 			slog.ErrorContext(context.Background(), fmt.Sprintf("deploy panic: %v", r))
 
+			stack := debug.Stack()
+			goroutines, _ := gostackparse.Parse(bytes.NewReader(stack))
+
 			log := map[string]any{
-				"stack": string(debug.Stack()),
+				"stack": goroutines,
 			}
 
 			p := o11y.CreateDiagnosticLogParams{

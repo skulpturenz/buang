@@ -1,6 +1,7 @@
 package workflowwrappers
 
 import (
+	"bytes"
 	"context"
 	"errors"
 	"fmt"
@@ -14,6 +15,7 @@ import (
 	dbosworkflows "skulpture/buang/workers/dbos/workflows"
 	temporalworkflows "skulpture/buang/workers/temporal/workflows"
 
+	"github.com/DataDog/gostackparse"
 	"github.com/dbos-inc/dbos-transact-golang/dbos"
 	temporal "go.temporal.io/sdk/client"
 )
@@ -28,8 +30,11 @@ func (p BuangBranchParams) Exec(ctx context.Context, s app.ApplicationServices) 
 		if r := recover(); r != nil {
 			slog.ErrorContext(context.Background(), fmt.Sprintf("buang branch panic: %v", r))
 
+			stack := debug.Stack()
+			goroutines, _ := gostackparse.Parse(bytes.NewReader(stack))
+
 			log := map[string]any{
-				"stack": string(debug.Stack()),
+				"stack": goroutines,
 			}
 
 			p := o11y.CreateDiagnosticLogParams{

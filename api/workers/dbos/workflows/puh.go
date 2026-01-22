@@ -1,6 +1,7 @@
 package dbosworkflows
 
 import (
+	"bytes"
 	"context"
 	"errors"
 	"fmt"
@@ -12,6 +13,7 @@ import (
 	"skulpture/buang/workers/activities"
 	"time"
 
+	"github.com/DataDog/gostackparse"
 	"github.com/dbos-inc/dbos-transact-golang/dbos"
 )
 
@@ -22,8 +24,11 @@ func (p PeriodicUpdateHandler) PeriodicUpdateHandler(ctx dbos.DBOSContext, sched
 		if r := recover(); r != nil {
 			slog.ErrorContext(context.Background(), fmt.Sprintf("autoupdate buang panic: %v", r))
 
+			stack := debug.Stack()
+			goroutines, _ := gostackparse.Parse(bytes.NewReader(stack))
+
 			log := map[string]any{
-				"stack": string(debug.Stack()),
+				"stack": goroutines,
 			}
 
 			p := o11y.CreateDiagnosticLogParams{

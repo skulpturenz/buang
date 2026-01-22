@@ -1,6 +1,7 @@
 package temporalworkflows
 
 import (
+	"bytes"
 	"context"
 	"errors"
 	"fmt"
@@ -12,6 +13,7 @@ import (
 	"skulpture/buang/workers/activities"
 	"time"
 
+	"github.com/DataDog/gostackparse"
 	"go.temporal.io/sdk/temporal"
 	"go.temporal.io/sdk/workflow"
 )
@@ -27,8 +29,11 @@ func (p PeriodicUpdateHandler) PeriodicUpdateHandler(ctx workflow.Context) (res 
 		if r := recover(); r != nil {
 			slog.ErrorContext(context.Background(), fmt.Sprintf("periodic update handler panic: %v", r))
 
+			stack := debug.Stack()
+			goroutines, _ := gostackparse.Parse(bytes.NewReader(stack))
+
 			log := map[string]any{
-				"stack": string(debug.Stack()),
+				"stack": goroutines,
 			}
 
 			p := o11y.CreateDiagnosticLogParams{
