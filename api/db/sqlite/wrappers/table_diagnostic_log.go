@@ -6,6 +6,8 @@ import (
 	sqlitemodels "skulpture/buang/db/sqlite/out"
 	enumsdiagnosticlogtype "skulpture/buang/enums/diagnostic_log_type"
 	"time"
+
+	"github.com/negrel/assert"
 )
 
 type DiagnosticLog sqlitemodels.DiagnosticLog
@@ -34,6 +36,8 @@ func (d DiagnosticLog) GetLog() (map[string]any, error) {
 	if err != nil {
 		return nil, err
 	}
+
+	assert.True(res != nil, "invalid diagnostic log record")
 
 	return res, nil
 }

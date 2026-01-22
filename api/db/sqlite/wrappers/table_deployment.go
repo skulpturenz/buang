@@ -56,6 +56,10 @@ func (d Deployment) GetEnvVars() (map[string]any, error) {
 		return nil, err
 	}
 
+	if res == nil {
+		return map[string]any{}, nil
+	}
+
 	return res, nil
 }
 
