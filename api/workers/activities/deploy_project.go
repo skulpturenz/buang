@@ -84,6 +84,9 @@ func (dp *DeployProject) DeployProject(ctx context.Context, d DeployProjectParam
 	if err != nil {
 		return nil, err
 	}
+	if env == nil {
+		env = map[string]any{}
+	}
 
 	sha := fmt.Sprintf("%.*s", 8, dply.Deployment.GetSha())
 	projectName := fmt.Sprintf("%v_%v_%v_%v", p.Project.GetId(), dply.Deployment.GetId(), dply.Deployment.GetBranch(), sha)
