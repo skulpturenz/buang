@@ -26,7 +26,7 @@ func (p HasDeployedParams) Exec(ctx context.Context, s app.ApplicationServices) 
 			slog.ErrorContext(context.Background(), fmt.Sprintf("has deployed panic: %v", r))
 
 			log := map[string]any{
-				"stack": debug.Stack(),
+				"stack": string(debug.Stack()),
 			}
 
 			p := o11y.CreateDiagnosticLogParams{

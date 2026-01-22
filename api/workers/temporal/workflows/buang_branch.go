@@ -21,7 +21,7 @@ func BuangBranch(ctx workflow.Context, projectId int64, branch string) (err erro
 			slog.ErrorContext(context.Background(), fmt.Sprintf("buang branch panic: %v", r))
 
 			log := map[string]any{
-				"stack": debug.Stack(),
+				"stack": string(debug.Stack()),
 			}
 
 			p := o11y.CreateDiagnosticLogParams{

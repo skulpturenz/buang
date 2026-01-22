@@ -4,7 +4,17 @@ import (
 	"context"
 	"log/slog"
 	"skulpture/buang/db/interfaces"
+	enumsdiagnosticlogtype "skulpture/buang/enums/diagnostic_log_type"
 )
+
+type CreateDiagnosticLogParams struct {
+	Type enumsdiagnosticlogtype.DiagnosticLogType
+	Log  map[string]any
+}
+
+type CreateDiagnosticLogResult struct {
+	ID int64
+}
 
 // ignoring errors here technically breaks the rules of workflows
 // but its so that we can capture the information we need

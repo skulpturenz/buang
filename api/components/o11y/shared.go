@@ -3,21 +3,11 @@ package o11y
 import (
 	"log/slog"
 	"skulpture/buang/db/interfaces"
-	enumsdiagnosticlogtype "skulpture/buang/enums/diagnostic_log_type"
 	"sync"
 )
 
 type diagnosticLog struct {
 	q *interfaces.Queries
-}
-
-type CreateDiagnosticLogParams struct {
-	Type enumsdiagnosticlogtype.DiagnosticLogType
-	Log  map[string]any
-}
-
-type CreateDiagnosticLogResult struct {
-	ID int64
 }
 
 var instance *diagnosticLog

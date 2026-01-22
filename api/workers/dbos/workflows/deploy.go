@@ -27,7 +27,7 @@ func (d Deploy) Deploy(ctx dbos.DBOSContext, p DeployParams) (res bool, err erro
 			slog.ErrorContext(context.Background(), fmt.Sprintf("deploy panic: %v", r))
 
 			log := map[string]any{
-				"stack": debug.Stack(),
+				"stack": string(debug.Stack()),
 			}
 
 			p := o11y.CreateDiagnosticLogParams{

@@ -28,7 +28,7 @@ func (p PeriodicUpdateHandler) PeriodicUpdateHandler(ctx workflow.Context) (res 
 			slog.ErrorContext(context.Background(), fmt.Sprintf("periodic update handler panic: %v", r))
 
 			log := map[string]any{
-				"stack": debug.Stack(),
+				"stack": string(debug.Stack()),
 			}
 
 			p := o11y.CreateDiagnosticLogParams{

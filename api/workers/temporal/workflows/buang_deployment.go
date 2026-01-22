@@ -21,7 +21,7 @@ func BuangDeployment(ctx workflow.Context, projectId int64, deploymentId int64) 
 			slog.ErrorContext(context.Background(), fmt.Sprintf("buang deployment panic: %v", r))
 
 			log := map[string]any{
-				"stack": debug.Stack(),
+				"stack": string(debug.Stack()),
 			}
 
 			p := o11y.CreateDiagnosticLogParams{

@@ -22,7 +22,7 @@ func BuangWorker(s app.ApplicationServices, c *client.Client) (worker.Worker, er
 			slog.ErrorContext(context.Background(), fmt.Sprintf("buang panic: %v", r))
 
 			log := map[string]any{
-				"stack": debug.Stack(),
+				"stack": string(debug.Stack()),
 			}
 
 			p := o11y.CreateDiagnosticLogParams{

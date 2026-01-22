@@ -88,7 +88,7 @@ func _000004_create_diagnostic_logs_down_sql() ([]byte, error) {
 	)
 }
 
-var __000004_create_diagnostic_logs_up_sql = []byte("\x1f\x8b\x08\x00\x00\x00\x00\x00\x00\xff\x5c\xcf\x3f\x4f\xc3\x30\x14\x04\xf0\x39\xfe\x14\x4f\x62\x69\xa5\xb4\x96\x80\x09\x26\xa7\x7d\xad\x2c\x5c\xb7\xd8\x2f\xa2\x61\x89\xf2\x4f\xae\x45\x52\x87\xc6\x0c\x7c\x7b\x54\x86\x0a\xb1\x9f\xee\xee\xb7\x32\x28\x08\x81\x44\xa6\x10\xe4\x06\xf4\x9e\x00\x8f\xd2\x92\x85\xd6\x57\xee\x1c\xa6\xe8\x9b\xb2\x0f\x6e\x82\x19\x4b\x7c\x0b\x99\xdc\x4a\x4d\xb0\x45\x8d\x46\x10\xae\x41\xa8\x37\x51\x58\x10\x16\xe4\x1a\x35\x49\x2a\x20\xd7\xf2\x35\xc7\x94\x25\xf1\x7b\xec\x80\xf0\x48\xbf\xbd\x3a\x57\x2a\x65\xc9\x62\x01\xa7\x18\xc7\xe9\x89\x73\xe7\xe3\xe9\xab\x5e\x36\x61\xe0\x43\x15\xe3\x99\xbb\xb0\x98\x3e\x7b\x1f\xbb\x07\x5e\xf7\xa1\xe6\x43\x35\xc5\xee\xc2\xdb\xd0\x2c\x5d\xb8\x53\xf7\x8f\x2c\x69\x2e\x5d\x15\xbb\xb6\xac\x22\x90\xdc\xa1\x25\xb1\x3b\xd0\xfb\x6d\x00\xd6\xb8\x11\xb9\x22\x58\xe5\xc6\xa0\xa6\xf2\x16\x4a\x59\xd2\x07\x07\x99\xda\x67\x7f\xef\xac\xf6\xda\x92\x11\x57\xd4\xf8\x51\xfe\x47\x1f\x8c\xdc\x09\x53\xc0\x0b\x16\x33\xdf\xa6\x70\x15\xcd\xd9\xfc\x99\xfd\x04\x00\x00\xff\xff\xc7\x96\x81\x3b\x39\x01\x00\x00")
+var __000004_create_diagnostic_logs_up_sql = []byte("\x1f\x8b\x08\x00\x00\x00\x00\x00\x00\xff\x5c\xcf\x3f\x4f\xc3\x30\x10\x05\xf0\x39\xfe\x14\x27\xb1\xb4\x52\x5a\x4b\xc0\x04\x93\x5b\xae\xc8\xc2\x71\x8a\x73\x91\x5a\x96\x28\xff\xe4\x5a\x24\x75\x68\x8e\x81\x6f\x8f\x60\xa8\x10\xfb\xd3\x7b\xef\xb7\x75\xa8\x08\x81\xd4\xc6\x20\xe8\x1d\xd8\x9c\x00\x0f\xba\xa0\x02\xba\x50\xfb\x73\x9c\x39\xb4\xd5\x10\xfd\x0c\x0b\x91\x84\x0e\xb4\x25\x7c\x46\x07\x7b\xa7\x33\xe5\x8e\xf0\x82\xc7\x54\x24\xfc\x35\xf5\x40\x78\xa0\xdf\x02\x5b\x1a\x93\x8a\x64\xb5\x82\x13\xf3\x34\x3f\x48\xe9\x03\x9f\x3e\x9b\x75\x1b\x47\x39\xd6\xcc\x67\xe9\xe3\x6a\xfe\x18\x02\xf7\x77\xb2\x19\x62\x23\xc7\x7a\xe6\xfe\x22\xbb\xd8\xae\x7d\xbc\x31\xb7\xf7\x22\x69\x2f\x7d\xcd\x7d\x57\xd5\x0c\xa4\x33\x2c\x48\x65\x7b\x7a\xbb\x0e\xc0\x13\xee\x54\x69\x08\xb6\xa5\x73\x68\xa9\xba\x86\x52\x91\x0c\xd1\xc3\xc6\xe4\x9b\xbf\x77\xb6\xb9\x2d\xc8\x29\x6d\x09\xa6\xf7\xea\xbf\xae\xb4\xfa\xb5\xc4\x45\xe8\x52\xf8\xc1\x2c\xc5\xf2\x51\x7c\x07\x00\x00\xff\xff\xc2\x73\x0d\x5a\x1d\x01\x00\x00")
 
 func _000004_create_diagnostic_logs_up_sql() ([]byte, error) {
 	return bindata_read(
@@ -128,28 +128,25 @@ func AssetNames() []string {
 
 // _bindata is a table, holding each asset generator, mapped to its name.
 var _bindata = map[string]func() ([]byte, error){
-	"000001_create_projects_table.down.sql":        _000001_create_projects_table_down_sql,
-	"000001_create_projects_table.up.sql":          _000001_create_projects_table_up_sql,
-	"000002_create_deployments_table.down.sql":     _000002_create_deployments_table_down_sql,
-	"000002_create_deployments_table.up.sql":       _000002_create_deployments_table_up_sql,
+	"000001_create_projects_table.down.sql": _000001_create_projects_table_down_sql,
+	"000001_create_projects_table.up.sql": _000001_create_projects_table_up_sql,
+	"000002_create_deployments_table.down.sql": _000002_create_deployments_table_down_sql,
+	"000002_create_deployments_table.up.sql": _000002_create_deployments_table_up_sql,
 	"000003_create_deployment_logs_table.down.sql": _000003_create_deployment_logs_table_down_sql,
-	"000003_create_deployment_logs_table.up.sql":   _000003_create_deployment_logs_table_up_sql,
-	"000004_create_diagnostic_logs.down.sql":       _000004_create_diagnostic_logs_down_sql,
-	"000004_create_diagnostic_logs.up.sql":         _000004_create_diagnostic_logs_up_sql,
-	"bindata.go":                                   bindata_go,
+	"000003_create_deployment_logs_table.up.sql": _000003_create_deployment_logs_table_up_sql,
+	"000004_create_diagnostic_logs.down.sql": _000004_create_diagnostic_logs_down_sql,
+	"000004_create_diagnostic_logs.up.sql": _000004_create_diagnostic_logs_up_sql,
+	"bindata.go": bindata_go,
 }
-
 // AssetDir returns the file names below a certain
 // directory embedded in the file by go-bindata.
 // For example if you run go-bindata on data/... and data contains the
 // following hierarchy:
-//
-//	data/
-//	  foo.txt
-//	  img/
-//	    a.png
-//	    b.png
-//
+//     data/
+//       foo.txt
+//       img/
+//         a.png
+//         b.png
 // then AssetDir("data") would return []string{"foo.txt", "img"}
 // AssetDir("data/img") would return []string{"a.png", "b.png"}
 // AssetDir("foo.txt") and AssetDir("notexist") would return an error
@@ -177,18 +174,26 @@ func AssetDir(name string) ([]string, error) {
 }
 
 type _bintree_t struct {
-	Func     func() ([]byte, error)
+	Func func() ([]byte, error)
 	Children map[string]*_bintree_t
 }
-
 var _bintree = &_bintree_t{nil, map[string]*_bintree_t{
-	"000001_create_projects_table.down.sql":        &_bintree_t{_000001_create_projects_table_down_sql, map[string]*_bintree_t{}},
-	"000001_create_projects_table.up.sql":          &_bintree_t{_000001_create_projects_table_up_sql, map[string]*_bintree_t{}},
-	"000002_create_deployments_table.down.sql":     &_bintree_t{_000002_create_deployments_table_down_sql, map[string]*_bintree_t{}},
-	"000002_create_deployments_table.up.sql":       &_bintree_t{_000002_create_deployments_table_up_sql, map[string]*_bintree_t{}},
-	"000003_create_deployment_logs_table.down.sql": &_bintree_t{_000003_create_deployment_logs_table_down_sql, map[string]*_bintree_t{}},
-	"000003_create_deployment_logs_table.up.sql":   &_bintree_t{_000003_create_deployment_logs_table_up_sql, map[string]*_bintree_t{}},
-	"000004_create_diagnostic_logs.down.sql":       &_bintree_t{_000004_create_diagnostic_logs_down_sql, map[string]*_bintree_t{}},
-	"000004_create_diagnostic_logs.up.sql":         &_bintree_t{_000004_create_diagnostic_logs_up_sql, map[string]*_bintree_t{}},
-	"bindata.go":                                   &_bintree_t{bindata_go, map[string]*_bintree_t{}},
+	"000001_create_projects_table.down.sql": &_bintree_t{_000001_create_projects_table_down_sql, map[string]*_bintree_t{
+	}},
+	"000001_create_projects_table.up.sql": &_bintree_t{_000001_create_projects_table_up_sql, map[string]*_bintree_t{
+	}},
+	"000002_create_deployments_table.down.sql": &_bintree_t{_000002_create_deployments_table_down_sql, map[string]*_bintree_t{
+	}},
+	"000002_create_deployments_table.up.sql": &_bintree_t{_000002_create_deployments_table_up_sql, map[string]*_bintree_t{
+	}},
+	"000003_create_deployment_logs_table.down.sql": &_bintree_t{_000003_create_deployment_logs_table_down_sql, map[string]*_bintree_t{
+	}},
+	"000003_create_deployment_logs_table.up.sql": &_bintree_t{_000003_create_deployment_logs_table_up_sql, map[string]*_bintree_t{
+	}},
+	"000004_create_diagnostic_logs.down.sql": &_bintree_t{_000004_create_diagnostic_logs_down_sql, map[string]*_bintree_t{
+	}},
+	"000004_create_diagnostic_logs.up.sql": &_bintree_t{_000004_create_diagnostic_logs_up_sql, map[string]*_bintree_t{
+	}},
+	"bindata.go": &_bintree_t{bindata_go, map[string]*_bintree_t{
+	}},
 }}

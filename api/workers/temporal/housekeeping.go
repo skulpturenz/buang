@@ -27,7 +27,7 @@ func Housekeeping(s app.ApplicationServices, c *client.Client) (worker.Worker, e
 			slog.ErrorContext(context.Background(), fmt.Sprintf("housekeeping panic: %v", r))
 
 			log := map[string]any{
-				"stack": debug.Stack(),
+				"stack": string(debug.Stack()),
 			}
 
 			p := o11y.CreateDiagnosticLogParams{
