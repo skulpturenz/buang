@@ -25,8 +25,9 @@ type GetDeploymentLogsResult = string
 // @param		projectId			path		int		required	"Project ID"
 // @param		deploymentId		path		int		required	"Deployment ID"
 // @param		waitForDeployment	query		bool	false		"Wait for deployment completion"
-// @success	204					{object}	nil
 // @success	200					{object}	string
+// @success	204					{object}	nil
+// @failure	400					{object}	any
 // @failure	401
 // @failure	500	{object}	string
 // @router		/project/{projectId}/deployment/{deploymentId}/logs [get]

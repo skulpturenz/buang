@@ -20,4 +20,5 @@ type Queries interface {
 	UpdateProject(ctx context.Context, arg UpdateProjectParams) (Project, error)
 	CreateDiagnosticLog(ctx context.Context, arg CreateDiagnosticLogParams) (DiagnosticLog, error)
 	DeleteStaleDiagnosticLogs(ctx context.Context) error
+	SelectActiveDeploymentsByProject(ctx context.Context, projectid int64) ([]Deployment, error)
 }

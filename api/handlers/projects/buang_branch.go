@@ -23,6 +23,7 @@ type BuangBranchRequest struct {
 // @param		projectId		path		int					true	"Project ID"
 // @param		branchDetails	body		BuangBranchRequest	true	"Branch details"
 // @success	204				{object}	nil
+// @failure	400				{object}	any
 // @failure	401
 // @failure	500	{object}	string
 // @router		/project/{projectId}/branch [delete]

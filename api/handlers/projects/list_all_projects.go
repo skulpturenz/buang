@@ -28,9 +28,10 @@ type ListAllProjectsItem struct {
 // @summary	List all projects
 // @tags		api.v1, projects
 // @security	ApiKeyAuth
-// @param		limit	query	int	false	"Limit"
-// @param		page	query	int	false	"Page"
-// @success	200		{array}	ListAllProjectsItem
+// @param		limit	query		int	false	"Limit"
+// @param		page	query		int	false	"Page"
+// @success	200		{array}		ListAllProjectsItem
+// @failure	400		{object}	any
 // @failure	401
 // @failure	500	{object}	string
 // @router		/projects [get]

@@ -15,15 +15,15 @@ func Router(s app.ApplicationServices, r chi.Router) {
 		r.Post("/", CreateProject(s))
 		r.Get("/", FindProjectByRepository(s))
 
-		r.Post("/{projectId}/deployment", CreateDeployment(s))
-
-		r.Get("/{projectId}/deployment/{deploymentId}", FindDeploymentById(s))
-		r.Delete("/{projectId}/deployment/{deploymentId}", BuangDeployment(s))
+		r.Post("/{projectId}", UpdateProject(s))
+		r.Delete("/{projectId}", DeleteProject(s))
+		r.Delete("/{projectId}/branch", BuangBranch(s))
 
 		r.Get("/{projectId}/deployments", ListAllDeployments(s))
 
-		r.Delete("/{projectId}/branch", BuangBranch(s))
-
+		r.Post("/{projectId}/deployment", CreateDeployment(s))
+		r.Get("/{projectId}/deployment/{deploymentId}", FindDeploymentById(s))
+		r.Delete("/{projectId}/deployment/{deploymentId}", BuangDeployment(s))
 		r.Get("/{projectId}/deployment/{deploymentId}/logs", GetDeploymentLogs(s))
 	})
 }

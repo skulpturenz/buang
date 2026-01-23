@@ -46,6 +46,10 @@ const docTemplate = `{
                             }
                         }
                     },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {}
+                    },
                     "401": {
                         "description": "Unauthorized"
                     },
@@ -85,6 +89,53 @@ const docTemplate = `{
                         "schema": {
                             "type": "integer"
                         }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {}
+                    },
+                    "401": {
+                        "description": "Unauthorized"
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "type": "string"
+                        }
+                    }
+                }
+            }
+        },
+        "/project/{projectId}": {
+            "post": {
+                "security": [
+                    {
+                        "ApiKeyAuth": []
+                    }
+                ],
+                "tags": [
+                    "api.v1",
+                    "project"
+                ],
+                "summary": "Update a project",
+                "parameters": [
+                    {
+                        "description": "Project details",
+                        "name": "projectDetails",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/projects.UpdateProjectRequest"
+                        }
+                    }
+                ],
+                "responses": {
+                    "204": {
+                        "description": "No Content"
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {}
                     },
                     "401": {
                         "description": "Unauthorized"
@@ -131,6 +182,10 @@ const docTemplate = `{
                 "responses": {
                     "204": {
                         "description": "No Content"
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {}
                     },
                     "401": {
                         "description": "Unauthorized"
@@ -186,6 +241,10 @@ const docTemplate = `{
                         "schema": {
                             "type": "integer"
                         }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {}
                     },
                     "401": {
                         "description": "Unauthorized"
@@ -255,7 +314,7 @@ const docTemplate = `{
                     "api.v1",
                     "project"
                 ],
-                "summary": "Spin down a preview deployment",
+                "summary": "Delete a project",
                 "parameters": [
                     {
                         "type": "integer",
@@ -263,18 +322,15 @@ const docTemplate = `{
                         "name": "projectId",
                         "in": "path",
                         "required": true
-                    },
-                    {
-                        "type": "integer",
-                        "description": "Deployment ID",
-                        "name": "deploymentId",
-                        "in": "path",
-                        "required": true
                     }
                 ],
                 "responses": {
                     "204": {
                         "description": "No Content"
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {}
                     },
                     "401": {
                         "description": "Unauthorized"
@@ -332,6 +388,10 @@ const docTemplate = `{
                     "204": {
                         "description": "No Content"
                     },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {}
+                    },
                     "401": {
                         "description": "Unauthorized"
                     },
@@ -387,6 +447,10 @@ const docTemplate = `{
                             }
                         }
                     },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {}
+                    },
                     "401": {
                         "description": "Unauthorized"
                     },
@@ -434,6 +498,10 @@ const docTemplate = `{
                                 "$ref": "#/definitions/projects.ListAllProjectsItem"
                             }
                         }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {}
                     },
                     "401": {
                         "description": "Unauthorized"
@@ -598,6 +666,30 @@ const docTemplate = `{
                     "type": "boolean"
                 },
                 "updatedAt": {
+                    "type": "string"
+                }
+            }
+        },
+        "projects.UpdateProjectRequest": {
+            "type": "object",
+            "required": [
+                "composePath",
+                "repository"
+            ],
+            "properties": {
+                "composePath": {
+                    "type": "string"
+                },
+                "password": {
+                    "type": "string"
+                },
+                "repository": {
+                    "type": "string"
+                },
+                "requiresAuthn": {
+                    "type": "boolean"
+                },
+                "username": {
                     "type": "string"
                 }
             }

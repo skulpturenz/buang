@@ -63,7 +63,7 @@ DBOS runs in-process so all that's required to use Buang is a Postgres database.
 
 Buang runs using an in memory SQLite database by default with Temporal.
 
-See the full list of environment variables to configure Buang: [configuration.md](api/configuration.md)
+See the full list of environment variables to configure Buang: [CONFIG.md](api/CONFIG.md)
 
 
 # Development

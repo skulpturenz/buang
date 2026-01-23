@@ -30,6 +30,7 @@ type CreateDeploymentRequest struct {
 // @param		deploymentDetails	body		CreateDeploymentRequest	true	"Deployment details"
 // @param		waitForDeployment	query		bool					false	"Wait for deployment completion"
 // @success	200					{object}	int
+// @failure	400					{object}	any
 // @failure	401
 // @failure	500	{object}	string
 // @router		/project/{projectId}/deployment [post]

@@ -23,6 +23,7 @@ import (
 type BuangDeploymentParams struct {
 	ProjectId    int64
 	DeploymentId int64
+	Block        bool
 }
 
 func (p BuangDeploymentParams) Exec(ctx context.Context, s app.ApplicationServices) (err error) {
@@ -61,9 +62,16 @@ func (p BuangDeploymentParams) Exec(ctx context.Context, s app.ApplicationServic
 			TaskQueue: constantstaskqueues.QueueBuang,
 		}
 
-		_, err := executor.(app.TemporalClient).ExecuteWorkflow(ctx, options, temporalworkflows.BuangDeployment, p.ProjectId, p.DeploymentId)
+		run, err := executor.(app.TemporalClient).ExecuteWorkflow(ctx, options, temporalworkflows.BuangDeployment, p.ProjectId, p.DeploymentId)
 		if err != nil {
 			return err
+		}
+
+		if p.Block {
+			err = run.Get(ctx, nil)
+			if err != nil {
+				return err
+			}
 		}
 
 		return nil
@@ -78,9 +86,11 @@ func (p BuangDeploymentParams) Exec(ctx context.Context, s app.ApplicationServic
 			return err
 		}
 
-		_, err = handle.GetResult()
-		if err != nil {
-			return err
+		if p.Block {
+			_, err = handle.GetResult()
+			if err != nil {
+				return err
+			}
 		}
 
 		return nil

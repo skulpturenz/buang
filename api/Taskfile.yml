@@ -52,7 +52,7 @@ tasks:
   generate-env-docs:
     desc: Generate docs for env configuration
     cmds:
-      - FERRITE_MODE="usage/markdown" go run . > configuration.md
+      - FERRITE_MODE="usage/markdown" go run . > CONFIG.md
 
   generate-changelog:
     desc: Generate changelog
