@@ -25,6 +25,7 @@ type UpdateProjectRequest struct {
 // @summary	Update a project
 // @tags		api.v1, project
 // @security	ApiKeyAuth
+// @param		projectId		path		int						true	"Project ID"
 // @param		projectDetails	body		UpdateProjectRequest	true	"Project details"
 // @success	204				{object}	nil
 // @failure	401

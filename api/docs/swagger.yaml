@@ -181,8 +181,38 @@ paths:
       - api.v1
       - project
   /project/{projectId}:
+    delete:
+      parameters:
+      - description: Project ID
+        in: path
+        name: projectId
+        required: true
+        type: integer
+      responses:
+        "204":
+          description: No Content
+        "400":
+          description: Bad Request
+          schema: {}
+        "401":
+          description: Unauthorized
+        "500":
+          description: Internal Server Error
+          schema:
+            type: string
+      security:
+      - ApiKeyAuth: []
+      summary: Delete a project
+      tags:
+      - api.v1
+      - project
     post:
       parameters:
+      - description: Project ID
+        in: path
+        name: projectId
+        required: true
+        type: integer
       - description: Project details
         in: body
         name: projectDetails
@@ -285,12 +315,14 @@ paths:
         name: projectId
         required: true
         type: integer
+      - description: Deployment ID
+        in: path
+        name: deploymentId
+        required: true
+        type: integer
       responses:
         "204":
           description: No Content
-        "400":
-          description: Bad Request
-          schema: {}
         "401":
           description: Unauthorized
         "500":
@@ -299,7 +331,7 @@ paths:
             type: string
       security:
       - ApiKeyAuth: []
-      summary: Delete a project
+      summary: Spin down a preview deployment
       tags:
       - api.v1
       - project

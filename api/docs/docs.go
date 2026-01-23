@@ -120,6 +120,13 @@ const docTemplate = `{
                 "summary": "Update a project",
                 "parameters": [
                     {
+                        "type": "integer",
+                        "description": "Project ID",
+                        "name": "projectId",
+                        "in": "path",
+                        "required": true
+                    },
+                    {
                         "description": "Project details",
                         "name": "projectDetails",
                         "in": "body",
@@ -127,6 +134,45 @@ const docTemplate = `{
                         "schema": {
                             "$ref": "#/definitions/projects.UpdateProjectRequest"
                         }
+                    }
+                ],
+                "responses": {
+                    "204": {
+                        "description": "No Content"
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {}
+                    },
+                    "401": {
+                        "description": "Unauthorized"
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "type": "string"
+                        }
+                    }
+                }
+            },
+            "delete": {
+                "security": [
+                    {
+                        "ApiKeyAuth": []
+                    }
+                ],
+                "tags": [
+                    "api.v1",
+                    "project"
+                ],
+                "summary": "Delete a project",
+                "parameters": [
+                    {
+                        "type": "integer",
+                        "description": "Project ID",
+                        "name": "projectId",
+                        "in": "path",
+                        "required": true
                     }
                 ],
                 "responses": {
@@ -314,7 +360,7 @@ const docTemplate = `{
                     "api.v1",
                     "project"
                 ],
-                "summary": "Delete a project",
+                "summary": "Spin down a preview deployment",
                 "parameters": [
                     {
                         "type": "integer",
@@ -322,15 +368,18 @@ const docTemplate = `{
                         "name": "projectId",
                         "in": "path",
                         "required": true
+                    },
+                    {
+                        "type": "integer",
+                        "description": "Deployment ID",
+                        "name": "deploymentId",
+                        "in": "path",
+                        "required": true
                     }
                 ],
                 "responses": {
                     "204": {
                         "description": "No Content"
-                    },
-                    "400": {
-                        "description": "Bad Request",
-                        "schema": {}
                     },
                     "401": {
                         "description": "Unauthorized"

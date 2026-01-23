@@ -1,7 +1,7 @@
 -- name: CreateDeployment :one
 INSERT INTO deployments (project_id, sha, status, service_entrypoint, branch, env_vars) 
 SELECT
-	$projectId AS project_id,
+	(SELECT id FROM projects WHERE projects.id = $projectId AND projects.deleted = FALSE) AS project_id,
 	$sha AS sha,
 	$status AS status,
 	$serviceEntrypoint AS service_entrypoint,

@@ -12,7 +12,7 @@ import (
 const createDeployment = `-- name: CreateDeployment :one
 INSERT INTO deployments (project_id, sha, status, service_entrypoint, branch, env_vars) 
 SELECT
-	$1::bigint AS project_id,
+	(SELECT id FROM projects WHERE id = $1::bigint AND deleted = FALSE) AS project_id,
 	$2::text AS sha,
 	$3::smallint AS status,
 	$4::text AS service_entrypoint,

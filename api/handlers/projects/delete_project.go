@@ -20,7 +20,7 @@ import (
 // @failure	400			{object}	any
 // @failure	401
 // @failure	500	{object}	string
-// @router		/project/{projectId}/deployment/{deploymentId} [delete]
+// @router		/project/{projectId} [delete]
 func DeleteProject(s app.ApplicationServices) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		projectIdParam := chi.URLParam(r, "projectId")
