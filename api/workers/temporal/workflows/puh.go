@@ -32,13 +32,9 @@ func (p PeriodicUpdateHandler) PeriodicUpdateHandler(ctx workflow.Context) (res 
 			stack := debug.Stack()
 			goroutines, _ := gostackparse.Parse(bytes.NewReader(stack))
 
-			log := map[string]any{
-				"stack": goroutines,
-			}
-
 			p := o11y.CreateDiagnosticLogParams{
 				Type: enumsdiagnosticlogtype.Panic,
-				Log:  log,
+				Log:  goroutines,
 			}
 			p.Exec(context.Background())
 

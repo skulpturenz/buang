@@ -25,13 +25,9 @@ func BuangBranch(ctx workflow.Context, projectId int64, branch string) (err erro
 			stack := debug.Stack()
 			goroutines, _ := gostackparse.Parse(bytes.NewReader(stack))
 
-			log := map[string]any{
-				"stack": goroutines,
-			}
-
 			p := o11y.CreateDiagnosticLogParams{
 				Type: enumsdiagnosticlogtype.Panic,
-				Log:  log,
+				Log:  goroutines,
 			}
 			p.Exec(context.Background())
 

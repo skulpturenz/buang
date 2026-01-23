@@ -9,7 +9,7 @@ import (
 
 type CreateDiagnosticLogParams struct {
 	Type enumsdiagnosticlogtype.DiagnosticLogType
-	Log  map[string]any
+	Log  any
 }
 
 type CreateDiagnosticLogResult struct {
@@ -23,14 +23,24 @@ func (p *CreateDiagnosticLogParams) Exec(ctx context.Context) *CreateDiagnosticL
 	if i == nil {
 		slog.Error("diagnostic log singleton not initialized, nothing will be captured")
 
-		return &CreateDiagnosticLogResult{}
+		return nil
 	}
 
 	q := *i.q
 
+	log := map[string]any{}
+	switch p.Type {
+	case enumsdiagnosticlogtype.Panic:
+		log["panic"] = p.Log
+	case enumsdiagnosticlogtype.DockerStats:
+		log["docker_stats"] = p.Log
+	default:
+		return nil
+	}
+
 	res, _ := q.CreateDiagnosticLog(ctx, interfaces.CreateDiagnosticLogParams{
 		Type: p.Type,
-		Log:  p.Log,
+		Log:  log,
 	})
 
 	ret := CreateDiagnosticLogResult{

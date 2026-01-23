@@ -34,13 +34,9 @@ func (p BuangDeploymentParams) Exec(ctx context.Context, s app.ApplicationServic
 			stack := debug.Stack()
 			goroutines, _ := gostackparse.Parse(bytes.NewReader(stack))
 
-			log := map[string]any{
-				"stack": goroutines,
-			}
-
 			p := o11y.CreateDiagnosticLogParams{
 				Type: enumsdiagnosticlogtype.Panic,
-				Log:  log,
+				Log:  goroutines,
 			}
 			p.Exec(ctx)
 

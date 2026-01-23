@@ -25,13 +25,9 @@ func BuangDeployment(ctx workflow.Context, projectId int64, deploymentId int64) 
 			stack := debug.Stack()
 			goroutines, _ := gostackparse.Parse(bytes.NewReader(stack))
 
-			log := map[string]any{
-				"stack": goroutines,
-			}
-
 			p := o11y.CreateDiagnosticLogParams{
 				Type: enumsdiagnosticlogtype.Panic,
-				Log:  log,
+				Log:  goroutines,
 			}
 			p.Exec(context.Background())
 
