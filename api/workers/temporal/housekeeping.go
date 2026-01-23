@@ -5,17 +5,15 @@ import (
 	"context"
 	"fmt"
 	"log/slog"
-	"os"
 	"runtime/debug"
 	"skulpture/buang/app"
 	"skulpture/buang/components/o11y"
-	constantsfeaturetoggles "skulpture/buang/constants/feature_toggles"
+	constantsenvs "skulpture/buang/constants/envs"
 	constantstaskqueues "skulpture/buang/constants/task_queues"
 	enumsdiagnosticlogtype "skulpture/buang/enums/diagnostic_log_type"
 	enumsenv "skulpture/buang/enums/env"
 	"skulpture/buang/workers/activities"
 	temporalworkflows "skulpture/buang/workers/temporal/workflows"
-	"strconv"
 
 	"github.com/DataDog/gostackparse"
 	"github.com/google/uuid"
@@ -59,25 +57,31 @@ func Housekeeping(s app.ApplicationServices, c *client.Client) (worker.Worker, e
 	w.RegisterWorkflow(buangHousekeeping.BuangHousekeeping)
 	w.RegisterWorkflow(periodicUpdateHandler.PeriodicUpdateHandler)
 
-	id := fmt.Sprintf("housekeeping_cron_%v", uuid.New())
+	id := fmt.Sprintf("housekeeping_cron_prune_%v", uuid.New())
 	options := client.StartWorkflowOptions{
 		ID:           id,
 		TaskQueue:    constantstaskqueues.QueueCron,
-		CronSchedule: "0 0 */2 * *", // every 2 days
+		CronSchedule: constantsenvs.HOUSEKEEPING_PRUNE_DEPLOYMENTS.Value(),
 	}
 
 	cl := *c
+
 	_, err := cl.ExecuteWorkflow(context.Background(), options, buangHousekeeping.BuangHousekeeping)
 	if err != nil {
 		return nil, err
 	}
 
-	goEnv, _ := os.LookupEnv("GO_ENV")
-	goEnvE, _ := enumsenv.Parse(goEnv)
-	isExperimentalBootstrapEnabledEnv, _ := os.LookupEnv(constantsfeaturetoggles.EXPERIMENTAL_BOOTSTRAP)
-	isExperimentalBootstrapEnabled, _ := strconv.ParseBool(isExperimentalBootstrapEnabledEnv)
+	goEnv, _ := enumsenv.Parse(constantsenvs.GO_ENV.Value())
+	isBootstrapEnabled, _ := constantsenvs.EXPERIMENTAL_BOOTSTRAP.Value()
 
-	if goEnvE == enumsenv.Production && isExperimentalBootstrapEnabled {
+	if goEnv == enumsenv.Production && isBootstrapEnabled {
+		id := fmt.Sprintf("housekeeping_cron_puh_%v", uuid.New())
+		options := client.StartWorkflowOptions{
+			ID:           id,
+			TaskQueue:    constantstaskqueues.QueueCron,
+			CronSchedule: constantsenvs.HOUSEKEEPING_PRUNE_DEPLOYMENTS.Value(),
+		}
+
 		_, err = cl.ExecuteWorkflow(context.Background(), options, periodicUpdateHandler.PeriodicUpdateHandler)
 		if err != nil {
 			return nil, err

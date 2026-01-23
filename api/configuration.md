@@ -2,24 +2,26 @@
 
 This document describes the environment variables used by `buang`.
 
-| Name                            | Usage                                                       | Description                                                                                                                    |
-| ------------------------------- | ----------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------ |
-| [`API_KEY`]                     | defaults to `supersecureapikey`                             | Buang API key                                                                                                                  |
-| [`DBOS_ADMIN_SERVER_PORT`]      | optional                                                    | DBOS admin server port. Optional to use DBOS. Specify a port to enable the admin server, DBOS default is 3001                  |
-| [`DBOS_CONDUCTOR_API_KEY`]      | optional                                                    | DBOS conductor API key. Optional to use DBOS                                                                                   |
-| [`DBOS_CONDUCTOR_URL`]          | optional                                                    | DBOS conductor url. Optional to use DBOS. You can use either the DBOS console or self host it                                  |
-| [`DB_CONNECTION_STRING`]        | defaults to `'file:test.db?_foreign_keys=true&mode=memory'` | Database connection string                                                                                                     |
-| [`DB_TYPE`]                     | defaults to `sqlite`                                        | Database type                                                                                                                  |
-| [`DURABLE_EXECUTOR`]            | defaults to `temporal`                                      | Durable executor                                                                                                               |
-| [`ENABLE_TELEMETRY`]            | defaults to `false`                                         | Enable telemetry                                                                                                               |
-| [`EXPERIMENTAL_BOOTSTRAP`]      | defaults to `false`                                         | Enable experimental bootstrap. Bootstrapping allows Buang to deploy itself and autoupdates on Saturdays at midnight every week |
-| [`GO_ENV`]                      | defaults to `development`                                   | Golang environment                                                                                                             |
-| [`LOG_LEVEL`]                   | defaults to `INFO`                                          | Log level                                                                                                                      |
-| [`OTEL_EXPORTER_OTLP_ENDPOINT`] | defaults to `''`                                            | OpenTelemetry exporter endpoint                                                                                                |
-| [`OTEL_SERVICE_NAME`]           | defaults to `skulpture-buang`                               | OpenTelemetry service name. This is also the DBOS application name which is required when using DBOS                           |
-| [`TEMPORAL_ADDRESS`]            | optional                                                    | Temporal address. You can either use Temporal Cloud or self host it                                                            |
-| [`TEMPORAL_API_KEY`]            | optional                                                    | Temporal API key                                                                                                               |
-| [`TEMPORAL_NAMESPACE`]          | optional                                                    | Temporal namespace                                                                                                             |
+| Name                                      | Usage                                                       | Description                                                                                                                    |
+| ----------------------------------------- | ----------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------ |
+| [`API_KEY`]                               | defaults to `supersecureapikey`                             | Buang API key                                                                                                                  |
+| [`DBOS_ADMIN_SERVER_PORT`]                | optional                                                    | DBOS admin server port. Optional to use DBOS. Specify a port to enable the admin server, DBOS default is 3001                  |
+| [`DBOS_CONDUCTOR_API_KEY`]                | optional                                                    | DBOS conductor API key. Optional to use DBOS                                                                                   |
+| [`DBOS_CONDUCTOR_URL`]                    | optional                                                    | DBOS conductor url. Optional to use DBOS. You can use either the DBOS console or self host it                                  |
+| [`DB_CONNECTION_STRING`]                  | defaults to `'file:test.db?_foreign_keys=true&mode=memory'` | Database connection string                                                                                                     |
+| [`DB_TYPE`]                               | defaults to `sqlite`                                        | Database type                                                                                                                  |
+| [`DURABLE_EXECUTOR`]                      | defaults to `temporal`                                      | Durable executor                                                                                                               |
+| [`ENABLE_TELEMETRY`]                      | defaults to `false`                                         | Enable telemetry                                                                                                               |
+| [`EXPERIMENTAL_BOOTSTRAP`]                | defaults to `false`                                         | Enable experimental bootstrap. Bootstrapping allows Buang to deploy itself and autoupdates on Saturdays at midnight every week |
+| [`EXPERIMENTAL_HOUSEKEEPING_AUTO_UPDATE`] | defaults to `'0 0 * * 6'`                                   | Cron expression for when auto updates should run. Defaults to every Saturday at midnight                                       |
+| [`GO_ENV`]                                | defaults to `development`                                   | Golang environment                                                                                                             |
+| [`HOUSEKEEPING_PRUNE_DEPLOYMENTS`]        | defaults to `'0 0 */2 * *'`                                 | Cron expression for stale deployments should be pruned. Defaults to every 2 days                                               |
+| [`LOG_LEVEL`]                             | defaults to `INFO`                                          | Log level                                                                                                                      |
+| [`OTEL_EXPORTER_OTLP_ENDPOINT`]           | defaults to `''`                                            | OpenTelemetry exporter endpoint                                                                                                |
+| [`OTEL_SERVICE_NAME`]                     | defaults to `skulpture-buang`                               | OpenTelemetry service name. This is also the DBOS application name which is required when using DBOS                           |
+| [`TEMPORAL_ADDRESS`]                      | optional                                                    | Temporal address. You can either use Temporal Cloud or self host it                                                            |
+| [`TEMPORAL_API_KEY`]                      | optional                                                    | Temporal API key                                                                                                               |
+| [`TEMPORAL_NAMESPACE`]                    | optional                                                    | Temporal namespace                                                                                                             |
 
 > [!TIP]
 > If an environment variable is set to an empty value, `buang` behaves as if
@@ -137,6 +139,18 @@ export EXPERIMENTAL_BOOTSTRAP=true
 export EXPERIMENTAL_BOOTSTRAP=false # (default)
 ```
 
+## `EXPERIMENTAL_HOUSEKEEPING_AUTO_UPDATE`
+
+> Cron expression for when auto updates should run. Defaults to every Saturday at midnight
+
+The `EXPERIMENTAL_HOUSEKEEPING_AUTO_UPDATE` variable **MAY** be left undefined,
+in which case the default value of `0 0 * * 6` is used. Otherwise, the value
+must be a valid 5 field cron expression.
+
+```bash
+export EXPERIMENTAL_HOUSEKEEPING_AUTO_UPDATE='0 0 * * 6' # (default)
+```
+
 ## `GO_ENV`
 
 > Golang environment
@@ -149,6 +163,18 @@ shown in the examples below.
 export GO_ENV=production
 export GO_ENV=development # (default)
 export GO_ENV=test
+```
+
+## `HOUSEKEEPING_PRUNE_DEPLOYMENTS`
+
+> Cron expression for stale deployments should be pruned. Defaults to every 2 days
+
+The `HOUSEKEEPING_PRUNE_DEPLOYMENTS` variable **MAY** be left undefined, in
+which case the default value of `0 0 */2 * *` is used. Otherwise, the value must
+be a valid 5 field cron expression.
+
+```bash
+export HOUSEKEEPING_PRUNE_DEPLOYMENTS='0 0 */2 * *' # (default)
 ```
 
 ## `LOG_LEVEL`
@@ -238,8 +264,10 @@ export TEMPORAL_NAMESPACE=foo # (non-normative)
 [`durable_executor`]: #DURABLE_EXECUTOR
 [`enable_telemetry`]: #ENABLE_TELEMETRY
 [`experimental_bootstrap`]: #EXPERIMENTAL_BOOTSTRAP
+[`experimental_housekeeping_auto_update`]: #EXPERIMENTAL_HOUSEKEEPING_AUTO_UPDATE
 [ferrite]: https://github.com/dogmatiq/ferrite
 [`go_env`]: #GO_ENV
+[`housekeeping_prune_deployments`]: #HOUSEKEEPING_PRUNE_DEPLOYMENTS
 [`log_level`]: #LOG_LEVEL
 [`otel_exporter_otlp_endpoint`]: #OTEL_EXPORTER_OTLP_ENDPOINT
 [`otel_service_name`]: #OTEL_SERVICE_NAME

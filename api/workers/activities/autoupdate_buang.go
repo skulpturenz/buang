@@ -16,13 +16,13 @@ type AutoupdateBuangResult struct{}
 func (bd *AutoupdateBuang) AutoupdateBuang(ctx context.Context) (*AutoupdateBuangResult, error) {
 	s := app.ApplicationServices(*bd)
 
-	projectName, isSet := os.LookupEnv("BUANG_BOOTSTRAP_PROJECT")
-	if !isSet {
+	projectName, ok := os.LookupEnv("BUANG_BOOTSTRAP_PROJECT")
+	if !ok {
 		return nil, nil
 	}
 
-	bootstrapDir, isSet := os.LookupEnv("BUANG_BOOTSTRAP_DIR")
-	if !isSet {
+	bootstrapDir, ok := os.LookupEnv("BUANG_BOOTSTRAP_DIR")
+	if !ok {
 		return nil, nil
 	}
 

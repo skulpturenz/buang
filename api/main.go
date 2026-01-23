@@ -6,7 +6,7 @@ import (
 	"os"
 	"skulpture/buang/app"
 	"skulpture/buang/components/o11y"
-	constantsfeaturetoggles "skulpture/buang/constants/feature_toggles"
+	constantsenvs "skulpture/buang/constants/envs"
 	"skulpture/buang/db"
 	_ "skulpture/buang/docs"
 	enumsdbtypes "skulpture/buang/enums/db_types"
@@ -19,84 +19,11 @@ import (
 	workers "skulpture/buang/workers/temporal"
 	"time"
 
-	"github.com/dogmatiq/ferrite"
 	"github.com/go-chi/chi/v5"
 	"github.com/go-chi/chi/v5/middleware"
 	_ "github.com/mattn/go-sqlite3"
 	httpSwagger "github.com/swaggo/http-swagger"
 )
-
-var (
-	GO_ENV = ferrite.
-		Enum("GO_ENV", "Golang environment").
-		WithMembers(enumsenv.Production.String(), enumsenv.Development.String(), enumsenv.Test.String()).
-		WithDefault(enumsenv.Development.String()).
-		Required()
-	API_KEY = ferrite.
-		String("API_KEY", "Buang API key").
-		WithSensitiveContent().
-		WithDefault("supersecureapikey").
-		Required()
-	LOG_LEVEL = ferrite.EnumAs[slog.Level]("LOG_LEVEL", "Log level").
-			WithMembers(slog.LevelDebug, slog.LevelError, slog.LevelInfo, slog.LevelWarn).
-			WithDefault(slog.LevelInfo).
-			Required()
-	ENABLE_TELEMETRY = ferrite.
-				Bool("ENABLE_TELEMETRY", "Enable telemetry").
-				WithDefault(false).
-				Required()
-	OTEL_SERVICE_NAME = ferrite.
-				String("OTEL_SERVICE_NAME", "OpenTelemetry service name. This is also the DBOS application name which is required when using DBOS").
-				WithDefault("skulpture-buang").
-				Required()
-	OTEL_EXPORTER_OTLP_ENDPOINT = ferrite.
-					String("OTEL_EXPORTER_OTLP_ENDPOINT", "OpenTelemetry exporter endpoint").
-					WithDefault("").
-					Optional()
-	DB_TYPE = ferrite.
-		Enum("DB_TYPE", "Database type").
-		WithMembers(enumsdbtypes.Pg.String(), enumsdbtypes.Sqlite.String()).
-		WithDefault(enumsdbtypes.Sqlite.String()).
-		Required()
-	DB_CONNECTION_STRING = ferrite.
-				String("DB_CONNECTION_STRING", "Database connection string").
-				WithSensitiveContent().
-				WithDefault("file:test.db?_foreign_keys=true&mode=memory").
-				Required()
-	TEMPORAL_API_KEY = ferrite.
-				String("TEMPORAL_API_KEY", "Temporal API key").
-				WithSensitiveContent().
-				Optional()
-	TEMPORAL_NAMESPACE = ferrite.
-				String("TEMPORAL_NAMESPACE", "Temporal namespace").
-				Optional()
-	TEMPORAL_ADDRESS = ferrite.
-				String("TEMPORAL_ADDRESS", "Temporal address. You can either use Temporal Cloud or self host it").
-				Optional()
-	DURABLE_EXECUTOR = ferrite.
-				Enum("DURABLE_EXECUTOR", "Durable executor").
-				WithMembers(enumsdurableexecutors.Temporal.String(), enumsdurableexecutors.Dbos.String()).
-				WithDefault(enumsdurableexecutors.Temporal.String()).
-				Required()
-	DBOS_CONDUCTOR_API_KEY = ferrite.
-				String("DBOS_CONDUCTOR_API_KEY", "DBOS conductor API key. Optional to use DBOS").
-				WithSensitiveContent().
-				Optional()
-	DBOS_CONDUCTOR_URL = ferrite.
-				String("DBOS_CONDUCTOR_URL", "DBOS conductor url. Optional to use DBOS. You can use either the DBOS console or self host it").
-				Optional()
-	DBOS_ADMIN_SERVER_PORT = ferrite.
-				Signed[int]("DBOS_ADMIN_SERVER_PORT", "DBOS admin server port. Optional to use DBOS. Specify a port to enable the admin server, DBOS default is 3001").
-				Optional()
-	EXPERIMENTAL_BOOTSTRAP = ferrite.
-				Bool(constantsfeaturetoggles.EXPERIMENTAL_BOOTSTRAP, "Enable experimental bootstrap. Bootstrapping allows Buang to deploy itself and autoupdates on Saturdays at midnight every week").
-				WithDefault(false).
-				Optional()
-)
-
-func init() {
-	ferrite.Init()
-}
 
 // @title						Buang API
 // @description				Deploy preview environments with ease
@@ -116,7 +43,7 @@ func main() {
 	r.Use(middleware.Logger)
 	r.Use(middleware.Recoverer)
 
-	env, err := enumsenv.Parse(GO_ENV.Value())
+	env, err := enumsenv.Parse(constantsenvs.GO_ENV.Value())
 	limiterConfig := limiter.LimiterConfig{
 		Env:      env,
 		Tokens:   500,
@@ -129,15 +56,15 @@ func main() {
 	}
 
 	logger := app.LoggerConfig{
-		Enable:   ENABLE_TELEMETRY.Value() || env == enumsenv.Production,
-		Service:  OTEL_SERVICE_NAME.Value(),
+		Enable:   constantsenvs.ENABLE_TELEMETRY.Value() || env == enumsenv.Production,
+		Service:  constantsenvs.OTEL_SERVICE_NAME.Value(),
 		Env:      env,
-		LogLevel: LOG_LEVEL.Value(),
+		LogLevel: constantsenvs.LOG_LEVEL.Value(),
 	}
 	cleanup := logger.SetDefault(ctx, r)
 	defer cleanup(ctx)
 
-	dbType, err := enumsdbtypes.Parse(DB_TYPE.Value())
+	dbType, err := enumsdbtypes.Parse(constantsenvs.DB_TYPE.Value())
 	if err != nil {
 		slog.ErrorContext(ctx, "error", "err", err.Error())
 		panic(err)
@@ -145,7 +72,7 @@ func main() {
 
 	dbCfg := db.DbConfig{
 		Type:             dbType,
-		ConnectionString: DB_CONNECTION_STRING.Value(),
+		ConnectionString: constantsenvs.DB_CONNECTION_STRING.Value(),
 	}
 	queries, cleanup, err := dbCfg.New(ctx)
 	if err != nil {
@@ -160,8 +87,8 @@ func main() {
 
 	_ = o11y.NewS(&queries) // singleton
 
-	isExperimentalBootstrapEnabled, ok := EXPERIMENTAL_BOOTSTRAP.Value()
-	if GO_ENV.Value() == enumsenv.Production.String() && ok && isExperimentalBootstrapEnabled { // TODO: test
+	isExperimentalBootstrapEnabled, ok := constantsenvs.EXPERIMENTAL_BOOTSTRAP.Value()
+	if constantsenvs.GO_ENV.Value() == enumsenv.Production.String() && ok && isExperimentalBootstrapEnabled { // TODO: test
 		err := bootstrap(ctx, &s)
 		if err != nil {
 			panic(err)
@@ -171,10 +98,10 @@ func main() {
 	}
 
 	authnConfig := authn.AuthnMiddlewareConfig{
-		ApiKey: API_KEY.Value(),
+		ApiKey: constantsenvs.API_KEY.Value(),
 	}
 
-	durableExecutor, err := enumsdurableexecutors.Parse(DURABLE_EXECUTOR.Value())
+	durableExecutor, err := enumsdurableexecutors.Parse(constantsenvs.DURABLE_EXECUTOR.Value())
 	if err != nil {
 		slog.ErrorContext(ctx, "error", "err", err.Error())
 		panic(err)
