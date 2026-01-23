@@ -54,6 +54,11 @@ tasks:
     cmds:
       - FERRITE_MODE="usage/markdown" go run . > configuration.md
 
+  generate-changelog:
+    desc: Generate changelog
+    cmds:
+      - git-chglog -o CHANGELOG.md
+
   generate-all:
     desc: Run all generators
     deps:
