@@ -1,6 +1,6 @@
 CREATE TABLE IF NOT EXISTS deployments (
 	id INTEGER PRIMARY KEY,
-	project_id INTEGER NOT NULL REFERENCES projects(id),
+	project_id INTEGER NOT NULL REFERENCES projects(id) ON DELETE CASCADE,
 	url TEXT,
 	status SMALLINT NOT NULL,
 	sha TEXT NOT NULL,
