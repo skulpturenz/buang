@@ -1,21 +1,14 @@
 package workflowwrappers
 
 import (
-	"bytes"
 	"context"
-	"errors"
 	"fmt"
-	"log/slog"
-	"runtime/debug"
 	"skulpture/buang/app"
-	"skulpture/buang/components/o11y"
 	constantstaskqueues "skulpture/buang/constants/task_queues"
-	enumsdiagnosticlogtype "skulpture/buang/enums/diagnostic_log_type"
 	enumsdurableexecutors "skulpture/buang/enums/durable_executors"
 	dbosworkflows "skulpture/buang/workers/dbos/workflows"
 	temporalworkflows "skulpture/buang/workers/temporal/workflows"
 
-	"github.com/DataDog/gostackparse"
 	"github.com/dbos-inc/dbos-transact-golang/dbos"
 	temporalclient "go.temporal.io/sdk/client"
 )
@@ -27,27 +20,7 @@ type CreateDeploymentParams struct {
 }
 
 func (p CreateDeploymentParams) Exec(ctx context.Context, s app.ApplicationServices) (err error) {
-	defer func() {
-		if r := recover(); r != nil {
-			slog.ErrorContext(context.Background(), fmt.Sprintf("create deployment panic: %v", r))
-
-			stack := debug.Stack()
-			goroutines, _ := gostackparse.Parse(bytes.NewReader(stack))
-
-			p := o11y.CreateDiagnosticLogParams{
-				Type: enumsdiagnosticlogtype.Panic,
-				Log:  goroutines,
-			}
-			p.Exec(ctx)
-
-			switch x := r.(type) {
-			case error:
-				err = x
-			default:
-				err = errors.New("create deployment panic")
-			}
-		}
-	}()
+	defer RecoverWorkflowPanic("CreateDeployment", err)
 
 	executor, durableExecutor := s.GetDurableExecutor()
 

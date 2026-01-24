@@ -1,18 +1,13 @@
 package dbosworkflows
 
 import (
-	"bytes"
 	"context"
 	"errors"
-	"fmt"
-	"log/slog"
-	"runtime/debug"
 	"skulpture/buang/app"
-	"skulpture/buang/components/o11y"
-	enumsdiagnosticlogtype "skulpture/buang/enums/diagnostic_log_type"
+	enumsdurableexecutors "skulpture/buang/enums/durable_executors"
+	"skulpture/buang/workers"
 	"skulpture/buang/workers/activities"
 
-	"github.com/DataDog/gostackparse"
 	"github.com/dbos-inc/dbos-transact-golang/dbos"
 )
 
@@ -24,27 +19,7 @@ type DeployParams struct {
 }
 
 func (d Deploy) Deploy(ctx dbos.DBOSContext, p DeployParams) (res bool, err error) {
-	defer func() {
-		if r := recover(); r != nil {
-			slog.ErrorContext(context.Background(), fmt.Sprintf("deploy panic: %v", r))
-
-			stack := debug.Stack()
-			goroutines, _ := gostackparse.Parse(bytes.NewReader(stack))
-
-			p := o11y.CreateDiagnosticLogParams{
-				Type: enumsdiagnosticlogtype.Panic,
-				Log:  goroutines,
-			}
-			p.Exec(context.Background())
-
-			switch x := r.(type) {
-			case error:
-				err = x
-			default:
-				err = errors.New("deploy panic")
-			}
-		}
-	}()
+	defer workers.RecoverWorkflowPanic(enumsdurableexecutors.Dbos, "Deploy", err)
 
 	s := app.ApplicationServices(d)
 

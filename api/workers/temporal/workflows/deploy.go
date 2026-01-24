@@ -1,44 +1,18 @@
 package temporalworkflows
 
 import (
-	"bytes"
-	"context"
 	"errors"
-	"fmt"
-	"log/slog"
-	"runtime/debug"
-	"skulpture/buang/components/o11y"
-	enumsdiagnosticlogtype "skulpture/buang/enums/diagnostic_log_type"
+	enumsdurableexecutors "skulpture/buang/enums/durable_executors"
+	"skulpture/buang/workers"
 	"skulpture/buang/workers/activities"
 	"time"
 
-	"github.com/DataDog/gostackparse"
 	"go.temporal.io/sdk/temporal"
 	"go.temporal.io/sdk/workflow"
 )
 
 func Deploy(ctx workflow.Context, projectId int64, deploymentId int64) (err error) {
-	defer func() {
-		if r := recover(); r != nil {
-			slog.ErrorContext(context.Background(), fmt.Sprintf("deploy panic: %v", r))
-
-			stack := debug.Stack()
-			goroutines, _ := gostackparse.Parse(bytes.NewReader(stack))
-
-			p := o11y.CreateDiagnosticLogParams{
-				Type: enumsdiagnosticlogtype.Panic,
-				Log:  goroutines,
-			}
-			p.Exec(context.Background())
-
-			switch x := r.(type) {
-			case error:
-				err = x
-			default:
-				err = errors.New("deploy panic")
-			}
-		}
-	}()
+	defer workers.RecoverWorkflowPanic(enumsdurableexecutors.Temporal, "Deploy", err)
 
 	// the convoluted error handling is because if this fails somewhere
 	// and the deployment is still marked as new or deploying then no other deployments for the branch can happen

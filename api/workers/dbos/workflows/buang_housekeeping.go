@@ -1,46 +1,21 @@
 package dbosworkflows
 
 import (
-	"bytes"
 	"context"
-	"errors"
-	"fmt"
-	"log/slog"
-	"runtime/debug"
 	"skulpture/buang/app"
 	"skulpture/buang/components/o11y"
-	enumsdiagnosticlogtype "skulpture/buang/enums/diagnostic_log_type"
+	enumsdurableexecutors "skulpture/buang/enums/durable_executors"
+	"skulpture/buang/workers"
 	"skulpture/buang/workers/activities"
 	"time"
 
-	"github.com/DataDog/gostackparse"
 	"github.com/dbos-inc/dbos-transact-golang/dbos"
 )
 
 type BuangHousekeeping app.ApplicationServices
 
 func (h BuangHousekeeping) BuangHousekeeping(ctx dbos.DBOSContext, scheduledTime time.Time) (res bool, err error) {
-	defer func() {
-		if r := recover(); r != nil {
-			slog.ErrorContext(context.Background(), fmt.Sprintf("buang housekeeping panic: %v", r))
-
-			stack := debug.Stack()
-			goroutines, _ := gostackparse.Parse(bytes.NewReader(stack))
-
-			p := o11y.CreateDiagnosticLogParams{
-				Type: enumsdiagnosticlogtype.Panic,
-				Log:  goroutines,
-			}
-			p.Exec(context.Background())
-
-			switch x := r.(type) {
-			case error:
-				err = x
-			default:
-				err = errors.New("buang housekeeping panic")
-			}
-		}
-	}()
+	defer workers.RecoverWorkflowPanic(enumsdurableexecutors.Dbos, "BuangHousekeeping", err)
 
 	s := app.ApplicationServices(h)
 
