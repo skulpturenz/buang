@@ -67,7 +67,7 @@ func (c StatsParams) Stats(ctx context.Context, s *app.ApplicationServices) (*St
 	getStats := func(ctx context.Context, wg *sync.WaitGroup, id string) {
 		defer wg.Done()
 
-		s, err := cli.ContainerStats(ctx, id, false)
+		s, err := cli.ContainerStats(ctx, id, true)
 		if err != nil {
 			return
 		}
@@ -75,13 +75,17 @@ func (c StatsParams) Stats(ctx context.Context, s *app.ApplicationServices) (*St
 
 		d := json.NewDecoder(s.Body)
 
-		var x container.StatsResponse
+		var x, y container.StatsResponse
 		if err := d.Decode(&x); err != nil {
 			return
 		}
+		if err := d.Decode(&y); err != nil {
+			return
+		}
 
-		deltaCpu := float64(x.CPUStats.CPUUsage.TotalUsage) - float64(x.PreCPUStats.CPUUsage.TotalUsage) // ns
-		deltaSysCpu := float64(x.CPUStats.SystemUsage) - float64(x.PreCPUStats.SystemUsage)              // ns
+		// NOTE: PRECPU STATS ARE NOT AVAILABLE ON NEWER HOSTS (CGROUP V2)
+		deltaCpu := float64(y.CPUStats.CPUUsage.TotalUsage) - float64(x.CPUStats.CPUUsage.TotalUsage) // ns
+		deltaSysCpu := float64(y.CPUStats.SystemUsage) - float64(x.CPUStats.SystemUsage)              // ns
 		numCpus := float64(x.CPUStats.OnlineCPUs)
 		// (cpu_delta / system_cpu_delta) * number_cpus * 100.0
 		// cpu_delta = cpu_stats.cpu_usage.total_usage - precpu_stats.cpu_usage.total_usage
@@ -92,7 +96,7 @@ func (c StatsParams) Stats(ctx context.Context, s *app.ApplicationServices) (*St
 			usagePercent = (deltaCpu / deltaSysCpu) * numCpus * 100.0
 		}
 
-		// `memory_stats.stats.cache` is `memory.stats.total_inactive_file` now: https://docs.docker.com/reference/cli/docker/container/stats/
+		// `memory_stats.stats.cache` is `memory.stats.total_inactive_file` on modern distributions (cgroup v2): https://docs.docker.com/reference/cli/docker/container/stats/
 		memUsage := float64(x.MemoryStats.Usage) - float64(x.MemoryStats.Stats["total_inactive_file"]) // bytes
 		memLimit := float64(x.MemoryStats.Limit)                                                       // bytes
 		memUsagePercent := float64(0)
