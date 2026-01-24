@@ -94,17 +94,34 @@ func GetDeploymentLogs(s app.ApplicationServices) http.HandlerFunc {
 			return
 		}
 
-		isDeploying := (err != nil && (errors.Is(err, sql.ErrNoRows) || errors.Is(err, pgx.ErrNoRows))) ||
-			((errors.Is(dplyErr, sql.ErrNoRows) || errors.Is(dplyErr, pgx.ErrNoRows)) && dply.Deployment.GetStatus() == int16(enumsdeploymentstatus.Deploying))
+		isDeploying := func() bool {
+			if dplyErr != nil {
+				return errors.Is(dplyErr, sql.ErrNoRows) || errors.Is(dplyErr, pgx.ErrNoRows)
+			}
+
+			if err != nil {
+				return errors.Is(err, sql.ErrNoRows) || errors.Is(err, pgx.ErrNoRows)
+			}
+
+			if dply.Deployment.GetStatus() == int16(enumsdeploymentstatus.New) {
+				return true
+			}
+
+			if dply.Deployment.GetStatus() == int16(enumsdeploymentstatus.Deploying) {
+				return true
+			}
+
+			return false
+		}
 
 		var streamErr error
-		if isDeploying && *req.Stream {
+		if isDeploying() && *req.Stream {
 			streamErr = streamDeploymentLogs(r.Context(), s, w, req)
 
 			return
 		}
 
-		if isDeploying && (!*req.Stream || errors.Is(streamErr, errStreamingUnsupported)) {
+		if isDeploying() && (!*req.Stream || errors.Is(streamErr, errStreamingUnsupported)) {
 			const WAIT_TIMEOUT = 5 * time.Minute
 			waitCtx, cancelWaitCtx := context.WithTimeout(r.Context(), WAIT_TIMEOUT)
 
