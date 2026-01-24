@@ -26,7 +26,6 @@ func (p PollDeploymentLogParams) Exec(ctx context.Context, s *app.ApplicationSer
 	const POLL_INTERVAL = 100 * time.Millisecond
 
 	pollIndefinitely := func() {
-
 		ticker := time.NewTicker(POLL_INTERVAL)
 		defer ticker.Stop()
 		defer close(results)
@@ -43,7 +42,8 @@ func (p PollDeploymentLogParams) Exec(ctx context.Context, s *app.ApplicationSer
 				})
 				if err != nil && dberrors.IsNoRows(err) {
 					continue
-				} else if err != nil {
+				}
+				if err != nil {
 					slog.ErrorContext(ctx, err.Error())
 					return
 				}
@@ -61,6 +61,7 @@ func (p PollDeploymentLogParams) Exec(ctx context.Context, s *app.ApplicationSer
 			}
 		}
 	}
+
 	go pollIndefinitely()
 
 	return results

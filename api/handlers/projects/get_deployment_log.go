@@ -18,13 +18,13 @@ import (
 	"github.com/negrel/assert"
 )
 
-type GetDeploymentLogsRequest struct {
+type GetDeploymentLogRequest struct {
 	ProjectId    int64 `schema:"-"`
 	DeploymentId int64 `schema:"-"`
 	Stream       *bool `schema:"stream,default:true"`
 }
 
-type GetDeploymentLogsResult = string
+type GetDeploymentLogResult = string
 
 var errStreamingUnsupported = errors.New("streaming unsupported")
 
@@ -40,9 +40,9 @@ var errStreamingUnsupported = errors.New("streaming unsupported")
 // @failure	401
 // @failure	500	{object}	string
 // @router		/project/{projectId}/deployment/{deploymentId}/logs [get]
-func GetDeploymentLogs(s app.ApplicationServices) http.HandlerFunc {
+func GetDeploymentLog(s app.ApplicationServices) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
-		var req GetDeploymentLogsRequest
+		var req GetDeploymentLogRequest
 
 		projectIdParam := chi.URLParam(r, "projectId")
 		projectId, err := strconv.Atoi(projectIdParam)
@@ -141,6 +141,8 @@ func GetDeploymentLogs(s app.ApplicationServices) http.HandlerFunc {
 			}
 		}
 
+		assert.True(dply.Deployment.GetStatus() == int16(enumsdeploymentstatus.Deployed))
+
 		if res.Logs == nil {
 			w.WriteHeader(http.StatusNoContent)
 
@@ -156,7 +158,7 @@ func GetDeploymentLogs(s app.ApplicationServices) http.HandlerFunc {
 	}
 }
 
-func streamDeploymentLogs(ctx context.Context, s app.ApplicationServices, w http.ResponseWriter, req GetDeploymentLogsRequest) error {
+func streamDeploymentLogs(ctx context.Context, s app.ApplicationServices, w http.ResponseWriter, req GetDeploymentLogRequest) error {
 	flusher, ok := w.(http.Flusher)
 	if !ok {
 		return errStreamingUnsupported
@@ -189,13 +191,13 @@ func streamDeploymentLogs(ctx context.Context, s app.ApplicationServices, w http
 				return streamCtx.Err()
 			}
 
+			// won't write to body if logs are empty because len(currentLogs) == len(previousLogs)
+			// so set correct headers
 			if previousLogs == "" {
 				w.WriteHeader(http.StatusNoContent)
 
 				return nil
 			}
-
-			w.WriteHeader(http.StatusOK)
 
 			return nil
 		case log, ok := <-p.Exec(streamCtx, &s):
@@ -210,7 +212,7 @@ func streamDeploymentLogs(ctx context.Context, s app.ApplicationServices, w http
 				assert.True(cl >= pl, "expected deployment log to be append only")
 
 				if cl > pl {
-					w.Write([]byte(newLogs[pl:])) // why we expect it to be append only: so that we can skip the diffing and just slice it
+					app.WriteText(w, newLogs[pl:], http.StatusOK) // why we expect it to be append only: so that we can skip the diffing and just slice it
 					flusher.Flush()
 
 					previousLogs = newLogs
@@ -220,7 +222,7 @@ func streamDeploymentLogs(ctx context.Context, s app.ApplicationServices, w http
 	}
 }
 
-func watchForDeployment(ctx context.Context, cancelCtx context.CancelFunc, s app.ApplicationServices, req GetDeploymentLogsRequest) {
+func watchForDeployment(ctx context.Context, cancelCtx context.CancelFunc, s app.ApplicationServices, req GetDeploymentLogRequest) {
 	const HAS_DEPLOYED_POLL_INTERVAL = 50 * time.Millisecond
 
 	ticker := time.NewTicker(HAS_DEPLOYED_POLL_INTERVAL)

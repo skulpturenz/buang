@@ -24,6 +24,6 @@ func Router(s app.ApplicationServices, r chi.Router) {
 		r.Post("/{projectId}/deployment", CreateDeployment(s))
 		r.Get("/{projectId}/deployment/{deploymentId}", FindDeploymentById(s))
 		r.Delete("/{projectId}/deployment/{deploymentId}", BuangDeployment(s))
-		r.Get("/{projectId}/deployment/{deploymentId}/logs", GetDeploymentLogs(s))
+		r.Get("/{projectId}/deployment/{deploymentId}/logs", GetDeploymentLog(s))
 	})
 }
