@@ -1,4 +1,4 @@
-package projects
+package deploymentlogs
 
 import (
 	"context"
@@ -29,7 +29,7 @@ type GetDeploymentLogResult = string
 var errStreamingUnsupported = errors.New("streaming unsupported")
 
 // @summary	Get deployment logs
-// @tags		api.v1, deployment
+// @tags		api.v1, deployment-logs
 // @security	ApiKeyAuth
 // @param		projectId		path		int		required	"Project ID"
 // @param		deploymentId	path		int		required	"Deployment ID"

@@ -29,6 +29,7 @@ tasks:
     cmds:
       - go get github.com/jteeuwen/go-bindata/...
       - go install github.com/jteeuwen/go-bindata/...
+      - go mod tidy
       - cd db/pg/schema && go-bindata -pkg migrations .
       - cd db/sqlite/schema && go-bindata -pkg migrations .
 

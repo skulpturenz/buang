@@ -1,4 +1,4 @@
-package projects
+package deployments
 
 import (
 	"log/slog"
@@ -21,7 +21,7 @@ type FindDeploymentByIdResponse struct {
 }
 
 // @summary	Find deployment by ID
-// @tags		api.v1, project
+// @tags		api.v1, deployments
 // @security	ApiKeyAuth
 // @param		projectId		path		int	required	"Project ID"
 // @param		deploymentId	path		int	required	"Deployment ID"

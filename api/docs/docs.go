@@ -254,7 +254,7 @@ const docTemplate = `{
                 ],
                 "tags": [
                     "api.v1",
-                    "project"
+                    "deployments"
                 ],
                 "summary": "Spin up a preview deployment",
                 "parameters": [
@@ -271,7 +271,7 @@ const docTemplate = `{
                         "in": "body",
                         "required": true,
                         "schema": {
-                            "$ref": "#/definitions/projects.CreateDeploymentRequest"
+                            "$ref": "#/definitions/deployments.CreateDeploymentRequest"
                         }
                     },
                     {
@@ -313,7 +313,7 @@ const docTemplate = `{
                 ],
                 "tags": [
                     "api.v1",
-                    "project"
+                    "deployments"
                 ],
                 "summary": "Find deployment by ID",
                 "parameters": [
@@ -336,7 +336,7 @@ const docTemplate = `{
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "$ref": "#/definitions/projects.FindDeploymentByIdResponse"
+                            "$ref": "#/definitions/deployments.FindDeploymentByIdResponse"
                         }
                     },
                     "401": {
@@ -358,7 +358,7 @@ const docTemplate = `{
                 ],
                 "tags": [
                     "api.v1",
-                    "project"
+                    "deployments"
                 ],
                 "summary": "Spin down a preview deployment",
                 "parameters": [
@@ -402,7 +402,7 @@ const docTemplate = `{
                 ],
                 "tags": [
                     "api.v1",
-                    "deployment"
+                    "deployment-logs"
                 ],
                 "summary": "Get deployment logs",
                 "parameters": [
@@ -462,7 +462,7 @@ const docTemplate = `{
                 ],
                 "tags": [
                     "api.v1",
-                    "project"
+                    "deployments"
                 ],
                 "summary": "List all deployments",
                 "parameters": [
@@ -566,18 +566,7 @@ const docTemplate = `{
         }
     },
     "definitions": {
-        "projects.BuangBranchRequest": {
-            "type": "object",
-            "required": [
-                "branch"
-            ],
-            "properties": {
-                "branch": {
-                    "type": "string"
-                }
-            }
-        },
-        "projects.CreateDeploymentRequest": {
+        "deployments.CreateDeploymentRequest": {
             "type": "object",
             "required": [
                 "branch",
@@ -603,6 +592,40 @@ const docTemplate = `{
                 }
             }
         },
+        "deployments.FindDeploymentByIdResponse": {
+            "type": "object",
+            "properties": {
+                "deployedAt": {
+                    "type": "string"
+                },
+                "id": {
+                    "type": "integer"
+                },
+                "projectId": {
+                    "type": "integer"
+                },
+                "sha": {
+                    "type": "string"
+                },
+                "status": {
+                    "type": "integer"
+                },
+                "url": {
+                    "type": "string"
+                }
+            }
+        },
+        "projects.BuangBranchRequest": {
+            "type": "object",
+            "required": [
+                "branch"
+            ],
+            "properties": {
+                "branch": {
+                    "type": "string"
+                }
+            }
+        },
         "projects.CreateProjectRequest": {
             "type": "object",
             "required": [
@@ -623,29 +646,6 @@ const docTemplate = `{
                     "type": "boolean"
                 },
                 "username": {
-                    "type": "string"
-                }
-            }
-        },
-        "projects.FindDeploymentByIdResponse": {
-            "type": "object",
-            "properties": {
-                "deployedAt": {
-                    "type": "string"
-                },
-                "id": {
-                    "type": "integer"
-                },
-                "projectId": {
-                    "type": "integer"
-                },
-                "sha": {
-                    "type": "string"
-                },
-                "status": {
-                    "type": "integer"
-                },
-                "url": {
                     "type": "string"
                 }
             }

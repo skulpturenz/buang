@@ -1,4 +1,4 @@
-package projects
+package deployments
 
 import (
 	"encoding/json"
@@ -24,7 +24,7 @@ type CreateDeploymentRequest struct {
 }
 
 // @summary	Spin up a preview deployment
-// @tags		api.v1, project
+// @tags		api.v1, deployments
 // @security	ApiKeyAuth
 // @param		projectId			path		int						true	"Project ID"
 // @param		deploymentDetails	body		CreateDeploymentRequest	true	"Deployment details"

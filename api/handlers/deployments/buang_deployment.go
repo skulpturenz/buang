@@ -1,4 +1,4 @@
-package projects
+package deployments
 
 import (
 	"log/slog"
@@ -11,7 +11,7 @@ import (
 )
 
 // @summary	Spin down a preview deployment
-// @tags		api.v1, project
+// @tags		api.v1, deployments
 // @security	ApiKeyAuth
 // @param		projectId		path		int	true	"Project ID"
 // @param		deploymentId	path		int	true	"Deployment ID"

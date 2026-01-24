@@ -1,13 +1,6 @@
 basePath: /api/v1
 definitions:
-  projects.BuangBranchRequest:
-    properties:
-      branch:
-        type: string
-    required:
-    - branch
-    type: object
-  projects.CreateDeploymentRequest:
+  deployments.CreateDeploymentRequest:
     properties:
       branch:
         type: string
@@ -25,6 +18,28 @@ definitions:
     - serviceEntrypoint
     - sha
     type: object
+  deployments.FindDeploymentByIdResponse:
+    properties:
+      deployedAt:
+        type: string
+      id:
+        type: integer
+      projectId:
+        type: integer
+      sha:
+        type: string
+      status:
+        type: integer
+      url:
+        type: string
+    type: object
+  projects.BuangBranchRequest:
+    properties:
+      branch:
+        type: string
+    required:
+    - branch
+    type: object
   projects.CreateProjectRequest:
     properties:
       composePath:
@@ -40,21 +55,6 @@ definitions:
     required:
     - composePath
     - repository
-    type: object
-  projects.FindDeploymentByIdResponse:
-    properties:
-      deployedAt:
-        type: string
-      id:
-        type: integer
-      projectId:
-        type: integer
-      sha:
-        type: string
-      status:
-        type: integer
-      url:
-        type: string
     type: object
   projects.FindProjectByRepositoryResponse:
     properties:
@@ -282,7 +282,7 @@ paths:
         name: deploymentDetails
         required: true
         schema:
-          $ref: '#/definitions/projects.CreateDeploymentRequest'
+          $ref: '#/definitions/deployments.CreateDeploymentRequest'
       - description: Wait for deployment completion
         in: query
         name: waitForDeployment
@@ -306,7 +306,7 @@ paths:
       summary: Spin up a preview deployment
       tags:
       - api.v1
-      - project
+      - deployments
   /project/{projectId}/deployment/{deploymentId}:
     delete:
       parameters:
@@ -334,7 +334,7 @@ paths:
       summary: Spin down a preview deployment
       tags:
       - api.v1
-      - project
+      - deployments
     get:
       parameters:
       - description: Project ID
@@ -351,7 +351,7 @@ paths:
         "200":
           description: OK
           schema:
-            $ref: '#/definitions/projects.FindDeploymentByIdResponse'
+            $ref: '#/definitions/deployments.FindDeploymentByIdResponse'
         "401":
           description: Unauthorized
         "500":
@@ -363,7 +363,7 @@ paths:
       summary: Find deployment by ID
       tags:
       - api.v1
-      - project
+      - deployments
   /project/{projectId}/deployment/{deploymentId}/logs:
     get:
       parameters:
@@ -402,7 +402,7 @@ paths:
       summary: Get deployment logs
       tags:
       - api.v1
-      - deployment
+      - deployment-logs
   /project/{projectId}/deployments:
     get:
       parameters:
@@ -440,7 +440,7 @@ paths:
       summary: List all deployments
       tags:
       - api.v1
-      - project
+      - deployments
   /projects:
     get:
       parameters:
