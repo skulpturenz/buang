@@ -3,6 +3,7 @@ package deploymentlogs
 import (
 	"bufio"
 	"context"
+	"fmt"
 	"io"
 	"skulpture/buang/app"
 	"skulpture/buang/db/interfaces"
@@ -54,27 +55,13 @@ type bufferedLogWriter struct {
 	bw *bufio.Writer
 }
 
-// reason for intercepting this call although we add new lines when we upsert logs
-// is that when it is buffered everything gets flushed at once so there are no new lines in this case
-// since we're adding a new line here along with adding one at the query we might have two new lines where there should be one
-// TODO: better way?
 func (nw bufferedLogWriter) Write(p []byte) (n int, err error) {
-	wrote := 0
-
-	n, err = nw.bw.Write(p)
+	n, err = fmt.Fprintf(nw.bw, "%v\n", string(p))
 	if err != nil {
 		return n, err
 	}
-	wrote += len(p)
 
-	nl := []byte("\n")
-	_, err = nw.bw.Write(nl)
-	if err != nil {
-		return wrote, err
-	}
-	wrote += len(nl)
-
-	return wrote, err
+	return n, nil
 }
 
 func (nw *bufferedLogWriter) Flush() error {

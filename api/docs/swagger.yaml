@@ -377,9 +377,9 @@ paths:
         name: deploymentId
         required: true
         type: integer
-      - description: Wait for deployment completion
+      - description: Stream logs
         in: query
-        name: waitForDeployment
+        name: stream
         type: boolean
       responses:
         "200":

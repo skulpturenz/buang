@@ -422,8 +422,8 @@ const docTemplate = `{
                     },
                     {
                         "type": "boolean",
-                        "description": "Wait for deployment completion",
-                        "name": "waitForDeployment",
+                        "description": "Stream logs",
+                        "name": "stream",
                         "in": "query"
                     }
                 ],

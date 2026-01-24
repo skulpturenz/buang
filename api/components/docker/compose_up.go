@@ -2,7 +2,6 @@ package docker
 
 import (
 	"context"
-	"errors"
 	"fmt"
 	"io"
 	"os"
@@ -109,12 +108,12 @@ func (c ComposeUpParams) Exec(ctx context.Context, s *app.ApplicationServices) (
 		return nil, nil, err
 	}
 
-	// this writes logs all at once right now
-	// ideally we can pass an `io.Writer` and it just writes each time there is a new log message
-	// docker pushes instead of we pull if that makes more sense
 	logConsumer := logConsumer{
 		Writer: c.Writer,
 	}
+	logCtx, cancelLogCtx := context.WithCancel(ctx)
+	go followSvcLogs(logCtx, project.Name, logConsumer, svc)
+	defer cancelLogCtx()
 
 	err = svc.Up(ctx, project, api.UpOptions{
 		Create: api.CreateOptions{
@@ -130,11 +129,6 @@ func (c ComposeUpParams) Exec(ctx context.Context, s *app.ApplicationServices) (
 		},
 	})
 	if err != nil {
-		logsErr := svc.Logs(ctx, project.Name, logConsumer, api.LogOptions{Timestamps: true})
-		if logsErr != nil {
-			return nil, nil, errors.Join(logsErr, err)
-		}
-
 		return nil, nil, err
 	}
 
@@ -147,15 +141,28 @@ func (c ComposeUpParams) Exec(ctx context.Context, s *app.ApplicationServices) (
 		down.Exec(ctx, s)
 	}
 
-	err = svc.Logs(ctx, project.Name, logConsumer, api.LogOptions{Timestamps: true})
-	if err != nil {
-		return nil, nil, errors.Join(err, err)
-	}
-
 	return &ComposeUpResult{
 		ProjectName:  project.Name,
 		ConfigPaths:  c.ConfigPaths,
 		Environment:  project.Environment.Values(),
 		ServiceNames: project.ServiceNames(),
 	}, cleanup, nil
+}
+
+func followSvcLogs(ctx context.Context, projectName string, logConsumer logConsumer, svc api.Compose) {
+	for {
+		select {
+		case <-ctx.Done():
+			return
+		default:
+			err := svc.Logs(ctx, projectName, logConsumer, api.LogOptions{ // blocks indefinitely
+				Follow:     true,
+				Timestamps: true,
+			})
+
+			if err != nil {
+				return
+			}
+		}
+	}
 }
