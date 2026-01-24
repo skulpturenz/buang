@@ -137,10 +137,7 @@ func (c StatsParams) Stats(ctx context.Context, s *app.ApplicationServices) (*St
 		go getStats(ctx, &wg, v.ID)
 	}
 
-	results := []ContainerStats{}
-	for c := range statsChan {
-		results = append(results, c)
-	}
+	results := collect(statsChan)
 	sort.Slice(results, func(x int, y int) bool {
 		return cmp.Or(
 			cmp.Compare(results[y].CpuStats.UsagePercent, results[x].CpuStats.UsagePercent),
@@ -154,4 +151,13 @@ func (c StatsParams) Stats(ctx context.Context, s *app.ApplicationServices) (*St
 	}
 
 	return stats, nil
+}
+
+func collect[T any](tChan chan T) []T {
+	ts := []T{}
+	for c := range tChan {
+		ts = append(ts, c)
+	}
+
+	return ts
 }
