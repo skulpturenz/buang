@@ -2,14 +2,11 @@ package deployments
 
 import (
 	"context"
-	"database/sql"
-	"errors"
 	"fmt"
 	"skulpture/buang/app"
+	dberrors "skulpture/buang/db/db_errors"
 	"skulpture/buang/db/interfaces"
 	enumsdeploymentstatus "skulpture/buang/enums/deployment_status"
-
-	"github.com/jackc/pgx/v5"
 )
 
 type CreateDeploymentParams struct {
@@ -35,7 +32,7 @@ func (d CreateDeploymentParams) Exec(ctx context.Context, s *app.ApplicationServ
 		ServiceEntrypoint: d.ServiceEntrypoint,
 		EnvVars:           d.Env,
 	})
-	if errors.Is(sql.ErrNoRows, err) || errors.Is(pgx.ErrNoRows, err) {
+	if dberrors.IsNoRows(err) {
 		return nil, fmt.Errorf("deployment for this branch in progress, try again later")
 	}
 	if err != nil {

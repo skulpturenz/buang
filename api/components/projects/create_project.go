@@ -2,13 +2,11 @@ package projects
 
 import (
 	"context"
-	"database/sql"
-	"errors"
 	"fmt"
 	"skulpture/buang/app"
+	dberrors "skulpture/buang/db/db_errors"
 	"skulpture/buang/db/interfaces"
 
-	"github.com/jackc/pgx/v5"
 	"github.com/negrel/assert"
 )
 
@@ -28,7 +26,7 @@ func (p CreateProjectParams) Exec(ctx context.Context, s *app.ApplicationService
 	q := *s.Queries
 
 	activeProject, err := q.SelectProjectByRepository(ctx, p.Repository)
-	if err != nil && !errors.Is(sql.ErrNoRows, err) && !errors.Is(pgx.ErrNoRows, err) {
+	if err != nil && !dberrors.IsNoRows(err) {
 		return nil, err
 	}
 

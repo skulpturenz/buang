@@ -2,20 +2,19 @@ package projects
 
 import (
 	"context"
-	"database/sql"
 	"errors"
 	"log/slog"
 	"net/http"
 	"skulpture/buang/app"
 	deploymentlogs "skulpture/buang/components/deployment_logs"
 	"skulpture/buang/components/deployments"
+	dberrors "skulpture/buang/db/db_errors"
 	enumsdeploymentstatus "skulpture/buang/enums/deployment_status"
 	workflowwrappers "skulpture/buang/workers/workflow_wrappers"
 	"strconv"
 	"time"
 
 	"github.com/go-chi/chi/v5"
-	"github.com/jackc/pgx/v5"
 	"github.com/negrel/assert"
 )
 
@@ -76,7 +75,7 @@ func GetDeploymentLogs(s app.ApplicationServices) http.HandlerFunc {
 		}
 
 		dply, dplyErr := d.Exec(r.Context(), &s)
-		if dplyErr != nil && !(errors.Is(dplyErr, sql.ErrNoRows) || errors.Is(dplyErr, pgx.ErrNoRows)) {
+		if dplyErr != nil && !dberrors.IsNoRows(dplyErr) {
 			slog.ErrorContext(r.Context(), "get deployment logs", "err", dplyErr.Error())
 			http.Error(w, dplyErr.Error(), http.StatusInternalServerError)
 			return
@@ -88,7 +87,7 @@ func GetDeploymentLogs(s app.ApplicationServices) http.HandlerFunc {
 		}
 
 		res, err := p.Exec(r.Context(), &s)
-		if err != nil && !(errors.Is(err, sql.ErrNoRows) || errors.Is(err, pgx.ErrNoRows)) {
+		if err != nil && !dberrors.IsNoRows(err) {
 			slog.ErrorContext(r.Context(), "get deployment logs", "err", err.Error())
 			http.Error(w, err.Error(), http.StatusInternalServerError)
 			return
@@ -96,11 +95,11 @@ func GetDeploymentLogs(s app.ApplicationServices) http.HandlerFunc {
 
 		isDeploying := func() bool {
 			if dplyErr != nil {
-				return errors.Is(dplyErr, sql.ErrNoRows) || errors.Is(dplyErr, pgx.ErrNoRows)
+				return dberrors.IsNoRows(dplyErr)
 			}
 
 			if err != nil {
-				return errors.Is(err, sql.ErrNoRows) || errors.Is(err, pgx.ErrNoRows)
+				return dberrors.IsNoRows(err)
 			}
 
 			if dply.Deployment.GetStatus() == int16(enumsdeploymentstatus.New) {

@@ -2,14 +2,11 @@ package deploymentlogs
 
 import (
 	"context"
-	"database/sql"
-	"errors"
 	"log/slog"
 	"skulpture/buang/app"
+	dberrors "skulpture/buang/db/db_errors"
 	"skulpture/buang/db/interfaces"
 	"time"
-
-	"github.com/jackc/pgx/v5"
 )
 
 type PollDeploymentLogParams struct {
@@ -44,7 +41,7 @@ func (p PollDeploymentLogParams) Exec(ctx context.Context, s *app.ApplicationSer
 					ProjectID:    p.ProjectId,
 					DeploymentID: p.DeploymentId,
 				})
-				if err != nil && (errors.Is(sql.ErrNoRows, err) || errors.Is(pgx.ErrNoRows, err)) {
+				if err != nil && dberrors.IsNoRows(err) {
 					continue
 				} else if err != nil {
 					slog.ErrorContext(ctx, err.Error())
