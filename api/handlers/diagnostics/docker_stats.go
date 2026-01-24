@@ -5,6 +5,8 @@ import (
 	"net/http"
 	"skulpture/buang/app"
 	"skulpture/buang/components/docker"
+
+	orderedmap "github.com/wk8/go-ordered-map/v2"
 )
 
 type DockerStatsRequest struct {
@@ -26,15 +28,16 @@ type MemoryStats struct {
 	Limit        float64 `json:"limitMb"`
 }
 
-type DockerStatsResult = map[string]ContainerStats
+type DockerStatsResult = map[string]ContainerStats // orderedmap.OrderedMap[string, ContainerStats]
 
-// @summary	Docker stats
-// @tags		api.v1, diagnostics
-// @security	ApiKeyAuth
-// @success	200	{object}	DockerStatsResult
-// @failure	401
-// @failure	500	{object}	string
-// @router		/diagnostics/stats [get]
+// @summary		Docker stats
+// @description	Not the most accurate readings but it should tell which services need attention
+// @tags			api.v1, diagnostics
+// @security		ApiKeyAuth
+// @success		200	{object}	DockerStatsResult
+// @failure		401
+// @failure		500	{object}	string
+// @router			/diagnostics/stats [get]
 func DockerStats(s app.ApplicationServices) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		p := docker.StatsParams{}
@@ -46,13 +49,13 @@ func DockerStats(s app.ApplicationServices) http.HandlerFunc {
 			return
 		}
 
-		ret := map[string]ContainerStats{}
-		for k, v := range res {
-			ret[k] = ContainerStats{
-				Name:        v.Name,
-				CpuStats:    CpuStats{UsagePercent: v.CpuStats.UsagePercent},
-				MemoryStats: MemoryStats{Usage: v.MemoryStats.Usage, UsagePercent: v.MemoryStats.UsagePercent, Limit: v.MemoryStats.Limit},
-			}
+		ret := orderedmap.New[string, ContainerStats]()
+		for pair := res.Newest(); pair != nil; pair = pair.Prev() {
+			ret.Set(pair.Key, ContainerStats{
+				Name:        pair.Value.Name,
+				CpuStats:    CpuStats{UsagePercent: pair.Value.CpuStats.UsagePercent},
+				MemoryStats: MemoryStats{Usage: pair.Value.MemoryStats.Usage, UsagePercent: pair.Value.MemoryStats.UsagePercent, Limit: pair.Value.MemoryStats.Limit},
+			})
 		}
 
 		err = app.WriteJson(w, ret, http.StatusOK)

@@ -22,6 +22,7 @@ const docTemplate = `{
                         "ApiKeyAuth": []
                     }
                 ],
+                "description": "Not the most accurate readings but it should tell which services need attention",
                 "tags": [
                     "api.v1",
                     "diagnostics"

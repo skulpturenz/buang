@@ -1,14 +1,17 @@
 package docker
 
 import (
+	"cmp"
 	"context"
 	"encoding/json"
 	"skulpture/buang/app"
+	"sort"
 	"strings"
 	"sync"
 
 	"github.com/docker/docker/api/types/container"
 	"github.com/docker/docker/client"
+	orderedmap "github.com/wk8/go-ordered-map/v2"
 )
 
 const (
@@ -39,10 +42,10 @@ type MemoryStats struct {
 	Limit        float64
 }
 
-type StatsResult = map[string]ContainerStats
+type StatsResult = orderedmap.OrderedMap[string, ContainerStats]
 
 // reference: https://docs.docker.com/reference/api/engine/version/v1.45/#tag/Container/operation/ContainerStats
-func (c StatsParams) Stats(ctx context.Context, s *app.ApplicationServices) (StatsResult, error) {
+func (c StatsParams) Stats(ctx context.Context, s *app.ApplicationServices) (*StatsResult, error) {
 	cli, err := client.NewClientWithOpts(client.FromEnv, client.WithAPIVersionNegotiation())
 	if err != nil {
 		return nil, err
@@ -130,9 +133,20 @@ func (c StatsParams) Stats(ctx context.Context, s *app.ApplicationServices) (Sta
 		go getStats(ctx, &wg, v.ID)
 	}
 
-	stats := map[string]ContainerStats{}
+	results := []ContainerStats{}
 	for c := range statsChan {
-		stats[c.id] = c
+		results = append(results, c)
+	}
+	sort.Slice(results, func(x int, y int) bool {
+		return cmp.Or(
+			cmp.Compare(results[y].CpuStats.UsagePercent, results[x].CpuStats.UsagePercent),
+			cmp.Compare(results[y].MemoryStats.UsagePercent, results[x].MemoryStats.UsagePercent),
+		) > 0 // desc
+	})
+
+	stats := orderedmap.New[string, ContainerStats]()
+	for _, v := range results {
+		stats.Set(v.id, v)
 	}
 
 	return stats, nil

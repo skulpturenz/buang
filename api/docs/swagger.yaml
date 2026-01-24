@@ -151,6 +151,8 @@ info:
 paths:
   /diagnostics/stats:
     get:
+      description: Not the most accurate readings but it should tell which services
+        need attention
       responses:
         "200":
           description: OK
