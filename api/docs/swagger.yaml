@@ -45,6 +45,10 @@ definitions:
         $ref: '#/definitions/diagnostics.MemoryStats'
       name:
         type: string
+      state:
+        type: string
+      status:
+        type: string
     type: object
   diagnostics.CpuStats:
     properties:
@@ -54,6 +58,15 @@ definitions:
   diagnostics.DockerStatsResult:
     additionalProperties:
       $ref: '#/definitions/diagnostics.ContainerStats'
+    type: object
+  diagnostics.InfoResult:
+    properties:
+      timezone:
+        type: string
+      uptime:
+        type: string
+      version:
+        type: string
     type: object
   diagnostics.MemoryStats:
     properties:
@@ -153,6 +166,25 @@ info:
   description: Deploy preview environments with ease
   title: Buang API
 paths:
+  /diagnostics/info:
+    get:
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/diagnostics.InfoResult'
+        "401":
+          description: Unauthorized
+        "500":
+          description: Internal Server Error
+          schema:
+            type: string
+      security:
+      - ApiKeyAuth: []
+      summary: Service info
+      tags:
+      - api.v1
+      - diagnostics
   /diagnostics/stats:
     get:
       description: Not the most accurate readings but it should tell which services
@@ -171,25 +203,6 @@ paths:
       security:
       - ApiKeyAuth: []
       summary: Docker stats
-      tags:
-      - api.v1
-      - diagnostics
-  /diagnostics/version:
-    get:
-      responses:
-        "200":
-          description: OK
-          schema:
-            type: string
-        "401":
-          description: Unauthorized
-        "500":
-          description: Internal Server Error
-          schema:
-            type: string
-      security:
-      - ApiKeyAuth: []
-      summary: API Version
       tags:
       - api.v1
       - diagnostics

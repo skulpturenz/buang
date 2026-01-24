@@ -29,6 +29,8 @@ type ContainerStats struct {
 	Name        string
 	Image       string
 	ImageID     string
+	Status      string
+	State       string
 	CpuStats    CpuStats
 	MemoryStats MemoryStats
 }
@@ -107,6 +109,8 @@ func (c StatsParams) Stats(ctx context.Context, s *app.ApplicationServices) (*St
 			id:      x.ID,
 			Image:   c.Image,
 			ImageID: c.ImageID,
+			Status:  c.Status,
+			State:   c.State,
 			Name:    strings.Replace(x.Name, "/", "", 1),
 			CpuStats: CpuStats{
 				UsagePercent: usagePercent,

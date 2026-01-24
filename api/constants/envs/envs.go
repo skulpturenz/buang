@@ -6,6 +6,7 @@ import (
 	enumsdbtypes "skulpture/buang/enums/db_types"
 	enumsdurableexecutors "skulpture/buang/enums/durable_executors"
 	enumsenv "skulpture/buang/enums/env"
+	"time"
 
 	"github.com/adhocore/gronx"
 	"github.com/dogmatiq/ferrite"
@@ -88,8 +89,13 @@ var (
 						WithDefault("0 0 * * 6").
 						WithConstraint("must be a valid 5 field cron expression", gronx.IsValid).
 						Optional()
+	startTime = time.Now()
 )
 
 func init() {
 	ferrite.Init()
+}
+
+func Uptime() time.Duration {
+	return time.Since(startTime)
 }

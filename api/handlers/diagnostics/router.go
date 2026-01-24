@@ -9,6 +9,6 @@ import (
 func Router(s app.ApplicationServices, r chi.Router) {
 	r.Route("/diagnostics", func(r chi.Router) {
 		r.Get("/stats", DockerStats(s))
-		r.Get("/version", Version(s))
+		r.Get("/info", Info(s))
 	})
 }
