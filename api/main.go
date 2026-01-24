@@ -14,6 +14,7 @@ import (
 	enumsenv "skulpture/buang/enums/env"
 	deploymentlogs "skulpture/buang/handlers/deployment_logs"
 	"skulpture/buang/handlers/deployments"
+	"skulpture/buang/handlers/diagnostics"
 	"skulpture/buang/handlers/projects"
 	authn "skulpture/buang/middleware/authn"
 	limiter "skulpture/buang/middleware/limiter"
@@ -129,7 +130,8 @@ func main() {
 
 		app.GetHttpApplication().AddRouters(r, projects.Router,
 			deployments.Router,
-			deploymentlogs.Router)
+			deploymentlogs.Router,
+			diagnostics.Router)
 	})
 
 	app.GetTemporalApplication().AddWorkers(workers.DeploymentWorker,

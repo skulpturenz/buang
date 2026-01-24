@@ -15,6 +15,37 @@ const docTemplate = `{
     "host": "{{.Host}}",
     "basePath": "{{.BasePath}}",
     "paths": {
+        "/diagnostics/stats": {
+            "get": {
+                "security": [
+                    {
+                        "ApiKeyAuth": []
+                    }
+                ],
+                "tags": [
+                    "api.v1",
+                    "diagnostics"
+                ],
+                "summary": "Docker stats",
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/diagnostics.DockerStatsResult"
+                        }
+                    },
+                    "401": {
+                        "description": "Unauthorized"
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "type": "string"
+                        }
+                    }
+                }
+            }
+        },
         "/project": {
             "get": {
                 "security": [
@@ -612,6 +643,48 @@ const docTemplate = `{
                 },
                 "url": {
                     "type": "string"
+                }
+            }
+        },
+        "diagnostics.ContainerStats": {
+            "type": "object",
+            "properties": {
+                "cpuStats": {
+                    "$ref": "#/definitions/diagnostics.CpuStats"
+                },
+                "memoryStats": {
+                    "$ref": "#/definitions/diagnostics.MemoryStats"
+                },
+                "name": {
+                    "type": "string"
+                }
+            }
+        },
+        "diagnostics.CpuStats": {
+            "type": "object",
+            "properties": {
+                "usagePercent": {
+                    "type": "number"
+                }
+            }
+        },
+        "diagnostics.DockerStatsResult": {
+            "type": "object",
+            "additionalProperties": {
+                "$ref": "#/definitions/diagnostics.ContainerStats"
+            }
+        },
+        "diagnostics.MemoryStats": {
+            "type": "object",
+            "properties": {
+                "limitMb": {
+                    "type": "number"
+                },
+                "usageMb": {
+                    "type": "number"
+                },
+                "usagePercent": {
+                    "type": "number"
                 }
             }
         },
