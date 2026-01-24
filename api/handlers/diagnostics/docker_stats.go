@@ -14,6 +14,8 @@ type DockerStatsRequest struct {
 
 type ContainerStats struct {
 	Name        string      `json:"name"`
+	Image       string      `json:"image"`
+	ImageID     string      `json:"imageId"`
 	CpuStats    CpuStats    `json:"cpuStats"`
 	MemoryStats MemoryStats `json:"memoryStats"`
 }
@@ -53,6 +55,8 @@ func DockerStats(s app.ApplicationServices) http.HandlerFunc {
 		for pair := res.Newest(); pair != nil; pair = pair.Prev() {
 			ret.Set(pair.Key, ContainerStats{
 				Name:        pair.Value.Name,
+				Image:       pair.Value.Image,
+				ImageID:     pair.Value.ImageID,
 				CpuStats:    CpuStats{UsagePercent: pair.Value.CpuStats.UsagePercent},
 				MemoryStats: MemoryStats{Usage: pair.Value.MemoryStats.Usage, UsagePercent: pair.Value.MemoryStats.UsagePercent, Limit: pair.Value.MemoryStats.Limit},
 			})

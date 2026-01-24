@@ -27,6 +27,8 @@ type StatsParams struct {
 type ContainerStats struct {
 	id          string
 	Name        string
+	Image       string
+	ImageID     string
 	CpuStats    CpuStats
 	MemoryStats MemoryStats
 }
@@ -57,10 +59,10 @@ func (c StatsParams) Stats(ctx context.Context, s *app.ApplicationServices) (*St
 
 	statsChan := make(chan ContainerStats, len(ps))
 
-	getStats := func(ctx context.Context, wg *sync.WaitGroup, id string) {
+	getStats := func(ctx context.Context, wg *sync.WaitGroup, c container.Summary) {
 		defer wg.Done()
 
-		s, err := s.Docker.ContainerStats(ctx, id, true)
+		s, err := s.Docker.ContainerStats(ctx, c.ID, true)
 		if err != nil {
 			return
 		}
@@ -102,8 +104,10 @@ func (c StatsParams) Stats(ctx context.Context, s *app.ApplicationServices) (*St
 
 		select {
 		case statsChan <- ContainerStats{
-			id:   x.ID,
-			Name: strings.Replace(x.Name, "/", "", 1),
+			id:      x.ID,
+			Image:   c.Image,
+			ImageID: c.ImageID,
+			Name:    strings.Replace(x.Name, "/", "", 1),
 			CpuStats: CpuStats{
 				UsagePercent: usagePercent,
 			},
@@ -127,7 +131,7 @@ func (c StatsParams) Stats(ctx context.Context, s *app.ApplicationServices) (*St
 
 	for _, v := range ps {
 		wg.Add(1)
-		go getStats(ctx, &wg, v.ID)
+		go getStats(ctx, &wg, v)
 	}
 
 	results := collect(statsChan)

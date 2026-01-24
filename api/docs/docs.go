@@ -684,6 +684,12 @@ const docTemplate = `{
                 "cpuStats": {
                     "$ref": "#/definitions/diagnostics.CpuStats"
                 },
+                "image": {
+                    "type": "string"
+                },
+                "imageId": {
+                    "type": "string"
+                },
                 "memoryStats": {
                     "$ref": "#/definitions/diagnostics.MemoryStats"
                 },
