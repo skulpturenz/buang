@@ -100,8 +100,6 @@ func main() {
 		GorillaSchemaEncoder: schema.NewEncoder(),
 	}
 
-	_ = o11y.NewS(&queries) // singleton
-
 	isExperimentalBootstrapEnabled, ok := constantsenvs.EXPERIMENTAL_BOOTSTRAP.Value()
 	if constantsenvs.GO_ENV.Value() == enumsenv.Production.String() && ok && isExperimentalBootstrapEnabled { // TODO: test
 		err := bootstrap(ctx, &s)
@@ -132,6 +130,8 @@ func main() {
 		slog.ErrorContext(ctx, "error", "err", err.Error())
 		panic(err)
 	}
+
+	app.AddSingletons(o11y.NewS(&queries))
 
 	r.Mount("/docs", httpSwagger.WrapHandler)
 

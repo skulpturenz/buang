@@ -6,12 +6,12 @@ tasks:
   start:
     desc: Run API
     cmds:
-      - go run .
+      - go run -tags assert .
 
   dev:
     desc: Run development API
     cmds:
-      - gow run .
+      - gow run -tags assert .
 
   build:
     desc: Build API

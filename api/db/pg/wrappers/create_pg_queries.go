@@ -31,18 +31,18 @@ func (c PgConfig) New(ctx context.Context) (interfaces.Queries, func(ctx context
 	})
 	d, err := bindata.WithInstance(s)
 	if err != nil {
-		return nil, nil, err
+		return nil, cleanup, err
 	}
 
 	driver, err := pgx.WithInstance(stdlib.OpenDBFromPool(pool), &pgx.Config{})
 	if err != nil {
-		return nil, nil, err
+		return nil, cleanup, err
 	}
 	defer driver.Close()
 
 	m, err := migrate.NewWithInstance("go-bindata", d, "pg", driver)
 	if err := m.Up(); err != nil && err != migrate.ErrNoChange {
-		return nil, nil, err
+		return nil, cleanup, err
 	}
 
 	queries := pg.New(pool)

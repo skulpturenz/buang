@@ -4,6 +4,8 @@ import (
 	"log/slog"
 	"skulpture/buang/db/interfaces"
 	"sync"
+
+	"github.com/negrel/assert"
 )
 
 type diagnosticLog struct {
@@ -24,8 +26,6 @@ func NewS(q *interfaces.Queries) *diagnosticLog {
 	return instance
 }
 
-// ignoring errors here technically breaks the rules of workflows
-// but its so that we can capture the information we need
 func getInstance() *diagnosticLog {
 	if instance == nil {
 		slog.Error("diagnostic log singleton not initialized, nothing will be captured")
@@ -34,4 +34,8 @@ func getInstance() *diagnosticLog {
 	}
 
 	return instance
+}
+
+func (d diagnosticLog) AssertInitialized() {
+	assert.True(instance != nil, "diagnostic log not initialized")
 }

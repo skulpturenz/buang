@@ -30,5 +30,5 @@ func (c DbConfig) New(ctx context.Context) (interfaces.Queries, func(ctx context
 		return cfg.New(ctx)
 	}
 
-	return nil, nil, nil
+	panic("unable to initialize db")
 }

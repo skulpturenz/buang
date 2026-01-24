@@ -141,11 +141,11 @@ func (a ApplicationConfig) New(ctx context.Context, chi *chi.Mux) (*Application,
 	}
 
 	assert.True(app.http != HttpApplication{}, "app initialized incorrectly")
-	assert.True(app.http.Services.dbos != nil, "dbos is injected to be used by handlers")
-	assert.True(app.http.Services.temporal != nil, "temporal is injected to be used by handlers")
-	assert.True(app.temporal != initialTemporal && app.dbos != initialDbos, "must use one durable executor")
+	assert.True(app.config.DurableExecutor != enumsdurableexecutors.Dbos || app.http.Services.dbos != nil, "dbos is injected to be used by handlers")
+	assert.True(app.config.DurableExecutor != enumsdurableexecutors.Temporal || app.http.Services.temporal != nil, "temporal is injected to be used by handlers")
+	assert.True(app.temporal != initialTemporal || app.dbos != initialDbos, "must use one durable executor")
 
-	assert.True(app.config.DurableExecutor == enumsdurableexecutors.Temporal && app.temporal.client != nil,
+	assert.True(app.config.DurableExecutor != enumsdurableexecutors.Temporal || app.temporal.client != nil,
 		"must have a client if temporal application")
 
 	return &app, nil
@@ -258,6 +258,12 @@ func (a *Application) GetDbosApplication() *DbosApplication {
 	return a.dbos
 }
 
+func (a *Application) AddSingletons(xs ...AppServiceSingleton) {
+	for _, x := range xs {
+		x.AssertInitialized()
+	}
+}
+
 type HttpRouter func(s ApplicationServices, r chi.Router)
 
 func (a *HttpApplication) AddRouters(r chi.Router, x ...HttpRouter) {
@@ -289,3 +295,7 @@ func (s *ApplicationServices) GetDurableExecutor() (any, enumsdurableexecutors.D
 type TemporalClient = temporalclient.Client
 
 type DbosContext = dbos.DBOSContext
+
+type AppServiceSingleton interface {
+	AssertInitialized()
+}

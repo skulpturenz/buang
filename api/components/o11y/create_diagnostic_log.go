@@ -16,8 +16,6 @@ type CreateDiagnosticLogResult struct {
 	ID int64
 }
 
-// ignoring errors here technically breaks the rules of workflows
-// but its so that we can capture the information we need
 func (p *CreateDiagnosticLogParams) Exec(ctx context.Context) *CreateDiagnosticLogResult {
 	i := getInstance()
 	if i == nil {

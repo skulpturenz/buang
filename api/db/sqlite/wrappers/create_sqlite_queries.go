@@ -30,17 +30,17 @@ func (c SqliteConfig) New(_ context.Context) (interfaces.Queries, func(ctx conte
 	})
 	d, err := bindata.WithInstance(s)
 	if err != nil {
-		return nil, nil, err
+		return nil, cleanup, err
 	}
 
 	driver, err := sqlite3.WithInstance(db, &sqlite3.Config{})
 	if err != nil {
-		return nil, nil, err
+		return nil, cleanup, err
 	}
 
 	m, err := migrate.NewWithInstance("go-bindata", d, "sqlite", driver)
 	if err := m.Up(); err != nil && err != migrate.ErrNoChange {
-		return nil, nil, err
+		return nil, cleanup, err
 	}
 
 	queries := sqlite.New(db)
