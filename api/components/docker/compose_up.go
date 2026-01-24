@@ -117,12 +117,18 @@ func (c ComposeUpParams) Exec(ctx context.Context, s *app.ApplicationServices) (
 	go followSvcLogs(logCtx, project.Name, logConsumer, svc)
 	defer cancelLogCtx()
 
+	buildOptions := api.BuildOptions{
+		Pull: true,
+		Push: true,
+		Deps: true,
+	}
+	if c.Writer != nil {
+		buildOptions.Out = c.Writer
+	}
+
 	err = svc.Up(ctx, project, api.UpOptions{
 		Create: api.CreateOptions{
-			Build: &api.BuildOptions{
-				Pull: true,
-				Deps: true,
-			},
+			Build:         &buildOptions,
 			RemoveOrphans: true,
 		},
 		Start: api.StartOptions{
