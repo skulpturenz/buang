@@ -14,6 +14,7 @@ import (
 	"syscall"
 
 	"github.com/dbos-inc/dbos-transact-golang/dbos"
+	"github.com/docker/docker/client"
 	"github.com/go-chi/chi/v5"
 	"github.com/gorilla/schema"
 	"github.com/negrel/assert"
@@ -54,18 +55,17 @@ type DbosApplication struct {
 }
 
 type ApplicationServices struct {
-	Queries         *interfaces.Queries
-	SchemaDecoder   *schema.Decoder
-	SchemaEncoder   *schema.Encoder
-	durableExecutor enumsdurableexecutors.DurableExecutor
-	temporal        *temporalclient.Client
-	dbos            dbos.DBOSContext
+	Queries              *interfaces.Queries
+	GorillaSchemaDecoder *schema.Decoder
+	GorillaSchemaEncoder *schema.Encoder
+	Docker               *client.Client
+	durableExecutor      enumsdurableexecutors.DurableExecutor
+	temporal             *temporalclient.Client
+	dbos                 dbos.DBOSContext
 }
 
 func (a ApplicationConfig) New(ctx context.Context, chi *chi.Mux) (*Application, error) {
 	services := a.Services
-	services.SchemaDecoder = schema.NewDecoder()
-	services.SchemaEncoder = schema.NewEncoder()
 	services.durableExecutor = a.DurableExecutor
 
 	httpApp := HttpApplication{

@@ -39,7 +39,7 @@ func FindProjectByRepository(s app.ApplicationServices) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		var req FindProjectByRepositoryRequest
 
-		err := s.SchemaDecoder.Decode(&req, r.URL.Query())
+		err := s.GorillaSchemaDecoder.Decode(&req, r.URL.Query())
 		if err != nil {
 			slog.ErrorContext(r.Context(), "find project by repository", "err", err.Error())
 			http.Error(w, err.Error(), http.StatusBadRequest)

@@ -47,7 +47,9 @@ func (c logConsumer) Status(containerName, message string) {
 }
 
 func (c ComposeUpParams) Exec(ctx context.Context, s *app.ApplicationServices) (*ComposeUpResult, func(ctx context.Context), error) {
-	cliOptions := []command.CLIOption{}
+	cliOptions := []command.CLIOption{
+		command.WithAPIClient(s.Docker),
+	}
 	if c.Writer != nil {
 		cliOptions = append(cliOptions, command.WithCombinedStreams(c.Writer))
 	}

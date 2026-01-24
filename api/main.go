@@ -22,8 +22,10 @@ import (
 	workers "skulpture/buang/workers/temporal"
 	"time"
 
+	"github.com/docker/docker/client"
 	"github.com/go-chi/chi/v5"
 	"github.com/go-chi/chi/v5/middleware"
+	"github.com/gorilla/schema"
 	_ "github.com/mattn/go-sqlite3"
 	httpSwagger "github.com/swaggo/http-swagger"
 )
@@ -84,8 +86,18 @@ func main() {
 	}
 	defer cleanup(ctx)
 
+	docker, err := client.NewClientWithOpts(client.FromEnv, client.WithAPIVersionNegotiation())
+	if err != nil {
+		slog.ErrorContext(ctx, "error", "err", err.Error())
+		panic(err)
+	}
+	defer docker.Close()
+
 	s := app.ApplicationServices{
-		Queries: &queries,
+		Queries:              &queries,
+		Docker:               docker,
+		GorillaSchemaDecoder: schema.NewDecoder(),
+		GorillaSchemaEncoder: schema.NewEncoder(),
 	}
 
 	_ = o11y.NewS(&queries) // singleton

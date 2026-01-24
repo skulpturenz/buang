@@ -10,7 +10,6 @@ import (
 	"github.com/docker/docker/api/types/image"
 	"github.com/docker/docker/api/types/network"
 	"github.com/docker/docker/api/types/volume"
-	"github.com/docker/docker/client"
 )
 
 type PruneParams struct {
@@ -25,33 +24,27 @@ type PruneResult struct {
 }
 
 func (c PruneParams) Prune(ctx context.Context, s *app.ApplicationServices) (*PruneResult, error) {
-	cli, err := client.NewClientWithOpts(client.FromEnv, client.WithAPIVersionNegotiation())
-	if err != nil {
-		return nil, err
-	}
-	defer cli.Close()
-
-	imagesPruneReport, err := cli.ImagesPrune(ctx, filters.NewArgs())
+	imagesPruneReport, err := s.Docker.ImagesPrune(ctx, filters.NewArgs())
 	if err != nil {
 		return nil, err
 	}
 
-	containersPruneReport, err := cli.ContainersPrune(ctx, filters.NewArgs())
+	containersPruneReport, err := s.Docker.ContainersPrune(ctx, filters.NewArgs())
 	if err != nil {
 		return nil, err
 	}
 
-	volumesPruneReport, err := cli.VolumesPrune(ctx, filters.NewArgs())
+	volumesPruneReport, err := s.Docker.VolumesPrune(ctx, filters.NewArgs())
 	if err != nil {
 		return nil, err
 	}
 
-	buildCachePruneReport, err := cli.BuildCachePrune(ctx, build.CachePruneOptions{All: true})
+	buildCachePruneReport, err := s.Docker.BuildCachePrune(ctx, build.CachePruneOptions{All: true})
 	if err != nil {
 		return nil, err
 	}
 
-	networksPruneReport, err := cli.NetworksPrune(ctx, filters.NewArgs())
+	networksPruneReport, err := s.Docker.NetworksPrune(ctx, filters.NewArgs())
 	if err != nil {
 		return nil, err
 	}

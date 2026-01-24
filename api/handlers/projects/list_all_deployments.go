@@ -53,7 +53,7 @@ func ListAllDeployments(s app.ApplicationServices) http.HandlerFunc {
 
 		var req ListAllDeploymentsRequest
 
-		err = s.SchemaDecoder.Decode(&req, r.URL.Query())
+		err = s.GorillaSchemaDecoder.Decode(&req, r.URL.Query())
 		if err != nil {
 			slog.ErrorContext(r.Context(), "list all deployments", "err", err.Error())
 			http.Error(w, err.Error(), http.StatusBadRequest)

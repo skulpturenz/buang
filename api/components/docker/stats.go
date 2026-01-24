@@ -10,7 +10,6 @@ import (
 	"sync"
 
 	"github.com/docker/docker/api/types/container"
-	"github.com/docker/docker/client"
 	orderedmap "github.com/wk8/go-ordered-map/v2"
 )
 
@@ -46,18 +45,12 @@ type StatsResult = orderedmap.OrderedMap[string, ContainerStats]
 
 // reference: https://docs.docker.com/reference/api/engine/version/v1.45/#tag/Container/operation/ContainerStats
 func (c StatsParams) Stats(ctx context.Context, s *app.ApplicationServices) (*StatsResult, error) {
-	cli, err := client.NewClientWithOpts(client.FromEnv, client.WithAPIVersionNegotiation())
-	if err != nil {
-		return nil, err
-	}
-	defer cli.Close()
-
 	opts := container.ListOptions{}
 	if c.All != nil {
 		opts.All = *c.All
 	}
 
-	ps, err := cli.ContainerList(ctx, container.ListOptions{})
+	ps, err := s.Docker.ContainerList(ctx, container.ListOptions{})
 	if err != nil {
 		return nil, err
 	}
@@ -67,7 +60,7 @@ func (c StatsParams) Stats(ctx context.Context, s *app.ApplicationServices) (*St
 	getStats := func(ctx context.Context, wg *sync.WaitGroup, id string) {
 		defer wg.Done()
 
-		s, err := cli.ContainerStats(ctx, id, true)
+		s, err := s.Docker.ContainerStats(ctx, id, true)
 		if err != nil {
 			return
 		}

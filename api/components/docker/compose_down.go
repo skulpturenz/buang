@@ -19,7 +19,7 @@ type ComposeDownParams struct {
 type ComposeDownResult struct{}
 
 func (c ComposeDownParams) Exec(ctx context.Context, s *app.ApplicationServices) (*ComposeDownResult, error) {
-	cli, err := command.NewDockerCli()
+	cli, err := command.NewDockerCli(command.WithAPIClient(s.Docker))
 	if err != nil {
 		return nil, err
 	}
