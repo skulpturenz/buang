@@ -96,9 +96,9 @@ func (c StatsParams) Stats(ctx context.Context, s *app.ApplicationServices) (*St
 			usagePercent = (deltaCpu / deltaSysCpu) * numCpus * 100.0
 		}
 
-		// `memory_stats.stats.cache` is `memory.stats.total_inactive_file` on modern distributions (cgroup v2): https://docs.docker.com/reference/cli/docker/container/stats/
-		memUsage := float64(x.MemoryStats.Usage) - float64(x.MemoryStats.Stats["total_inactive_file"]) // bytes
-		memLimit := float64(x.MemoryStats.Limit)                                                       // bytes
+		// `memory_stats.stats.cache` is `memory.stats.inactive_file` on modern distributions (cgroup v2): https://docs.docker.com/reference/cli/docker/container/stats/
+		memUsage := float64(x.MemoryStats.Usage) - float64(x.MemoryStats.Stats["inactive_file"]) // bytes
+		memLimit := float64(x.MemoryStats.Limit)                                                 // bytes
 		memUsagePercent := float64(0)
 		// (used_memory / available_memory) * 100.0
 		// used_memory = memory_stats.usage - memory_stats.stats.cache
