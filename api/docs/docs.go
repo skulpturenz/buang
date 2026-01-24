@@ -47,6 +47,37 @@ const docTemplate = `{
                 }
             }
         },
+        "/diagnostics/version": {
+            "get": {
+                "security": [
+                    {
+                        "ApiKeyAuth": []
+                    }
+                ],
+                "tags": [
+                    "api.v1",
+                    "diagnostics"
+                ],
+                "summary": "API Version",
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "type": "string"
+                        }
+                    },
+                    "401": {
+                        "description": "Unauthorized"
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "type": "string"
+                        }
+                    }
+                }
+            }
+        },
         "/project": {
             "get": {
                 "security": [

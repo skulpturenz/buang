@@ -7,6 +7,7 @@ import (
 	"net/http"
 	"os"
 	"os/signal"
+	constantsenvs "skulpture/buang/constants/envs"
 	"skulpture/buang/db/interfaces"
 	enumsdurableexecutors "skulpture/buang/enums/durable_executors"
 	"strconv"
@@ -231,6 +232,8 @@ func (a *Application) Run(ctx context.Context) (func(ctx context.Context), error
 		_ = <-sigs
 		cancel()
 	}()
+
+	slog.InfoContext(ctx, "buang running", "version", constantsenvs.BUANG_VERSION)
 
 	wg.Wait()
 

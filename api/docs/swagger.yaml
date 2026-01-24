@@ -170,6 +170,25 @@ paths:
       tags:
       - api.v1
       - diagnostics
+  /diagnostics/version:
+    get:
+      responses:
+        "200":
+          description: OK
+          schema:
+            type: string
+        "401":
+          description: Unauthorized
+        "500":
+          description: Internal Server Error
+          schema:
+            type: string
+      security:
+      - ApiKeyAuth: []
+      summary: API Version
+      tags:
+      - api.v1
+      - diagnostics
   /project:
     get:
       parameters:

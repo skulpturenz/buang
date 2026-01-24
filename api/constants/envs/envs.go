@@ -12,11 +12,12 @@ import (
 )
 
 var (
-	GO_ENV = ferrite.
-		Enum("GO_ENV", "Golang environment").
-		WithMembers(enumsenv.Production.String(), enumsenv.Development.String(), enumsenv.Test.String()).
-		WithDefault(enumsenv.Development.String()).
-		Required()
+	BUANG_VERSION = "unknown"
+	GO_ENV        = ferrite.
+			Enum("GO_ENV", "Golang environment").
+			WithMembers(enumsenv.Production.String(), enumsenv.Development.String(), enumsenv.Test.String()).
+			WithDefault(enumsenv.Development.String()).
+			Required()
 	API_KEY = ferrite.
 		String("API_KEY", "Buang API key").
 		WithSensitiveContent().
