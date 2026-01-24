@@ -1,6 +1,7 @@
 package constantsenvs
 
 import (
+	"fmt"
 	"log/slog"
 	constantsfeaturetoggles "skulpture/buang/constants/feature_toggles"
 	enumsdbtypes "skulpture/buang/enums/db_types"
@@ -13,8 +14,9 @@ import (
 )
 
 var (
-	BUANG_VERSION = "unknown"
-	GO_ENV        = ferrite.
+	versionUnknown = "unknown"
+	BUANG_VERSION  = versionUnknown
+	GO_ENV         = ferrite.
 			Enum("GO_ENV", "Golang environment").
 			WithMembers(enumsenv.Production.String(), enumsenv.Development.String(), enumsenv.Test.String()).
 			WithDefault(enumsenv.Development.String()).
@@ -93,6 +95,10 @@ var (
 )
 
 func init() {
+	if v, _ := enumsenv.Parse(GO_ENV.Value()); v == enumsenv.Production && BUANG_VERSION == versionUnknown {
+		panic(fmt.Sprintf("bad buang build, version: %v", BUANG_VERSION))
+	}
+
 	ferrite.Init()
 }
 
