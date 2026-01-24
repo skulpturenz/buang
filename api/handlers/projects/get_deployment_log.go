@@ -27,6 +27,8 @@ type GetDeploymentLogsRequest struct {
 
 type GetDeploymentLogsResult = string
 
+var errStreamingUnsupported = errors.New("streaming unsupported")
+
 // @summary	Get deployment logs
 // @tags		api.v1, deployment
 // @security	ApiKeyAuth
@@ -73,10 +75,10 @@ func GetDeploymentLogs(s app.ApplicationServices) http.HandlerFunc {
 			ID:        req.DeploymentId,
 		}
 
-		dply, err := d.Exec(r.Context(), &s)
-		if err != nil {
-			slog.ErrorContext(r.Context(), "get deployment logs", "err", err.Error())
-			http.Error(w, err.Error(), http.StatusInternalServerError)
+		dply, dplyErr := d.Exec(r.Context(), &s)
+		if dplyErr != nil && !(errors.Is(dplyErr, sql.ErrNoRows) || errors.Is(dplyErr, pgx.ErrNoRows)) {
+			slog.ErrorContext(r.Context(), "get deployment logs", "err", dplyErr.Error())
+			http.Error(w, dplyErr.Error(), http.StatusInternalServerError)
 			return
 		}
 
@@ -93,15 +95,16 @@ func GetDeploymentLogs(s app.ApplicationServices) http.HandlerFunc {
 		}
 
 		isDeploying := (err != nil && (errors.Is(err, sql.ErrNoRows) || errors.Is(err, pgx.ErrNoRows))) ||
-			dply.Deployment.GetStatus() == int16(enumsdeploymentstatus.Deploying)
+			((errors.Is(dplyErr, sql.ErrNoRows) || errors.Is(dplyErr, pgx.ErrNoRows)) && dply.Deployment.GetStatus() == int16(enumsdeploymentstatus.Deploying))
 
+		var streamErr error
 		if isDeploying && *req.Stream {
-			streamDeploymentLogs(r.Context(), s, w, req)
+			streamErr = streamDeploymentLogs(r.Context(), s, w, req)
 
 			return
 		}
 
-		if isDeploying && !*req.Stream {
+		if isDeploying && (!*req.Stream || errors.Is(streamErr, errStreamingUnsupported)) {
 			const WAIT_TIMEOUT = 5 * time.Minute
 			waitCtx, cancelWaitCtx := context.WithTimeout(r.Context(), WAIT_TIMEOUT)
 
@@ -137,12 +140,10 @@ func GetDeploymentLogs(s app.ApplicationServices) http.HandlerFunc {
 	}
 }
 
-func streamDeploymentLogs(ctx context.Context, s app.ApplicationServices, w http.ResponseWriter, req GetDeploymentLogsRequest) {
+func streamDeploymentLogs(ctx context.Context, s app.ApplicationServices, w http.ResponseWriter, req GetDeploymentLogsRequest) error {
 	flusher, ok := w.(http.Flusher)
 	if !ok {
-		http.Error(w, "streaming unsupported", http.StatusInternalServerError)
-
-		return
+		return errStreamingUnsupported
 	}
 
 	w.Header().Set("Content-Type", "text/plain")
@@ -168,13 +169,19 @@ func streamDeploymentLogs(ctx context.Context, s app.ApplicationServices, w http
 			if errors.Is(context.DeadlineExceeded, streamCtx.Err()) && previousLogs == "" {
 				slog.ErrorContext(streamCtx, "get deployment logs", "err", streamCtx.Err().Error())
 				http.Error(w, streamCtx.Err().Error(), http.StatusInternalServerError)
-			} else if previousLogs == "" {
-				w.WriteHeader(http.StatusNoContent)
-			} else {
-				w.WriteHeader(http.StatusOK)
+
+				return streamCtx.Err()
 			}
 
-			return
+			if previousLogs == "" {
+				w.WriteHeader(http.StatusNoContent)
+
+				return nil
+			}
+
+			w.WriteHeader(http.StatusOK)
+
+			return nil
 		case log, ok := <-p.Exec(streamCtx, &s):
 			if !ok { // poll deployment logs result channel closed
 				cancelStreamCtx()
