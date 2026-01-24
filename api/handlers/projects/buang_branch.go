@@ -18,7 +18,7 @@ type BuangBranchRequest struct {
 }
 
 // @summary	Spin down a preview branch
-// @tags		api.v1, project
+// @tags		api.v1, projects
 // @security	ApiKeyAuth
 // @param		projectId		path		int					true	"Project ID"
 // @param		branchDetails	body		BuangBranchRequest	true	"Branch details"

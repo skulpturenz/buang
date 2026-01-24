@@ -21,7 +21,7 @@ type CreateProjectRequest struct {
 }
 
 // @summary	Create a project
-// @tags		api.v1, project
+// @tags		api.v1, projects
 // @security	ApiKeyAuth
 // @param		projectDetails	body		CreateProjectRequest	true	"Project details"
 // @success	200				{object}	int

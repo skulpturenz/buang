@@ -29,7 +29,7 @@ type ListAllDeploymentsItem struct {
 }
 
 // @summary	List all deployments
-// @tags		api.v1, deployments
+// @tags		api.v1, projects
 // @security	ApiKeyAuth
 // @param		projectId	path		int	true	"Project ID"
 // @param		limit		query		int	false	"Limit"

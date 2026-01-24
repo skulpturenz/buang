@@ -13,7 +13,7 @@ import (
 )
 
 // @summary	Delete a project
-// @tags		api.v1, project
+// @tags		api.v1, projects
 // @security	ApiKeyAuth
 // @param		projectId	path		int	true	"Project ID"
 // @success	204			{object}	nil

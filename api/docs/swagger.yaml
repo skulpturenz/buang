@@ -151,7 +151,7 @@ paths:
       summary: Find project by repository
       tags:
       - api.v1
-      - project
+      - projects
     post:
       parameters:
       - description: Project details
@@ -179,7 +179,7 @@ paths:
       summary: Create a project
       tags:
       - api.v1
-      - project
+      - projects
   /project/{projectId}:
     delete:
       parameters:
@@ -205,7 +205,7 @@ paths:
       summary: Delete a project
       tags:
       - api.v1
-      - project
+      - projects
     post:
       parameters:
       - description: Project ID
@@ -236,7 +236,7 @@ paths:
       summary: Update a project
       tags:
       - api.v1
-      - project
+      - projects
   /project/{projectId}/branch:
     delete:
       parameters:
@@ -268,7 +268,7 @@ paths:
       summary: Spin down a preview branch
       tags:
       - api.v1
-      - project
+      - projects
   /project/{projectId}/deployment:
     post:
       parameters:
@@ -440,7 +440,7 @@ paths:
       summary: List all deployments
       tags:
       - api.v1
-      - deployments
+      - projects
   /projects:
     get:
       parameters:

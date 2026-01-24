@@ -25,7 +25,7 @@ type FindProjectByRepositoryResponse struct {
 }
 
 // @summary	Find project by repository
-// @tags		api.v1, project
+// @tags		api.v1, projects
 // @security	ApiKeyAuth
 // @param		repository	query		string	required	"Repository"
 // @success	200			{array}		FindProjectByRepositoryResponse

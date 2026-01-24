@@ -16,7 +16,7 @@
                 ],
                 "tags": [
                     "api.v1",
-                    "project"
+                    "projects"
                 ],
                 "summary": "Find project by repository",
                 "parameters": [
@@ -61,7 +61,7 @@
                 ],
                 "tags": [
                     "api.v1",
-                    "project"
+                    "projects"
                 ],
                 "summary": "Create a project",
                 "parameters": [
@@ -107,7 +107,7 @@
                 ],
                 "tags": [
                     "api.v1",
-                    "project"
+                    "projects"
                 ],
                 "summary": "Update a project",
                 "parameters": [
@@ -155,7 +155,7 @@
                 ],
                 "tags": [
                     "api.v1",
-                    "project"
+                    "projects"
                 ],
                 "summary": "Delete a project",
                 "parameters": [
@@ -196,7 +196,7 @@
                 ],
                 "tags": [
                     "api.v1",
-                    "project"
+                    "projects"
                 ],
                 "summary": "Spin down a preview branch",
                 "parameters": [
@@ -454,7 +454,7 @@
                 ],
                 "tags": [
                     "api.v1",
-                    "deployments"
+                    "projects"
                 ],
                 "summary": "List all deployments",
                 "parameters": [

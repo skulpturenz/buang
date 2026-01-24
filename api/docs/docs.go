@@ -24,7 +24,7 @@ const docTemplate = `{
                 ],
                 "tags": [
                     "api.v1",
-                    "project"
+                    "projects"
                 ],
                 "summary": "Find project by repository",
                 "parameters": [
@@ -69,7 +69,7 @@ const docTemplate = `{
                 ],
                 "tags": [
                     "api.v1",
-                    "project"
+                    "projects"
                 ],
                 "summary": "Create a project",
                 "parameters": [
@@ -115,7 +115,7 @@ const docTemplate = `{
                 ],
                 "tags": [
                     "api.v1",
-                    "project"
+                    "projects"
                 ],
                 "summary": "Update a project",
                 "parameters": [
@@ -163,7 +163,7 @@ const docTemplate = `{
                 ],
                 "tags": [
                     "api.v1",
-                    "project"
+                    "projects"
                 ],
                 "summary": "Delete a project",
                 "parameters": [
@@ -204,7 +204,7 @@ const docTemplate = `{
                 ],
                 "tags": [
                     "api.v1",
-                    "project"
+                    "projects"
                 ],
                 "summary": "Spin down a preview branch",
                 "parameters": [
@@ -462,7 +462,7 @@ const docTemplate = `{
                 ],
                 "tags": [
                     "api.v1",
-                    "deployments"
+                    "projects"
                 ],
                 "summary": "List all deployments",
                 "parameters": [
