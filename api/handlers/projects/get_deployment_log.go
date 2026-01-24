@@ -8,6 +8,8 @@ import (
 	"net/http"
 	"skulpture/buang/app"
 	deploymentlogs "skulpture/buang/components/deployment_logs"
+	"skulpture/buang/components/deployments"
+	enumsdeploymentstatus "skulpture/buang/enums/deployment_status"
 	workflowwrappers "skulpture/buang/workers/workflow_wrappers"
 	"strconv"
 	"time"
@@ -66,6 +68,18 @@ func GetDeploymentLogs(s app.ApplicationServices) http.HandlerFunc {
 			return
 		}
 
+		d := deployments.FindDeploymentByIdParams{
+			ProjectId: req.ProjectId,
+			ID:        req.DeploymentId,
+		}
+
+		dply, err := d.Exec(r.Context(), &s)
+		if err != nil {
+			slog.ErrorContext(r.Context(), "get deployment logs", "err", err.Error())
+			http.Error(w, err.Error(), http.StatusInternalServerError)
+			return
+		}
+
 		p := deploymentlogs.GetDeploymentLogParams{
 			ProjectId:    int64(projectId),
 			DeploymentId: int64(deploymentId),
@@ -78,13 +92,16 @@ func GetDeploymentLogs(s app.ApplicationServices) http.HandlerFunc {
 			return
 		}
 
-		if err != nil && (errors.Is(err, sql.ErrNoRows) || errors.Is(err, pgx.ErrNoRows)) && *req.Stream {
+		isDeploying := (err != nil && (errors.Is(err, sql.ErrNoRows) || errors.Is(err, pgx.ErrNoRows))) ||
+			dply.Deployment.GetStatus() == int16(enumsdeploymentstatus.Deploying)
+
+		if isDeploying && *req.Stream {
 			streamDeploymentLogs(r.Context(), s, w, req)
 
 			return
 		}
 
-		if err != nil && (errors.Is(err, sql.ErrNoRows) || errors.Is(err, pgx.ErrNoRows)) {
+		if isDeploying && !*req.Stream {
 			const WAIT_TIMEOUT = 5 * time.Minute
 			waitCtx, cancelWaitCtx := context.WithTimeout(r.Context(), WAIT_TIMEOUT)
 
@@ -149,7 +166,8 @@ func streamDeploymentLogs(ctx context.Context, s app.ApplicationServices, w http
 		select {
 		case <-streamCtx.Done():
 			if errors.Is(context.DeadlineExceeded, streamCtx.Err()) && previousLogs == "" {
-				http.Error(w, "timed out", http.StatusInternalServerError)
+				slog.ErrorContext(streamCtx, "get deployment logs", "err", streamCtx.Err().Error())
+				http.Error(w, streamCtx.Err().Error(), http.StatusInternalServerError)
 			} else if previousLogs == "" {
 				w.WriteHeader(http.StatusNoContent)
 			} else {
