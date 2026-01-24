@@ -649,9 +649,6 @@ const docTemplate = `{
                 },
                 "sha": {
                     "type": "string"
-                },
-                "waitForDeployment": {
-                    "type": "boolean"
                 }
             }
         },

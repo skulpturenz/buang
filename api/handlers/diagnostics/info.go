@@ -28,15 +28,15 @@ func Info(s app.ApplicationServices) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		zoneName, _ := time.Now().Zone()
 
-		about := InfoResult{
+		info := InfoResult{
 			Version:  constantsenvs.BUANG_VERSION,
 			Timezone: zoneName,
 			Uptime:   constantsenvs.Uptime().String(),
 		}
 
-		err := app.WriteJson(w, about, http.StatusOK)
+		err := app.WriteJson(w, info, http.StatusOK)
 		if err != nil {
-			slog.ErrorContext(r.Context(), "version", "err", err.Error())
+			slog.ErrorContext(r.Context(), "info", "err", err.Error())
 			http.Error(w, err.Error(), http.StatusInternalServerError)
 			return
 		}

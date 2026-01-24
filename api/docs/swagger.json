@@ -641,9 +641,6 @@
                 },
                 "sha": {
                     "type": "string"
-                },
-                "waitForDeployment": {
-                    "type": "boolean"
                 }
             }
         },

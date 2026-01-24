@@ -11,8 +11,6 @@ definitions:
         type: string
       sha:
         type: string
-      waitForDeployment:
-        type: boolean
     required:
     - branch
     - serviceEntrypoint

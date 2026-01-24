@@ -20,7 +20,7 @@ type CreateDeploymentRequest struct {
 	Sha               string         `json:"sha" validate:"required" schema:"-"`
 	ServiceEntrypoint string         `json:"serviceEntrypoint" validate:"required,hostname_port" schema:"-"`
 	Env               map[string]any `json:"env" schema:"-"`
-	WaitForDeployment bool           `schema:"waitForDeployment,default:false"`
+	WaitForDeployment bool           `schema:"waitForDeployment,default:false" swaggerignore:"true"`
 }
 
 // @summary	Spin up a preview deployment
