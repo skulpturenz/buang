@@ -655,6 +655,9 @@ const docTemplate = `{
         "deployments.FindDeploymentByIdResponse": {
             "type": "object",
             "properties": {
+                "branch": {
+                    "type": "string"
+                },
                 "deployedAt": {
                     "type": "string"
                 },

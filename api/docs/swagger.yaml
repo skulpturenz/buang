@@ -18,6 +18,8 @@ definitions:
     type: object
   deployments.FindDeploymentByIdResponse:
     properties:
+      branch:
+        type: string
       deployedAt:
         type: string
       id:

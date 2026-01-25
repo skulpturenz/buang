@@ -146,13 +146,25 @@ func createNewProjectWithDeployment(t *testing.T, config testutils.DurableExecut
 	}
 
 	getDeploymentLogs := func(projectId int64, deploymentId int64) {
-		// TODO: want to wait for deployment here but `io.ReadAll` is getting an EOF right after git clone logs
-		// which is too early
-		getDeploymentLogsUrl := fmt.Sprintf("%v/project/%v/deployment/%v/logs", baseUrl, projectId, deploymentId)
-		req, err := http.NewRequestWithContext(ctx, http.MethodGet, getDeploymentLogsUrl, nil)
+		getDeploymentUrl := fmt.Sprintf("%v/project/%v/deployment/%v", baseUrl, projectId, deploymentId)
+		req, err := http.NewRequestWithContext(ctx, http.MethodGet, getDeploymentUrl, nil)
 		require.NoError(t, err)
 
 		res, err := http.DefaultClient.Do(req)
+		require.NoError(t, err)
+		defer res.Body.Close()
+
+		var deployment deploymentshandlers.FindDeploymentByIdResponse
+		err = json.NewDecoder(res.Body).Decode(&deployment)
+		require.NoError(t, err)
+
+		// TODO: want to wait for deployment here but `io.ReadAll` is getting an EOF right after git clone logs
+		// which is too early
+		getDeploymentLogsUrl := fmt.Sprintf("%v/project/%v/deployment/%v/logs", baseUrl, projectId, deploymentId)
+		req, err = http.NewRequestWithContext(ctx, http.MethodGet, getDeploymentLogsUrl, nil)
+		require.NoError(t, err)
+
+		res, err = http.DefaultClient.Do(req)
 		require.NoError(t, err)
 		defer res.Body.Close()
 
@@ -160,9 +172,7 @@ func createNewProjectWithDeployment(t *testing.T, config testutils.DurableExecut
 		logs, err := io.ReadAll(res.Body)
 		require.NoError(t, err)
 
-		// TODO: check branch and SHA
-		// need to update endpoints
-		require.Contains(t, string(logs), "Checked out commit")
+		require.Contains(t, string(logs), fmt.Sprintf("Checked out commit %v, branch %v", deployment.Sha, deployment.Branch))
 		require.Contains(t, string(logs), "nginx")
 	}
 

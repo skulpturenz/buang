@@ -17,6 +17,7 @@ type FindDeploymentByIdResponse struct {
 	Url        *string    `json:"url"`
 	Status     int16      `json:"status"`
 	Sha        string     `json:"sha"`
+	Branch     string     `json:"branch"`
 	DeployedAt *time.Time `json:"deployedAt"`
 }
 
@@ -66,6 +67,7 @@ func FindDeploymentById(s app.ApplicationServices) http.HandlerFunc {
 			Url:        res.Deployment.GetUrl(),
 			Status:     res.Deployment.GetStatus(),
 			Sha:        res.Deployment.GetSha(),
+			Branch:     res.Deployment.GetBranch(),
 			DeployedAt: res.Deployment.GetDeployedAt(),
 		}
 
