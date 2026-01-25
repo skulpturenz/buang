@@ -65,6 +65,7 @@ services:
       BUANG_HOUSEKEEPING_PRUNE_DEPLOYMENTS: ${BUANG_HOUSEKEEPING_PRUNE_DEPLOYMENTS}
       BUANG_EXPERIMENTAL_HOUSEKEEPING_AUTO_UPDATE: ${BUANG_EXPERIMENTAL_HOUSEKEEPING_AUTO_UPDATE}
     volumes:
+      - /var/run/docker.sock:/var/run/docker.sock
       - ${BUANG_TRAEFIK_DYNAMIC_CONFIG_DIR:-/buang/traefik}:/app/deployments
     ulimits:
       nofile:
