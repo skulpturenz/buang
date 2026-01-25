@@ -24,9 +24,10 @@ func CreateSqliteTemporal(ctx context.Context) (*DurableExecutorConfiguration, f
 	}
 
 	res := DurableExecutorConfiguration{
-		DurableExecutor:    enumsdurableexecutors.Temporal,
-		DbType:             enumsdbtypes.Sqlite,
-		DbConnectionString: sqlite.ConnectionString,
+		DurableExecutor:          enumsdurableexecutors.Temporal,
+		DbType:                   enumsdbtypes.Sqlite,
+		DbConnectionString:       sqlite.ConnectionString,
+		DurableExecutorContainer: &container,
 	}
 
 	cleanup := func(ctx context.Context) error {

@@ -16,6 +16,7 @@ func CreateDbos(ctx context.Context) (*DurableExecutorConfiguration, func(contex
 		DurableExecutor:    enumsdurableexecutors.Dbos,
 		DbType:             enumsdbtypes.Pg,
 		DbConnectionString: pg.ConnectionString,
+		DbContainer:        &pg.Container,
 	}
 
 	return &res, cleanup, nil

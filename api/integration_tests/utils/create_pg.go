@@ -13,6 +13,7 @@ type CreatePgResult struct {
 	Username         string
 	Password         string
 	ConnectionString string
+	Container        testcontainers.Container
 }
 
 func CreatePg(ctx context.Context) (*CreatePgResult, func(context.Context) error, error) {
@@ -44,6 +45,7 @@ func CreatePg(ctx context.Context) (*CreatePgResult, func(context.Context) error
 		Username:         user,
 		Password:         pw,
 		ConnectionString: connectionString,
+		Container:        pg,
 	}
 
 	return &res, cleanup, nil
