@@ -117,7 +117,6 @@ func createNewProjectWithDeployment(t *testing.T, config testutils.DurableExecut
 	}
 
 	createDeployment := func(projectId int64) int64 {
-		// TODO: let logs wait for the deployment
 		postDeploymentUrl := fmt.Sprintf("%v/project/%v/deployment?waitForDeployment=true", baseUrl, projectId)
 		createDeploymentReq := deploymentshandlers.CreateDeploymentRequest{
 			Branch:            "master",
@@ -158,8 +157,32 @@ func createNewProjectWithDeployment(t *testing.T, config testutils.DurableExecut
 		err = json.NewDecoder(res.Body).Decode(&deployment)
 		require.NoError(t, err)
 
-		// TODO: want to wait for deployment here but `io.ReadAll` is getting an EOF right after git clone logs
-		// which is too early
+		// TODO: there are a few bugs here if we don't `waitForDeployment=true` when creating the deployment:
+		// - temporal with in memory sqlite
+		//   - when the workflow has deployed the database is torn down for some reason
+		//     thought that it was something to do with the tests but can replicate it manually
+		//	   steps to reproduce:
+		//	     - create project
+		//       - get deployment logs for project 1, deployment id 1 (this will be streaming)
+		//       - create deployment (this will have id 1)
+		//       - once the git clone is complete there are deployment logs for the clone
+		//         but after there is an error about all the tables not existing
+		//       - context cancel triggering sqlite to get torn down?
+		//         unsure why, we are creating a new context
+		//         if it gets torn down when we try to create a new connection a fresh db is created
+		//         with none of the migrations applied
+		// - temporal with sqlite file db
+		//   - has deployed check returns too early. after git clone is done, `HasDeployed` unblocks
+		//     but docker compose logs are not written yet
+		//     steps to reproduce:
+		//       - create project
+		//       - get deployment logs for project 1, deployment id 1 (this will be streaming)
+		//       - create deployment (this will have id 1)
+		//       - once the git clone is complete, the deployment logs returns but there are no logs
+		//         from compose, only git
+		//       - note: if we fetch it again the compose logs show so unblocking too early
+		//               not so sure why though because the workflow isn't complete
+		// both scenarios are fine with dbos and pg
 		getDeploymentLogsUrl := fmt.Sprintf("%v/project/%v/deployment/%v/logs", baseUrl, projectId, deploymentId)
 		req, err = http.NewRequestWithContext(ctx, http.MethodGet, getDeploymentLogsUrl, nil)
 		require.NoError(t, err)
