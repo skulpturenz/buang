@@ -1,5 +1,5 @@
 # TODO: BUMP
-ARG VERSION="0.0.1"
+ARG VERSION="unknown"
 
 FROM golang:alpine AS build
 
@@ -11,6 +11,8 @@ RUN go build -ldflags "-X skulpture/buang/constants/envs.BUANG_VERSION=$VERSION"
 
 FROM alpine
 
-COPY --from=build /build/buang /buang
+RUN apk add --no-cache docker-cli
 
-ENTRYPOINT [ "/buang" ]
+COPY --from=build /build/buang /app/buang
+
+ENTRYPOINT [ "/app/buang" ]
