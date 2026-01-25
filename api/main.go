@@ -164,9 +164,8 @@ func main() {
 	c := func(ctx context.Context) {
 		cleanup(ctx)
 
-		buangComposePath, ok := os.LookupEnv("BUANG_BOOTSTRAP_DIR")
-		if ok && isExperimentalBootstrapEnabled {
-			os.RemoveAll(buangComposePath)
+		if v, ok := os.LookupEnv(constantsenvs.INTERNAL_BUANG_BOOTSTRAP_DIR); ok && isExperimentalBootstrapEnabled {
+			os.RemoveAll(v)
 		}
 	}
 

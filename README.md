@@ -93,9 +93,9 @@ task run-pg
 2. Set the correct environment variables
 
 ```bash
-export DB_CONNECTION_STRING="postgresql://postgres:mysecretpassword@localhost/buang?sslmode=disable"
-export DB_TYPE="postgres"
-export DURABLE_EXECUTOR="dbos"
+export BUANG_DB_CONNECTION_STRING="postgresql://postgres:mysecretpassword@localhost/buang?sslmode=disable"
+export BUANG_DB_TYPE="postgres"
+export BUANG_DURABLE_EXECUTOR="dbos"
 ```
 
 3. Run Buang:

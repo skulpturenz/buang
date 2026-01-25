@@ -10,7 +10,6 @@ import (
 	constantsenvs "skulpture/buang/constants/envs"
 	"skulpture/buang/db/interfaces"
 	enumsdurableexecutors "skulpture/buang/enums/durable_executors"
-	"strconv"
 	"sync"
 	"syscall"
 
@@ -106,24 +105,18 @@ func (a ApplicationConfig) New(ctx context.Context, chi *chi.Mux) (*Application,
 		}
 	} else {
 		cfg := dbos.Config{
-			AppName:     os.Getenv("OTEL_SERVICE_NAME"),
-			DatabaseURL: os.Getenv("DB_CONNECTION_STRING"),
+			AppName:     constantsenvs.OTEL_SERVICE_NAME.Value(),
+			DatabaseURL: constantsenvs.DB_CONNECTION_STRING.Value(),
 		}
-		if os.Getenv("DBOS_CONDUCTOR_API_KEY") != "" {
-			cfg.ConductorAPIKey = os.Getenv("DBOS_CONDUCTOR_API_KEY")
+		if v, ok := constantsenvs.DBOS_CONDUCTOR_API_KEY.Value(); ok {
+			cfg.ConductorAPIKey = v
 		}
-		if os.Getenv("DBOS_CONDUCTOR_URL") != "" {
-			cfg.ConductorURL = os.Getenv("DBOS_CONDUCTOR_URL")
+		if v, ok := constantsenvs.DBOS_CONDUCTOR_URL.Value(); ok {
+			cfg.ConductorURL = v
 		}
-		if os.Getenv("DBOS_ADMIN_SERVER_PORT") != "" {
-			p := os.Getenv("DBOS_ADMIN_SERVER_PORT")
-			port, err := strconv.Atoi(p)
-			if err != nil {
-				return nil, err
-			}
-
+		if v, ok := constantsenvs.DBOS_ADMIN_SERVER_PORT.Value(); ok {
 			cfg.AdminServer = true
-			cfg.AdminServerPort = port
+			cfg.AdminServerPort = v
 		}
 
 		dbosContext, err := dbos.NewDBOSContext(context.Background(), cfg)
