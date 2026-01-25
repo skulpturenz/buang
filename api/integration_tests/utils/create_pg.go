@@ -2,7 +2,6 @@ package testutils
 
 import (
 	"context"
-	"fmt"
 
 	"github.com/testcontainers/testcontainers-go"
 	"github.com/testcontainers/testcontainers-go/modules/postgres"
@@ -21,8 +20,6 @@ func CreatePg(ctx context.Context) (*CreatePgResult, func(context.Context) error
 	user := "buang"
 	pw := "buang"
 
-	connectionString := fmt.Sprintf("postgresql://%v:%v@localhost/%v?sslmode=disable", user, pw, dbName)
-
 	pg, err := postgres.Run(ctx, "postgres:18-alpine",
 		postgres.WithDatabase(dbName),
 		postgres.WithUsername(user),
@@ -38,6 +35,11 @@ func CreatePg(ctx context.Context) (*CreatePgResult, func(context.Context) error
 		}
 
 		return nil
+	}
+
+	connectionString, err := pg.ConnectionString(ctx)
+	if err != nil {
+		return nil, cleanup, err
 	}
 
 	res := CreatePgResult{

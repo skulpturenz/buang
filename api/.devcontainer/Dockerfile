@@ -17,7 +17,8 @@ RUN go install github.com/golang-migrate/migrate/v4/cmd/migrate@latest && \
 	go install github.com/git-chglog/git-chglog/cmd/git-chglog@latest
 
 RUN apk update && \
-	apk add --no-cache build-base libc6-compat git-lfs ca-certificates openssl && \
+	apk add --no-cache build-base libc6-compat git-lfs ca-certificates openssl nodejs npm && \
+	npm i -g @google/gemini-cli
 	git lfs install && \
 	update-ca-certificates
 

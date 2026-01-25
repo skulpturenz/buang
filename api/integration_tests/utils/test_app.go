@@ -20,7 +20,6 @@ import (
 	"github.com/gorilla/schema"
 	"github.com/negrel/assert"
 	temporalclient "go.temporal.io/sdk/client"
-	"go.temporal.io/sdk/contrib/envconfig"
 	temporallog "go.temporal.io/sdk/log"
 	"go.temporal.io/sdk/worker"
 )
@@ -31,7 +30,7 @@ type TestApplicationConfig struct {
 }
 
 type TestApplication struct {
-	Url      string
+	Url      *string
 	http     TestHttpApplication
 	temporal *TestTemporalApplication
 	config   TestApplicationConfig
@@ -60,9 +59,9 @@ type TestApplicationServices struct {
 	GorillaSchemaDecoder *schema.Decoder
 	GorillaSchemaEncoder *schema.Encoder
 	Docker               *client.Client
-	durableExecutor      enumsdurableexecutors.DurableExecutor
-	temporal             *temporalclient.Client
-	dbos                 dbos.DBOSContext
+	DurableExecutor      enumsdurableexecutors.DurableExecutor
+	Temporal             *temporalclient.Client
+	Dbos                 dbos.DBOSContext
 }
 
 // NOTE: MOSTLY FOLLOWS THE REAL THING
@@ -70,7 +69,7 @@ type TestApplicationServices struct {
 // AND SOME TYPE MAPPING
 func (a TestApplicationConfig) New(ctx context.Context, chi *chi.Mux) (*TestApplication, error) {
 	services := a.Services
-	services.durableExecutor = a.DurableExecutorConfig.DurableExecutor
+	services.DurableExecutor = a.DurableExecutorConfig.DurableExecutor
 
 	httpApp := TestHttpApplication{
 		chi:      chi,
@@ -87,7 +86,15 @@ func (a TestApplicationConfig) New(ctx context.Context, chi *chi.Mux) (*TestAppl
 	app.dbos = initialDbos
 
 	if a.DurableExecutorConfig.DurableExecutor == enumsdurableexecutors.Temporal {
-		opts := envconfig.MustLoadDefaultClientOptions()
+		c := *a.DurableExecutorConfig.DurableExecutorContainer
+		port, err := c.MappedPort(ctx, "7233/tcp")
+		if err != nil {
+			return nil, err
+		}
+
+		opts := temporalclient.Options{
+			HostPort: fmt.Sprintf("%v:%v", "0.0.0.0", port.Port()),
+		}
 		opts.Logger = temporallog.NewStructuredLogger(slog.Default())
 
 		tc, err := temporalclient.NewLazyClient(opts) // used by the workers
@@ -99,8 +106,8 @@ func (a TestApplicationConfig) New(ctx context.Context, chi *chi.Mux) (*TestAppl
 		if err != nil {
 			return nil, err
 		}
-		services.temporal = &hc
-		httpApp.Services.temporal = &hc
+		services.Temporal = &hc
+		httpApp.Services.Temporal = &hc
 
 		app.http = httpApp
 		app.temporal = &TestTemporalApplication{
@@ -117,8 +124,8 @@ func (a TestApplicationConfig) New(ctx context.Context, chi *chi.Mux) (*TestAppl
 		if err != nil {
 			return nil, err
 		}
-		services.dbos = dbosContext
-		httpApp.Services.dbos = dbosContext
+		services.Dbos = dbosContext
+		httpApp.Services.Dbos = dbosContext
 
 		app.http = httpApp
 		app.dbos = &TestDbosApplication{
@@ -128,8 +135,8 @@ func (a TestApplicationConfig) New(ctx context.Context, chi *chi.Mux) (*TestAppl
 	}
 
 	assert.True(app.http != TestHttpApplication{}, "app initialized incorrectly")
-	assert.True(app.config.DurableExecutorConfig.DurableExecutor != enumsdurableexecutors.Dbos || app.http.Services.dbos != nil, "dbos is injected to be used by handlers")
-	assert.True(app.config.DurableExecutorConfig.DurableExecutor != enumsdurableexecutors.Temporal || app.http.Services.temporal != nil, "temporal is injected to be used by handlers")
+	assert.True(app.config.DurableExecutorConfig.DurableExecutor != enumsdurableexecutors.Dbos || app.http.Services.Dbos != nil, "dbos is injected to be used by handlers")
+	assert.True(app.config.DurableExecutorConfig.DurableExecutor != enumsdurableexecutors.Temporal || app.http.Services.Temporal != nil, "temporal is injected to be used by handlers")
 	assert.True(app.temporal != initialTemporal || app.dbos != initialDbos, "must use one durable executor")
 	assert.True(app.config.DurableExecutorConfig.DurableExecutor != enumsdurableexecutors.Temporal || app.temporal.client != nil,
 		"must have a client if temporal application")
@@ -143,20 +150,10 @@ func (a *TestApplication) Run(ctx context.Context) (func(ctx context.Context), e
 	ctx, cancel := context.WithCancel(ctx)
 	var wg sync.WaitGroup
 
-	startHttpServer := func(ctx context.Context, wg *sync.WaitGroup) {
-		ts := httptest.NewUnstartedServer(a.http.chi)
-		a.Url = ts.URL
-
-		go func() {
-			defer wg.Done()
-			slog.InfoContext(ctx, fmt.Sprintf("Test HTTP server listening at %s", ts.URL))
-			ts.Start()
-		}()
-
-		_ = <-ctx.Done()
-		slog.InfoContext(ctx, "shutting down test HTTP server")
-		ts.Close()
-	}
+	ts := httptest.NewUnstartedServer(a.http.chi)
+	a.Url = &ts.URL
+	ts.Start()
+	slog.InfoContext(ctx, fmt.Sprintf("Test HTTP server listening at %s", ts.URL))
 
 	runTemporalWorkers := func(ctx context.Context, wg *sync.WaitGroup) {
 		defer wg.Done()
@@ -195,9 +192,6 @@ func (a *TestApplication) Run(ctx context.Context) (func(ctx context.Context), e
 		}
 	}
 
-	wg.Add(1)
-	go startHttpServer(ctx, &wg)
-
 	if a.config.DurableExecutorConfig.DurableExecutor == enumsdurableexecutors.Temporal {
 		wg.Add(1)
 		go runTemporalWorkers(ctx, &wg)
@@ -217,9 +211,13 @@ func (a *TestApplication) Run(ctx context.Context) (func(ctx context.Context), e
 	wg.Wait()
 
 	cleanup := func(ctx context.Context) {
-		c := *a.temporal.client
+		if a.temporal.client != nil {
+			c := *a.temporal.client
 
-		c.Close()
+			c.Close()
+		}
+
+		ts.Close()
 	}
 
 	return cleanup, nil
@@ -264,11 +262,11 @@ func (a *TestDbosApplication) AddWorkflows(ws ...DbosWorkflow[any, any]) {
 }
 
 func (s *TestApplicationServices) GetDurableExecutor() (any, enumsdurableexecutors.DurableExecutor) {
-	if s.durableExecutor == enumsdurableexecutors.Temporal {
-		return *s.temporal, s.durableExecutor
+	if s.DurableExecutor == enumsdurableexecutors.Temporal {
+		return *s.Temporal, s.DurableExecutor
 	}
 
-	return s.dbos, s.durableExecutor
+	return s.Dbos, s.DurableExecutor
 }
 
 func (s TestApplicationServices) ToAppApplicationServices() app.ApplicationServices {
@@ -277,5 +275,8 @@ func (s TestApplicationServices) ToAppApplicationServices() app.ApplicationServi
 		GorillaSchemaDecoder: s.GorillaSchemaDecoder,
 		GorillaSchemaEncoder: s.GorillaSchemaEncoder,
 		Docker:               s.Docker,
+		Temporal:             s.Temporal,
+		DurableExecutor:      s.DurableExecutor,
+		Dbos:                 s.Dbos,
 	}
 }

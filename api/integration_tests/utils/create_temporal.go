@@ -4,8 +4,10 @@ import (
 	"context"
 	enumsdbtypes "skulpture/buang/enums/db_types"
 	enumsdurableexecutors "skulpture/buang/enums/durable_executors"
+	"time"
 
 	"github.com/testcontainers/testcontainers-go"
+	"github.com/testcontainers/testcontainers-go/wait"
 )
 
 func CreateSqliteTemporal(ctx context.Context) (*DurableExecutorConfiguration, func(context.Context) error, error) {
@@ -15,7 +17,8 @@ func CreateSqliteTemporal(ctx context.Context) (*DurableExecutorConfiguration, f
 		ContainerRequest: testcontainers.ContainerRequest{
 			Image:        "temporalio/temporal",
 			ExposedPorts: []string{"7233/tcp", "8233/tcp"},
-			Cmd:          []string{"server start-dev --ip 0.0.0.0"},
+			Cmd:          []string{"server", "start-dev", "--ip", "0.0.0.0"},
+			WaitingFor:   wait.ForLog("0.0.0.0:7233").WithStartupTimeout(120 * time.Second).WithPollInterval(100 * time.Millisecond),
 		},
 		Started: true,
 	})
