@@ -7,5 +7,5 @@ type CreateSqliteResult struct {
 }
 
 func CreateSqlite(ctx context.Context) CreateSqliteResult {
-	return CreateSqliteResult{ConnectionString: "file:test.db?_foreign_keys=true&mode=memory"}
+	return CreateSqliteResult{ConnectionString: "file:test.db?_foreign_keys=true&mode=memory&cache=shared"}
 }

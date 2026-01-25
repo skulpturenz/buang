@@ -50,7 +50,7 @@ var (
 	DB_CONNECTION_STRING = ferrite.
 				String("BUANG_DB_CONNECTION_STRING", "Database connection string").
 				WithSensitiveContent().
-				WithDefault("file:test.db?_foreign_keys=true&mode=memory").
+				WithDefault("file:test.db?_foreign_keys=true&mode=memory&cache=shared").
 				Required()
 	TEMPORAL_API_KEY = ferrite.
 				String("BUANG_TEMPORAL_API_KEY", "Temporal API key").

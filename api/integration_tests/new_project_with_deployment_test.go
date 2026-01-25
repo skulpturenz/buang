@@ -158,19 +158,6 @@ func createNewProjectWithDeployment(t *testing.T, config testutils.DurableExecut
 		require.NoError(t, err)
 
 		// TODO: there are a few bugs here if we don't `waitForDeployment=true` when creating the deployment:
-		// - temporal with in memory sqlite
-		//   - when the workflow has deployed the database is torn down for some reason
-		//     thought that it was something to do with the tests but can replicate it manually
-		//	   steps to reproduce:
-		//	     - create project
-		//       - get deployment logs for project 1, deployment id 1 (this will be streaming)
-		//       - create deployment (this will have id 1)
-		//       - once the git clone is complete there are deployment logs for the clone
-		//         but after there is an error about all the tables not existing
-		//       - context cancel triggering sqlite to get torn down?
-		//         unsure why, we are creating a new context
-		//         if it gets torn down when we try to create a new connection a fresh db is created
-		//         with none of the migrations applied
 		// - temporal with sqlite file db
 		//   - has deployed check returns too early. after git clone is done, `HasDeployed` unblocks
 		//     but docker compose logs are not written yet
