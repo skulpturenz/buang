@@ -28,6 +28,8 @@ type Client struct {
 	c temporalclient.Client
 }
 
+var _ workersinterfaces.Workflows = (*Client)(nil)
+
 func New(ctx context.Context, cfg TemporalConfig) (workersinterfaces.Workflows, func(ctx context.Context), error) {
 	var opts temporalclient.Options
 

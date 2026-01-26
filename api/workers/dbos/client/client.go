@@ -28,6 +28,8 @@ type Client struct {
 	s   app.ApplicationServices
 }
 
+var _ workersinterfaces.Workflows = (*Client)(nil)
+
 func New(ctx context.Context, cfg DbosConfig) (workersinterfaces.Workflows, error) {
 	c := dbos.Config{
 		AppName:     cfg.AppName,
