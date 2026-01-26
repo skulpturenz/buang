@@ -117,7 +117,7 @@ func createNewProjectWithDeployment(t *testing.T, config testutils.DurableExecut
 	}
 
 	createDeployment := func(projectId int64) int64 {
-		postDeploymentUrl := fmt.Sprintf("%v/project/%v/deployment?waitForDeployment=true", baseUrl, projectId)
+		postDeploymentUrl := fmt.Sprintf("%v/project/%v/deployment", baseUrl, projectId)
 		createDeploymentReq := deploymentshandlers.CreateDeploymentRequest{
 			Branch:            "master",
 			Sha:               "e6792e4fe8a66de90b0945fa9d38f0b25149bd00",
@@ -157,19 +157,6 @@ func createNewProjectWithDeployment(t *testing.T, config testutils.DurableExecut
 		err = json.NewDecoder(res.Body).Decode(&deployment)
 		require.NoError(t, err)
 
-		// TODO: there are a few bugs here if we don't `waitForDeployment=true` when creating the deployment:
-		// - temporal with sqlite file db
-		//   - has deployed check returns too early. after git clone is done, `HasDeployed` unblocks
-		//     but docker compose logs are not written yet
-		//     steps to reproduce:
-		//       - create project
-		//       - get deployment logs for project 1, deployment id 1 (this will be streaming)
-		//       - create deployment (this will have id 1)
-		//       - once the git clone is complete, the deployment logs returns but there are no logs
-		//         from compose, only git
-		//       - note: if we fetch it again the compose logs show so unblocking too early
-		//               not so sure why though because the workflow isn't complete
-		// both scenarios are fine with dbos and pg
 		getDeploymentLogsUrl := fmt.Sprintf("%v/project/%v/deployment/%v/logs", baseUrl, projectId, deploymentId)
 		req, err = http.NewRequestWithContext(ctx, http.MethodGet, getDeploymentLogsUrl, nil)
 		require.NoError(t, err)

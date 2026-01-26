@@ -94,16 +94,37 @@ func (dp *DeployProject) DeployProject(ctx context.Context, d DeployProjectParam
 
 	env["BUANG_DEPLOYMENT_PATH"] = url
 
-	writer := deploymentlogs.CreateBufferedWriter(deploymentLogsParams)
+	// TODO: ideally we want to use the buffered writer so that we don't hit the DB all the time
+	// but temporal's long polling is faster than our short polling in `poll_deployment_log`
+	// so what happens is that the workflow unblocks and we return deployment logs for the deployment
+	// but the compose logs are not included because it unblocks before `poll_deployment_logs` can
+	// retrieve the updated logs
+	// steps to reproduce:
+	// - temporal with sqlite
+	//   - has deployed check returns too early. after git clone is done, `HasDeployed` unblocks
+	//     but docker compose logs are not written yet
+	//     steps to reproduce:
+	//       - create project
+	//       - get deployment logs for project 1, deployment id 1 (this will be streaming)
+	//       - create deployment (this will have id 1)
+	//       - once the git clone is complete, the deployment logs returns but there are no logs
+	//         from compose, only git
+	//       - note: if we fetch it again the compose logs show so unblocking too early
+	//               not so sure why though because the workflow isn't complete
+	// fine with dbos
+	// TODO: think this is something which won't occur when deployed because network latency will give us enough
+	// time for everything to work correctly, in which case we can use the buffered writer but we just have to relax the
+	// assertion around compose logs being included
+	// writer := deploymentlogs.CreateBufferedWriter(deploymentLogsParams)
+	// defer writer.Flush()
 	upParams := docker.ComposeUpParams{
 		ProjectName: projectName,
 		ConfigPaths: []string{
 			filepath.Join(d.Dir, p.Project.GetComposePath()),
 		},
 		Environment: env,
-		Writer:      writer,
+		Writer:      deploymentLogsParams,
 	}
-	defer writer.Flush()
 
 	_, _, err = upParams.Exec(ctx, &s)
 	if err != nil {
