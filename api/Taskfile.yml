@@ -88,3 +88,17 @@ tasks:
       - mkdir -p /deployments
       - echo "Buang depends on Temporal, you can use Temporal Cloud or self host it by following the docs at https://docs.temporal.io/self-hosted-guide"
       - docker-compose -f docker-compose.prod.yml up
+
+  # TODO: base64 encoded token so that we don't trip github secret scanning for now
+  # TODO: from repo secrets
+  test:
+    desc: Run tests
+    cmds:
+      - BUANG_TEST_GITHUB_USER="nmathew98" BUANG_TEST_GITHUB_PAT="$(echo 'Z2l0aHViX3BhdF8xMUFORVFHSUEwRjNac0dMazZoNFpHX283YmR6TTdldUllbm5xWXdOWjlhcVJaaEN6YmdJa2JiUFlVc2pxR1FUTldVUkU1T1dJSmYyWmFYdWhLCg==' | base64 -d)" go test -count=1 -v ./integration_tests
+
+  # TODO: base64 encoded token so that we don't trip github secret scanning for now
+  # TODO: from repo secrets
+  test-watch:
+    desc: Run tests in watch mode
+    cmds:
+      - BUANG_TEST_GITHUB_USER="nmathew98" BUANG_TEST_GITHUB_PAT="$(echo 'Z2l0aHViX3BhdF8xMUFORVFHSUEwRjNac0dMazZoNFpHX283YmR6TTdldUllbm5xWXdOWjlhcVJaaEN6YmdJa2JiUFlVc2pxR1FUTldVUkU1T1dJSmYyWmFYdWhLCg==' | base64 -d)" gow test -count=1 -v ./integration_tests

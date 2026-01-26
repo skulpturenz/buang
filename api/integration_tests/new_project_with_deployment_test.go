@@ -89,11 +89,11 @@ func createNewProjectWithDeployment(t *testing.T, config testutils.DurableExecut
 	createProject := func() int64 {
 		postProjectsUrl := fmt.Sprintf("%v/project", baseUrl)
 		createProjectReq := projectshandlers.CreateProjectRequest{
-			Repository:    "https://github.com/skulpturenz/buangtest",
+			Repository:    "https://github.com/skulpturenz/buangtest", // TODO: from repo vars
 			RequiresAuthn: true,
-			Username:      &username,
-			Password:      &githubPat,
-			ComposePath:   "compose.yaml",
+			Username:      &username,      // TODO: from repo secrets
+			Password:      &githubPat,     // TODO: from repo secrets
+			ComposePath:   "compose.yaml", // TODO: from repo vars
 		}
 
 		body, err := json.Marshal(createProjectReq)
@@ -119,9 +119,9 @@ func createNewProjectWithDeployment(t *testing.T, config testutils.DurableExecut
 	createDeployment := func(projectId int64) int64 {
 		postDeploymentUrl := fmt.Sprintf("%v/project/%v/deployment", baseUrl, projectId)
 		createDeploymentReq := deploymentshandlers.CreateDeploymentRequest{
-			Branch:            "master",
-			Sha:               "e6792e4fe8a66de90b0945fa9d38f0b25149bd00",
-			ServiceEntrypoint: "web:80",
+			Branch:            "master",                                   // TODO: from repo vars
+			Sha:               "e6792e4fe8a66de90b0945fa9d38f0b25149bd00", // TODO: from repo vars
+			ServiceEntrypoint: "web:80",                                   // TODO: from repo vars
 		}
 
 		body, err := json.Marshal(createDeploymentReq)
