@@ -1,18 +1,18 @@
-package app
+package apploggerotel
 
 import (
 	"context"
 	"errors"
 	"fmt"
+	"io"
 	"log/slog"
+	"net/http"
 	enumsenv "skulpture/buang/enums/env"
 
 	"github.com/agoda-com/opentelemetry-go/otelslog"
 	"github.com/agoda-com/opentelemetry-logs-go/exporters/otlp/otlplogs"
 	"github.com/agoda-com/opentelemetry-logs-go/exporters/otlp/otlplogs/otlplogshttp"
 	sdklog "github.com/agoda-com/opentelemetry-logs-go/sdk/logs"
-	"github.com/go-chi/chi/v5"
-	"github.com/go-chi/httplog/v2"
 	"go.opentelemetry.io/contrib/instrumentation/net/http/otelhttp"
 	"go.opentelemetry.io/otel"
 	"go.opentelemetry.io/otel/attribute"
@@ -23,21 +23,25 @@ import (
 	"go.opentelemetry.io/otel/trace/noop"
 )
 
-type LoggerConfig struct {
+type OtelSloggerConfig struct {
 	Enable   bool
 	Env      enumsenv.Environment
 	Service  string
 	LogLevel slog.Leveler
 }
 
-func (c LoggerConfig) New(ctx context.Context) (slog.Handler, func(context.Context), error) {
+func (c OtelSloggerConfig) New(ctx context.Context) (slog.Handler, func(context.Context), error) {
 	if !c.Enable {
 		// https://github.com/open-telemetry/opentelemetry-go/discussions/2659#discussioncomment-10798740
 		otel.SetTracerProvider(
 			noop.NewTracerProvider(),
 		)
 
-		return nil, func(context.Context) {}, nil
+		handler := slog.NewTextHandler(io.Discard, nil)
+
+		cleanup := func(context.Context) {} // noop
+
+		return handler, cleanup, nil
 	}
 
 	exporter, err := otlptrace.New(
@@ -99,12 +103,6 @@ func (c LoggerConfig) New(ctx context.Context) (slog.Handler, func(context.Conte
 	return handler, cleanup, nil
 }
 
-func (c LoggerConfig) AttachMiddleware(r chi.Router) {
-	r.Use(otelhttp.NewMiddleware(c.Service))
-	r.Use(httplog.RequestLogger(httplog.NewLogger(c.Service, httplog.Options{
-		Concise: true,
-		Tags: map[string]string{
-			"env": c.Env.String(),
-		},
-	})))
+func (c OtelSloggerConfig) Handler(next http.Handler) http.Handler {
+	return otelhttp.NewMiddleware(c.Service)(next)
 }

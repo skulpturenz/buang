@@ -6,6 +6,7 @@ import (
 	"log/slog"
 	"os"
 	"skulpture/buang/app"
+	apploggerotel "skulpture/buang/app/logger"
 	"skulpture/buang/components/o11y"
 	constantsenvs "skulpture/buang/constants/envs"
 	"skulpture/buang/db"
@@ -24,6 +25,13 @@ import (
 	workersshared "skulpture/buang/workers/shared"
 	"time"
 
+	"github.com/getsentry/sentry-go"
+	"github.com/golang-cz/devslog"
+	slogchi "github.com/samber/slog-chi"
+	slogmulti "github.com/samber/slog-multi"
+	slogsentry "github.com/samber/slog-sentry/v2"
+	"gitlab.com/greyxor/slogor"
+
 	"github.com/docker/docker/client"
 	"github.com/go-chi/chi/v5"
 	"github.com/go-chi/chi/v5/middleware"
@@ -41,16 +49,79 @@ import (
 // @name						X-API-Key
 func main() {
 	ctx := context.Background()
+	env, err := enumsenv.Parse(constantsenvs.GO_ENV.Value())
 
 	r := chi.NewRouter()
 
 	r.Use(middleware.RequestID)
 	r.Use(middleware.Heartbeat("/ping"))
 	r.Use(middleware.RealIP)
-	r.Use(middleware.Logger)
+
+	// TODO: otel might need more work
+	otelSloggerCfg := apploggerotel.OtelSloggerConfig{
+		Enable:   constantsenvs.ENABLE_TELEMETRY.Value() || env == enumsenv.Production,
+		Service:  constantsenvs.OTEL_SERVICE_NAME.Value(),
+		Env:      env,
+		LogLevel: constantsenvs.LOG_LEVEL.Value(),
+	}
+	otelSlogger, otelSloggerCleanup, err := otelSloggerCfg.New(ctx)
+	if err != nil {
+		slog.ErrorContext(ctx, "error", "err", err.Error())
+		panic(err)
+	}
+	defer otelSloggerCleanup(ctx)
+
+	if v, ok := constantsenvs.BUANG_SENTRY_DSN.Value(); ok {
+		err := sentry.Init(sentry.ClientOptions{
+			Dsn:           v,
+			EnableTracing: true,
+			Environment:   env.String(),
+			ServerName:    constantsenvs.OTEL_SERVICE_NAME.Value(),
+		})
+		if err != nil {
+			slog.ErrorContext(ctx, "error", "err", err.Error())
+			panic(err)
+		}
+	}
+
+	handlers := []slog.Handler{
+		otelSlogger,
+	}
+	if env == enumsenv.Production {
+		handlers = append(handlers,
+			slogor.NewHandler(os.Stdout,
+				slogor.SetLevel(constantsenvs.LOG_LEVEL.Value()),
+				slogor.SetTimeFormat(time.Stamp),
+				slogor.ShowSource()))
+	}
+	if env != enumsenv.Production {
+		handlers = append(handlers, devslog.NewHandler(os.Stdout, nil))
+	}
+	if _, ok := constantsenvs.BUANG_SENTRY_DSN.Value(); ok {
+		handler := slogsentry.Option{Level: constantsenvs.LOG_LEVEL.Value()}.
+			NewSentryHandler()
+
+		handlers = append(handlers, handler)
+	}
+	slogger := slog.
+		New(slogmulti.Fanout(handlers...)).
+		With("environment", env.String()).
+		With("release", constantsenvs.BUANG_VERSION)
+	slog.SetDefault(slogger)
+
+	r.Use(otelSloggerCfg.Handler)
+	r.Use(slogchi.NewWithConfig(slogger, slogchi.Config{
+		WithSpanID:         true,
+		WithTraceID:        true,
+		WithRequestID:      true,
+		WithRequestHeader:  constantsenvs.LOG_LEVEL.Value() == slog.LevelDebug,
+		WithResponseHeader: constantsenvs.LOG_LEVEL.Value() == slog.LevelDebug,
+		WithRequestBody:    constantsenvs.LOG_LEVEL.Value() == slog.LevelDebug,
+		DefaultLevel:       constantsenvs.LOG_LEVEL.Value(),
+	}))
+
 	r.Use(middleware.Recoverer)
 
-	env, err := enumsenv.Parse(constantsenvs.GO_ENV.Value())
 	limiterConfig := limiter.LimiterConfig{
 		Env:      env,
 		Tokens:   500,
@@ -61,15 +132,6 @@ func main() {
 		slog.ErrorContext(ctx, "error", "err", err.Error())
 		panic(err)
 	}
-
-	logger := app.LoggerConfig{
-		Enable:   constantsenvs.ENABLE_TELEMETRY.Value() || env == enumsenv.Production,
-		Service:  constantsenvs.OTEL_SERVICE_NAME.Value(),
-		Env:      env,
-		LogLevel: constantsenvs.LOG_LEVEL.Value(),
-	}
-	queriesCleanup := logger.SetDefault(ctx, r)
-	defer queriesCleanup(ctx)
 
 	dbType, err := enumsdbtypes.Parse(constantsenvs.DB_TYPE.Value())
 	if err != nil {

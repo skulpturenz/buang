@@ -103,6 +103,9 @@ var (
 						String("BUANG_TRAEFIK_DYNAMIC_CONFIG_DIR", "Traefik dynamic config directory").
 						WithDefault("/buang/traefik").
 						Optional()
+	BUANG_SENTRY_DSN = ferrite.
+				String("BUANG_SENTRY_DSN", "Sentry DSN").
+				Optional()
 	INTERNAL_BUANG_BOOTSTRAP_PROJECT = "BUANG_BOOTSTRAP_PROJECT"
 	INTERNAL_BUANG_BOOTSTRAP_DIR     = "BUANG_BOOTSTRAP_DIR"
 	startTime                        = time.Now()

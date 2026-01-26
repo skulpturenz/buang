@@ -14,17 +14,21 @@ require (
 	github.com/docker/docker v28.5.2+incompatible
 	github.com/docker/go-connections v0.6.0
 	github.com/dogmatiq/ferrite v1.5.1
+	github.com/getsentry/sentry-go v0.41.0
 	github.com/go-chi/chi/v5 v5.2.4
 	github.com/go-chi/httplog/v2 v2.1.1
 	github.com/go-git/go-git/v6 v6.0.0-20260114124804-a8db3a6585a6
 	github.com/go-playground/validator/v10 v10.30.1
+	github.com/golang-cz/devslog v0.0.15
 	github.com/golang-migrate/migrate/v4 v4.19.1
 	github.com/google/uuid v1.6.0
 	github.com/gorilla/schema v1.4.1
 	github.com/jackc/pgx/v5 v5.8.0
 	github.com/mattn/go-sqlite3 v1.14.33
 	github.com/negrel/assert v0.5.0
+	github.com/samber/slog-chi v1.18.0
 	github.com/samber/slog-multi v1.7.0
+	github.com/samber/slog-sentry/v2 v2.10.1
 	github.com/sethvargo/go-limiter v1.1.0
 	github.com/stretchr/testify v1.11.1
 	github.com/swaggo/http-swagger v1.3.4
@@ -33,6 +37,7 @@ require (
 	github.com/testcontainers/testcontainers-go/modules/postgres v0.40.0
 	github.com/traefik/traefik/v3 v3.6.7
 	github.com/wk8/go-ordered-map/v2 v2.1.8
+	gitlab.com/greyxor/slogor v1.6.6
 	go.opentelemetry.io/contrib/instrumentation/net/http/otelhttp v0.64.0
 	go.opentelemetry.io/otel v1.39.0
 	go.opentelemetry.io/otel/exporters/otlp/otlptrace v1.39.0

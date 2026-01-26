@@ -2,29 +2,30 @@
 
 This document describes the environment variables used by `buang`.
 
-| Name                                            | Usage                                                       | Description                                                                                                                    |
-| ----------------------------------------------- | ----------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------ |
-| [`BUANG_API_KEY`]                               | defaults to `supersecureapikey`                             | Buang API key                                                                                                                  |
-| [`BUANG_DBOS_ADMIN_SERVER_PORT`]                | optional                                                    | DBOS admin server port. Optional to use DBOS. Specify a port to enable the admin server, DBOS default is 3001                  |
-| [`BUANG_DBOS_CONDUCTOR_API_KEY`]                | optional                                                    | DBOS conductor API key. Optional to use DBOS                                                                                   |
-| [`BUANG_DBOS_CONDUCTOR_URL`]                    | optional                                                    | DBOS conductor url. Optional to use DBOS. You can use either the DBOS console or self host it                                  |
-| [`BUANG_DB_CONNECTION_STRING`]                  | defaults to `'file:test.db?_foreign_keys=true&mode=memory'` | Database connection string                                                                                                     |
-| [`BUANG_DB_TYPE`]                               | defaults to `sqlite`                                        | Database type                                                                                                                  |
-| [`BUANG_DURABLE_EXECUTOR`]                      | defaults to `temporal`                                      | Durable executor                                                                                                               |
-| [`BUANG_ENABLE_EXPERIMENTAL_BOOTSTRAP`]         | defaults to `false`                                         | Enable experimental bootstrap. Bootstrapping allows Buang to deploy itself and autoupdates on Saturdays at midnight every week |
-| [`BUANG_ENABLE_TELEMETRY`]                      | defaults to `false`                                         | Enable telemetry                                                                                                               |
-| [`BUANG_EXPERIMENTAL_HOUSEKEEPING_AUTO_UPDATE`] | defaults to `'0 0 * * 6'`                                   | Cron expression for when auto updates should run. Defaults to every Saturday at midnight                                       |
-| [`BUANG_HOUSEKEEPING_PRUNE_DEPLOYMENTS`]        | defaults to `'0 0 */2 * *'`                                 | Cron expression for stale deployments should be pruned. Defaults to every 2 days                                               |
-| [`BUANG_LOG_LEVEL`]                             | defaults to `INFO`                                          | Log level                                                                                                                      |
-| [`BUANG_OTEL_EXPORTER_OTLP_ENDPOINT`]           | defaults to `''`                                            | OpenTelemetry exporter endpoint                                                                                                |
-| [`BUANG_OTEL_SERVICE_NAME`]                     | defaults to `skulpture-buang`                               | OpenTelemetry service name. This is also the DBOS application name which is required when using DBOS                           |
-| [`BUANG_TEMPORAL_ADDRESS`]                      | optional                                                    | Temporal address. You can either use Temporal Cloud or self host it                                                            |
-| [`BUANG_TEMPORAL_API_KEY`]                      | optional                                                    | Temporal API key                                                                                                               |
-| [`BUANG_TEMPORAL_NAMESPACE`]                    | optional                                                    | Temporal namespace                                                                                                             |
-| [`BUANG_TRAEFIK_DYNAMIC_CONFIG_DIR`]            | defaults to `/buang/traefik`                                | Traefik dynamic config directory                                                                                               |
-| [`BUANG_TRAEFIK_ENTRYPOINT_WEBSECURE_PORT`]     | defaults to `443`                                           | Traefik HTTPS port                                                                                                             |
-| [`BUANG_TRAEFIK_ENTRYPOINT_WEB_PORT`]           | defaults to `80`                                            | Traefik HTTP port                                                                                                              |
-| [`GO_ENV`]                                      | defaults to `development`                                   | Golang environment                                                                                                             |
+| Name                                            | Usage                                                                    | Description                                                                                                                    |
+| ----------------------------------------------- | ------------------------------------------------------------------------ | ------------------------------------------------------------------------------------------------------------------------------ |
+| [`BUANG_API_KEY`]                               | defaults to `supersecureapikey`                                          | Buang API key                                                                                                                  |
+| [`BUANG_DBOS_ADMIN_SERVER_PORT`]                | optional                                                                 | DBOS admin server port. Optional to use DBOS. Specify a port to enable the admin server, DBOS default is 3001                  |
+| [`BUANG_DBOS_CONDUCTOR_API_KEY`]                | optional                                                                 | DBOS conductor API key. Optional to use DBOS                                                                                   |
+| [`BUANG_DBOS_CONDUCTOR_URL`]                    | optional                                                                 | DBOS conductor url. Optional to use DBOS. You can use either the DBOS console or self host it                                  |
+| [`BUANG_DB_CONNECTION_STRING`]                  | defaults to `'file:test.db?_foreign_keys=true&mode=memory&cache=shared'` | Database connection string                                                                                                     |
+| [`BUANG_DB_TYPE`]                               | defaults to `sqlite`                                                     | Database type                                                                                                                  |
+| [`BUANG_DURABLE_EXECUTOR`]                      | defaults to `temporal`                                                   | Durable executor                                                                                                               |
+| [`BUANG_ENABLE_EXPERIMENTAL_BOOTSTRAP`]         | defaults to `false`                                                      | Enable experimental bootstrap. Bootstrapping allows Buang to deploy itself and autoupdates on Saturdays at midnight every week |
+| [`BUANG_ENABLE_TELEMETRY`]                      | defaults to `false`                                                      | Enable telemetry                                                                                                               |
+| [`BUANG_EXPERIMENTAL_HOUSEKEEPING_AUTO_UPDATE`] | defaults to `'0 0 * * 6'`                                                | Cron expression for when auto updates should run. Defaults to every Saturday at midnight                                       |
+| [`BUANG_HOUSEKEEPING_PRUNE_DEPLOYMENTS`]        | defaults to `'0 0 */2 * *'`                                              | Cron expression for stale deployments should be pruned. Defaults to every 2 days                                               |
+| [`BUANG_LOG_LEVEL`]                             | defaults to `INFO`                                                       | Log level                                                                                                                      |
+| [`BUANG_OTEL_EXPORTER_OTLP_ENDPOINT`]           | defaults to `''`                                                         | OpenTelemetry exporter endpoint                                                                                                |
+| [`BUANG_OTEL_SERVICE_NAME`]                     | defaults to `skulpture-buang`                                            | OpenTelemetry service name. This is also the DBOS application name which is required when using DBOS                           |
+| [`BUANG_SENTRY_DSN`]                            | optional                                                                 | Sentry DSN                                                                                                                     |
+| [`BUANG_TEMPORAL_ADDRESS`]                      | optional                                                                 | Temporal address. You can either use Temporal Cloud or self host it                                                            |
+| [`BUANG_TEMPORAL_API_KEY`]                      | optional                                                                 | Temporal API key                                                                                                               |
+| [`BUANG_TEMPORAL_NAMESPACE`]                    | optional                                                                 | Temporal namespace                                                                                                             |
+| [`BUANG_TRAEFIK_DYNAMIC_CONFIG_DIR`]            | defaults to `/buang/traefik`                                             | Traefik dynamic config directory                                                                                               |
+| [`BUANG_TRAEFIK_ENTRYPOINT_WEBSECURE_PORT`]     | defaults to `443`                                                        | Traefik HTTPS port                                                                                                             |
+| [`BUANG_TRAEFIK_ENTRYPOINT_WEB_PORT`]           | defaults to `80`                                                         | Traefik HTTP port                                                                                                              |
+| [`GO_ENV`]                                      | defaults to `development`                                                | Golang environment                                                                                                             |
 
 > [!TIP]
 > If an environment variable is set to an empty value, `buang` behaves as if
@@ -204,6 +205,16 @@ the default value of `skulpture-buang` is used.
 export BUANG_OTEL_SERVICE_NAME=skulpture-buang # (default)
 ```
 
+## `BUANG_SENTRY_DSN`
+
+> Sentry DSN
+
+The `BUANG_SENTRY_DSN` variable **MAY** be left undefined.
+
+```bash
+export BUANG_SENTRY_DSN=foo # (non-normative)
+```
+
 ## `BUANG_TEMPORAL_ADDRESS`
 
 > Temporal address. You can either use Temporal Cloud or self host it
@@ -332,6 +343,7 @@ export GO_ENV=test
 [`buang_log_level`]: #BUANG_LOG_LEVEL
 [`buang_otel_exporter_otlp_endpoint`]: #BUANG_OTEL_EXPORTER_OTLP_ENDPOINT
 [`buang_otel_service_name`]: #BUANG_OTEL_SERVICE_NAME
+[`buang_sentry_dsn`]: #BUANG_SENTRY_DSN
 [`buang_temporal_address`]: #BUANG_TEMPORAL_ADDRESS
 [`buang_temporal_api_key`]: #BUANG_TEMPORAL_API_KEY
 [`buang_temporal_namespace`]: #BUANG_TEMPORAL_NAMESPACE
