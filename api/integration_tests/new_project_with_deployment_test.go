@@ -13,6 +13,7 @@ import (
 	projectscomponent "skulpture/buang/components/projects"
 	"skulpture/buang/db"
 	testutils "skulpture/buang/integration_tests/utils"
+	workersshared "skulpture/buang/workers/shared"
 	"strconv"
 	"testing"
 	"time"
@@ -76,20 +77,31 @@ func createNewProjectWithDeployment(t *testing.T, config testutils.DurableExecut
 	decoder := schema.NewDecoder()
 	encoder := schema.NewEncoder()
 
-	appServices := testutils.TestApplicationServices{
+	ws := workersshared.WorkflowServices{
 		Queries:              &queries,
 		GorillaSchemaDecoder: decoder,
 		GorillaSchemaEncoder: encoder,
 		Docker:               docker,
 	}
+	workflows, cleanup, err := testutils.CreateWorkflows(ctx, config, ws)
+	require.NoError(t, err)
+	defer cleanup(ctx)
+
+	as := testutils.TestApplicationServices{
+		Queries:              &queries,
+		GorillaSchemaDecoder: decoder,
+		GorillaSchemaEncoder: encoder,
+		Docker:               docker,
+		Workflows:            workflows,
+	}
 
 	appConfig := testutils.TestApplicationConfig{
-		Services:              appServices,
+		Services:              as,
 		DurableExecutorConfig: config,
 	}
 
-	testApp, appCleanup := testutils.CreateApp(ctx, appConfig)
-	defer appCleanup(ctx)
+	testApp, cleanup := testutils.CreateApp(ctx, appConfig)
+	defer cleanup(ctx)
 
 	githubPat := os.Getenv("BUANG_TEST_GITHUB_PAT")
 	username := os.Getenv("BUANG_TEST_GITHUB_USER")
@@ -193,7 +205,7 @@ func createNewProjectWithDeployment(t *testing.T, config testutils.DurableExecut
 		require.DirExists(t, DYNAMIC_CONFIG_DIR)
 		require.FileExists(t, fmt.Sprintf("%v/project-%v-deployment-%v.yaml", DYNAMIC_CONFIG_DIR, projectId, deploymentId))
 
-		s := appServices.ToAppApplicationServices()
+		s := testApp.GetHttpApplication().Services.ToAppApplicationServices()
 
 		findDeploymentParams := deploymentscomponent.FindDeploymentByIdParams{
 			ID:        deploymentId,

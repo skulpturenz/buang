@@ -6,7 +6,7 @@ import (
 	"skulpture/buang/app"
 	"skulpture/buang/components/deployments"
 	"skulpture/buang/components/projects"
-	workflowwrappers "skulpture/buang/workers/workflow_wrappers"
+	workersinterfaces "skulpture/buang/workers/interfaces"
 	"strconv"
 
 	"github.com/go-chi/chi/v5"
@@ -43,13 +43,13 @@ func DeleteProject(s app.ApplicationServices) http.HandlerFunc {
 		}
 
 		for _, dply := range activeDeployments.Deployments {
-			wp := workflowwrappers.BuangDeploymentParams{
+			wp := workersinterfaces.BuangDeploymentParams{
 				ProjectId:    int64(projectId),
 				DeploymentId: dply.GetId(),
 				Block:        true,
 			}
 
-			err = wp.Exec(r.Context(), s)
+			err = s.Workflows.BuangDeployment(r.Context(), wp)
 			if err != nil {
 				slog.ErrorContext(r.Context(), "delete project", "err", err.Error())
 				http.Error(w, err.Error(), http.StatusInternalServerError)

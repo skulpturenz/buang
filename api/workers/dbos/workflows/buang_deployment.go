@@ -5,8 +5,8 @@ import (
 	"errors"
 	"skulpture/buang/app"
 	enumsdurableexecutors "skulpture/buang/enums/durable_executors"
-	"skulpture/buang/workers"
 	"skulpture/buang/workers/activities"
+	workersshared "skulpture/buang/workers/shared"
 
 	"github.com/dbos-inc/dbos-transact-golang/dbos"
 )
@@ -19,7 +19,7 @@ type BuangDeploymentParams struct {
 }
 
 func (bd BuangDeployment) BuangDeployment(ctx dbos.DBOSContext, p BuangDeploymentParams) (res bool, err error) {
-	defer workers.RecoverWorkflowPanic(enumsdurableexecutors.Dbos, "BuangDeployment", err)
+	defer workersshared.RecoverWorkflowPanic(enumsdurableexecutors.Dbos, "BuangDeployment", err)
 
 	s := app.ApplicationServices(bd)
 

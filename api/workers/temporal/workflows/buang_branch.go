@@ -3,8 +3,8 @@ package temporalworkflows
 import (
 	"errors"
 	enumsdurableexecutors "skulpture/buang/enums/durable_executors"
-	"skulpture/buang/workers"
 	"skulpture/buang/workers/activities"
+	workersshared "skulpture/buang/workers/shared"
 	"time"
 
 	"go.temporal.io/sdk/temporal"
@@ -12,7 +12,7 @@ import (
 )
 
 func BuangBranch(ctx workflow.Context, projectId int64, branch string) (err error) {
-	defer workers.RecoverWorkflowPanic(enumsdurableexecutors.Temporal, "BuangBranch", err)
+	defer workersshared.RecoverWorkflowPanic(enumsdurableexecutors.Temporal, "BuangBranch", err)
 
 	ao := workflow.ActivityOptions{
 		ScheduleToCloseTimeout: time.Minute,

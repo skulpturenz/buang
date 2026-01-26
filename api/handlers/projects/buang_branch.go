@@ -6,7 +6,7 @@ import (
 	"log/slog"
 	"net/http"
 	"skulpture/buang/app"
-	workflowwrappers "skulpture/buang/workers/workflow_wrappers"
+	workersinterfaces "skulpture/buang/workers/interfaces"
 	"strconv"
 
 	"github.com/go-chi/chi/v5"
@@ -64,12 +64,12 @@ func BuangBranch(s app.ApplicationServices) http.HandlerFunc {
 			return
 		}
 
-		wp := workflowwrappers.BuangBranchParams{
+		wp := workersinterfaces.BuangBranchParams{
 			ProjectId: int64(projectId),
 			Branch:    req.Branch,
 		}
 
-		err = wp.Exec(r.Context(), s)
+		err = s.Workflows.BuangBranch(r.Context(), wp)
 		if err != nil {
 			slog.ErrorContext(r.Context(), "buang branch", "err", err.Error())
 			http.Error(w, err.Error(), http.StatusInternalServerError)

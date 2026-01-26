@@ -3,8 +3,8 @@ package temporalworkflows
 import (
 	"skulpture/buang/app"
 	enumsdurableexecutors "skulpture/buang/enums/durable_executors"
-	"skulpture/buang/workers"
 	"skulpture/buang/workers/activities"
+	workersshared "skulpture/buang/workers/shared"
 	"time"
 
 	"go.temporal.io/sdk/temporal"
@@ -18,7 +18,7 @@ type PeriodicUpdateHandlerResult struct {
 }
 
 func (p PeriodicUpdateHandler) PeriodicUpdateHandler(ctx workflow.Context) (res *PeriodicUpdateHandlerResult, err error) {
-	defer workers.RecoverWorkflowPanic(enumsdurableexecutors.Temporal, "PeriodicUpdateHandler", err)
+	defer workersshared.RecoverWorkflowPanic(enumsdurableexecutors.Temporal, "PeriodicUpdateHandler", err)
 
 	s := app.ApplicationServices(p)
 

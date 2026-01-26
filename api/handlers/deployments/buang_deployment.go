@@ -4,7 +4,7 @@ import (
 	"log/slog"
 	"net/http"
 	"skulpture/buang/app"
-	workflowwrappers "skulpture/buang/workers/workflow_wrappers"
+	workersinterfaces "skulpture/buang/workers/interfaces"
 	"strconv"
 
 	"github.com/go-chi/chi/v5"
@@ -37,12 +37,12 @@ func BuangDeployment(s app.ApplicationServices) http.HandlerFunc {
 			return
 		}
 
-		wp := workflowwrappers.BuangDeploymentParams{
+		wp := workersinterfaces.BuangDeploymentParams{
 			ProjectId:    int64(projectId),
 			DeploymentId: int64(deploymentId),
 		}
 
-		err = wp.Exec(r.Context(), s)
+		err = s.Workflows.BuangDeployment(r.Context(), wp)
 		if err != nil {
 			slog.ErrorContext(r.Context(), "buang deployment", "err", err.Error())
 			http.Error(w, err.Error(), http.StatusInternalServerError)

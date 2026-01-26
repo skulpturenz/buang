@@ -5,8 +5,8 @@ import (
 	"skulpture/buang/app"
 	"skulpture/buang/components/o11y"
 	enumsdurableexecutors "skulpture/buang/enums/durable_executors"
-	"skulpture/buang/workers"
 	"skulpture/buang/workers/activities"
+	workersshared "skulpture/buang/workers/shared"
 	"time"
 
 	"go.temporal.io/sdk/temporal"
@@ -20,7 +20,7 @@ type BuangHousekeepingResult struct {
 }
 
 func (bh BuangHousekeeping) BuangHousekeeping(ctx workflow.Context) (res *BuangHousekeepingResult, err error) {
-	defer workers.RecoverWorkflowPanic(enumsdurableexecutors.Temporal, "Deploy", err)
+	defer workersshared.RecoverWorkflowPanic(enumsdurableexecutors.Temporal, "Deploy", err)
 
 	s := app.ApplicationServices(bh)
 

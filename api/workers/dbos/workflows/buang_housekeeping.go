@@ -5,8 +5,8 @@ import (
 	"skulpture/buang/app"
 	"skulpture/buang/components/o11y"
 	enumsdurableexecutors "skulpture/buang/enums/durable_executors"
-	"skulpture/buang/workers"
 	"skulpture/buang/workers/activities"
+	workersshared "skulpture/buang/workers/shared"
 	"time"
 
 	"github.com/dbos-inc/dbos-transact-golang/dbos"
@@ -15,7 +15,7 @@ import (
 type BuangHousekeeping app.ApplicationServices
 
 func (h BuangHousekeeping) BuangHousekeeping(ctx dbos.DBOSContext, scheduledTime time.Time) (res bool, err error) {
-	defer workers.RecoverWorkflowPanic(enumsdurableexecutors.Dbos, "BuangHousekeeping", err)
+	defer workersshared.RecoverWorkflowPanic(enumsdurableexecutors.Dbos, "BuangHousekeeping", err)
 
 	s := app.ApplicationServices(h)
 

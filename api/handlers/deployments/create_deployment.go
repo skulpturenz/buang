@@ -8,7 +8,7 @@ import (
 	"net/http"
 	"skulpture/buang/app"
 	"skulpture/buang/components/deployments"
-	workflowwrappers "skulpture/buang/workers/workflow_wrappers"
+	workersinterfaces "skulpture/buang/workers/interfaces"
 	"strconv"
 
 	"github.com/go-chi/chi/v5"
@@ -93,13 +93,13 @@ func CreateDeployment(s app.ApplicationServices) http.HandlerFunc {
 			return
 		}
 
-		wp := workflowwrappers.CreateDeploymentParams{
+		wp := workersinterfaces.CreateDeploymentParams{
 			ProjectId:    p.ProjectID,
 			DeploymentId: res.Id,
 			Block:        req.WaitForDeployment,
 		}
 
-		err = wp.Exec(r.Context(), s)
+		err = s.Workflows.CreateDeployment(r.Context(), wp)
 		if err != nil {
 			slog.ErrorContext(r.Context(), "create deployment", "err", err.Error())
 			http.Error(w, err.Error(), http.StatusInternalServerError)

@@ -2,6 +2,7 @@ package main
 
 import (
 	"context"
+	"fmt"
 	"log/slog"
 	"os"
 	"skulpture/buang/app"
@@ -18,8 +19,9 @@ import (
 	"skulpture/buang/handlers/projects"
 	authn "skulpture/buang/middleware/authn"
 	limiter "skulpture/buang/middleware/limiter"
-	"skulpture/buang/workers/dbos"
-	workers "skulpture/buang/workers/temporal"
+	"skulpture/buang/workers"
+	workersinterfaces "skulpture/buang/workers/interfaces"
+	workersshared "skulpture/buang/workers/shared"
 	"time"
 
 	"github.com/docker/docker/client"
@@ -66,8 +68,8 @@ func main() {
 		Env:      env,
 		LogLevel: constantsenvs.LOG_LEVEL.Value(),
 	}
-	cleanup := logger.SetDefault(ctx, r)
-	defer cleanup(ctx)
+	queriesCleanup := logger.SetDefault(ctx, r)
+	defer queriesCleanup(ctx)
 
 	dbType, err := enumsdbtypes.Parse(constantsenvs.DB_TYPE.Value())
 	if err != nil {
@@ -79,12 +81,12 @@ func main() {
 		Type:             dbType,
 		ConnectionString: constantsenvs.DB_CONNECTION_STRING.Value(),
 	}
-	queries, cleanup, err := dbCfg.New(ctx)
+	queries, queriesCleanup, err := dbCfg.New(ctx)
 	if err != nil {
 		slog.ErrorContext(ctx, "error", "err", err.Error())
 		panic(err)
 	}
-	defer cleanup(ctx)
+	defer queriesCleanup(ctx)
 
 	docker, err := client.NewClientWithOpts(client.FromEnv, client.WithAPIVersionNegotiation())
 	if err != nil {
@@ -93,11 +95,25 @@ func main() {
 	}
 	defer docker.Close()
 
+	ws := workersshared.WorkflowServices{
+		Queries:              &queries,
+		Docker:               docker,
+		GorillaSchemaDecoder: schema.NewDecoder(),
+		GorillaSchemaEncoder: schema.NewEncoder(),
+	}
+	workflows, cleanup, err := createWorkflows(ctx, ws)
+	if err != nil {
+		slog.ErrorContext(ctx, "error", "err", err.Error())
+		panic(err)
+	}
+	defer cleanup(ctx)
+
 	s := app.ApplicationServices{
 		Queries:              &queries,
 		Docker:               docker,
 		GorillaSchemaDecoder: schema.NewDecoder(),
 		GorillaSchemaEncoder: schema.NewEncoder(),
+		Workflows:            workflows,
 	}
 
 	isExperimentalBootstrapEnabled, ok := constantsenvs.EXPERIMENTAL_BOOTSTRAP.Value()
@@ -114,16 +130,9 @@ func main() {
 		ApiKey: constantsenvs.API_KEY.Value(),
 	}
 
-	durableExecutor, err := enumsdurableexecutors.Parse(constantsenvs.DURABLE_EXECUTOR.Value())
-	if err != nil {
-		slog.ErrorContext(ctx, "error", "err", err.Error())
-		panic(err)
-	}
-
 	appConfig := app.ApplicationConfig{
-		HttpPort:        ":80",
-		Services:        s,
-		DurableExecutor: durableExecutor,
+		HttpPort: ":80",
+		Services: s,
 	}
 	app, err := appConfig.New(ctx, r)
 	if err != nil {
@@ -136,7 +145,6 @@ func main() {
 	r.Mount("/docs", httpSwagger.WrapHandler)
 
 	r.Route("/api/v1", func(r chi.Router) {
-
 		r.Use(limiter.Handle)
 		r.Use(authnConfig.Handle)
 
@@ -146,28 +154,70 @@ func main() {
 			diagnostics.Router)
 	})
 
-	app.GetTemporalApplication().AddWorkers(workers.DeploymentWorker,
-		workers.BuangWorker,
-		workers.Housekeeping,
-	)
-
-	app.GetDbosApplication().AddWorkflows(dbos.Deployment,
-		dbos.Buang,
-		dbos.Housekeping)
-
-	cleanup, err = app.Run(ctx)
+	err = app.Run(ctx)
 	if err != nil {
 		slog.ErrorContext(ctx, "error", "err", err.Error())
 		panic(err)
 	}
 
 	c := func(ctx context.Context) {
-		cleanup(ctx)
-
 		if v, ok := os.LookupEnv(constantsenvs.INTERNAL_BUANG_BOOTSTRAP_DIR); ok && isExperimentalBootstrapEnabled {
 			os.RemoveAll(v)
 		}
 	}
-
 	defer c(ctx)
+}
+
+func createWorkflows(ctx context.Context, services workersshared.WorkflowServices) (workersinterfaces.Workflows, func(context.Context), error) {
+	durableExecutor, err := enumsdurableexecutors.Parse(constantsenvs.DURABLE_EXECUTOR.Value())
+	if err != nil {
+		slog.ErrorContext(ctx, "error", "err", err.Error())
+		panic(err)
+	}
+
+	createTemporalWorkflows := func(ctx context.Context) (workersinterfaces.Workflows, func(context.Context), error) {
+		tc := workers.TemporalConfig{
+			Services: services,
+		}
+		workflows, cleanup, err := tc.New(ctx)
+		if err != nil {
+			return nil, nil, err
+		}
+
+		return workflows, cleanup, nil
+	}
+
+	createDbosWorkflows := func(ctx context.Context) (workersinterfaces.Workflows, func(context.Context), error) {
+		dc := workers.DbosConfig{
+			Services:    services,
+			AppName:     constantsenvs.OTEL_SERVICE_NAME.Value(),
+			DatabaseURL: constantsenvs.DB_CONNECTION_STRING.Value(),
+		}
+		if v, ok := constantsenvs.DBOS_CONDUCTOR_API_KEY.Value(); ok {
+			dc.ConductorAPIKey = &v
+		}
+		if v, ok := constantsenvs.DBOS_CONDUCTOR_URL.Value(); ok {
+			dc.ConductorURL = &v
+		}
+		if v, ok := constantsenvs.DBOS_ADMIN_SERVER_PORT.Value(); ok {
+			dc.AdminServerPort = &v
+		}
+
+		workflows, cleanup, err := dc.New(ctx)
+		if err != nil {
+			return nil, nil, err
+		}
+
+		return workflows, cleanup, nil
+	}
+
+	if durableExecutor == enumsdurableexecutors.Temporal {
+		return createTemporalWorkflows(ctx)
+	}
+
+	if durableExecutor == enumsdurableexecutors.Dbos {
+		return createDbosWorkflows(ctx)
+	}
+
+	return nil, nil, fmt.Errorf("unsupported durable executor")
 }

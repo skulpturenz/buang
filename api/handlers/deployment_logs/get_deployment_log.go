@@ -10,7 +10,7 @@ import (
 	"skulpture/buang/components/deployments"
 	dberrors "skulpture/buang/db/db_errors"
 	enumsdeploymentstatus "skulpture/buang/enums/deployment_status"
-	workflowwrappers "skulpture/buang/workers/workflow_wrappers"
+	workersinterfaces "skulpture/buang/workers/interfaces"
 	"strconv"
 	"time"
 
@@ -233,12 +233,12 @@ func watchForDeployment(ctx context.Context, cancelCtx context.CancelFunc, s app
 		case <-ctx.Done():
 			return
 		case <-ticker.C:
-			wp := workflowwrappers.HasDeployedParams{
+			wp := workersinterfaces.HasDeployedParams{
 				ProjectId:    req.ProjectId,
 				DeploymentId: req.DeploymentId,
 			}
 
-			err := wp.Exec(ctx, s)
+			err := s.Workflows.HasDeployed(ctx, wp)
 			if err == nil {
 				cancelCtx()
 				return

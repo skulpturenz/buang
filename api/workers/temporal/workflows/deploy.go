@@ -3,8 +3,8 @@ package temporalworkflows
 import (
 	"errors"
 	enumsdurableexecutors "skulpture/buang/enums/durable_executors"
-	"skulpture/buang/workers"
 	"skulpture/buang/workers/activities"
+	workersshared "skulpture/buang/workers/shared"
 	"time"
 
 	"go.temporal.io/sdk/temporal"
@@ -12,7 +12,7 @@ import (
 )
 
 func Deploy(ctx workflow.Context, projectId int64, deploymentId int64) (err error) {
-	defer workers.RecoverWorkflowPanic(enumsdurableexecutors.Temporal, "Deploy", err)
+	defer workersshared.RecoverWorkflowPanic(enumsdurableexecutors.Temporal, "Deploy", err)
 
 	// the convoluted error handling is because if this fails somewhere
 	// and the deployment is still marked as new or deploying then no other deployments for the branch can happen
