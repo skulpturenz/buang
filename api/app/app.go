@@ -59,9 +59,14 @@ type ApplicationServices struct {
 	GorillaSchemaDecoder *schema.Decoder
 	GorillaSchemaEncoder *schema.Encoder
 	Docker               *client.Client
-	DurableExecutor      enumsdurableexecutors.DurableExecutor
-	Temporal             *temporalclient.Client
-	Dbos                 dbos.DBOSContext
+	// TODO: for testing we need to map test application services into the real thing that handlers
+	// and components use
+	// we can't do this if these fields are private because workflow wrappers needs to access these
+	// so we need to make `ApplicationServices` into an interface
+	// or some other way?
+	DurableExecutor enumsdurableexecutors.DurableExecutor // set internally when application is created
+	Temporal        *temporalclient.Client                // set internally when application is created
+	Dbos            dbos.DBOSContext                      // set internally when application is created
 }
 
 func (a ApplicationConfig) New(ctx context.Context, chi *chi.Mux) (*Application, error) {

@@ -7,6 +7,7 @@ require (
 	github.com/adhocore/gronx v1.19.6
 	github.com/agoda-com/opentelemetry-go/otelslog v0.3.0
 	github.com/agoda-com/opentelemetry-logs-go v0.6.0
+	github.com/compose-spec/compose-go/v2 v2.10.0
 	github.com/dbos-inc/dbos-transact-golang v0.9.0
 	github.com/docker/cli v28.5.2+incompatible
 	github.com/docker/compose/v5 v5.0.1
@@ -63,7 +64,6 @@ require (
 	github.com/clipperhouse/stringish v0.1.1 // indirect
 	github.com/clipperhouse/uax29/v2 v2.3.0 // indirect
 	github.com/cloudflare/circl v1.6.1 // indirect
-	github.com/compose-spec/compose-go/v2 v2.10.0 // indirect
 	github.com/containerd/console v1.0.5 // indirect
 	github.com/containerd/containerd/api v1.10.0 // indirect
 	github.com/containerd/containerd/v2 v2.2.1 // indirect

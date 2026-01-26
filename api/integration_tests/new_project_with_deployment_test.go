@@ -9,8 +9,8 @@ import (
 	"net/http"
 	"os"
 	"path/filepath"
-	"skulpture/buang/components/deployments"
-	"skulpture/buang/components/projects"
+	deploymentscomponent "skulpture/buang/components/deployments"
+	projectscomponent "skulpture/buang/components/projects"
 	"skulpture/buang/db"
 	testutils "skulpture/buang/integration_tests/utils"
 	"strconv"
@@ -20,10 +20,13 @@ import (
 	deploymentshandlers "skulpture/buang/handlers/deployments"
 	projectshandlers "skulpture/buang/handlers/projects"
 
+	"github.com/compose-spec/compose-go/v2/types"
 	"github.com/docker/cli/cli/command"
 	"github.com/docker/cli/cli/flags"
 	"github.com/docker/compose/v5/pkg/api"
 	"github.com/docker/compose/v5/pkg/compose"
+	"github.com/docker/docker/api/types/container"
+	"github.com/docker/docker/api/types/filters"
 	"github.com/docker/docker/client"
 	"github.com/gorilla/schema"
 	"github.com/negrel/assert"
@@ -129,6 +132,9 @@ func createNewProjectWithDeployment(t *testing.T, config testutils.DurableExecut
 			Branch:            "master",                                   // TODO: from repo vars
 			Sha:               "e6792e4fe8a66de90b0945fa9d38f0b25149bd00", // TODO: from repo vars
 			ServiceEntrypoint: "web:80",                                   // TODO: from repo vars
+			Env: map[string]any{
+				"HELLO": "WORLD",
+			},
 		}
 
 		body, err := json.Marshal(createDeploymentReq)
@@ -189,7 +195,7 @@ func createNewProjectWithDeployment(t *testing.T, config testutils.DurableExecut
 
 		s := appServices.ToAppApplicationServices()
 
-		findDeploymentParams := deployments.FindDeploymentByIdParams{
+		findDeploymentParams := deploymentscomponent.FindDeploymentByIdParams{
 			ID:        deploymentId,
 			ProjectId: projectId,
 		}
@@ -199,7 +205,7 @@ func createNewProjectWithDeployment(t *testing.T, config testutils.DurableExecut
 
 		require.NotNil(t, deployment.Deployment.GetDeployedAt())
 
-		findProjectParams := projects.FindProjectByIdParams{
+		findProjectParams := projectscomponent.FindProjectByIdParams{
 			ID: deploymentId,
 		}
 
@@ -224,6 +230,23 @@ func createNewProjectWithDeployment(t *testing.T, config testutils.DurableExecut
 		require.NoError(t, err)
 
 		require.Len(t, composeProject.AllServices(), EXPECTED_SERVICES)
+
+		filters := filters.NewArgs()
+		filters.Add("label", fmt.Sprintf("com.docker.compose.project=%s", projectName))
+		containers, err := docker.ContainerList(ctx, container.ListOptions{
+			Filters: filters,
+		})
+		require.NoError(t, err)
+
+		for _, v := range containers {
+			i, err := docker.ContainerInspect(ctx, v.ID)
+			require.NoError(t, err)
+
+			envs := types.NewMappingWithEquals(i.Config.Env)
+
+			require.Equal(t, *envs["HELLO"], "WORLD")
+			require.Equal(t, *envs["BUANG_DEPLOYMENT_PATH"], *deployment.Deployment.GetUrl())
+		}
 	}
 
 	buangDeploymenbt := func(projectId int64, deploymentId int64) {
