@@ -2,6 +2,7 @@ package docker
 
 import (
 	"context"
+	"io"
 	"skulpture/buang/app"
 	"time"
 
@@ -14,12 +15,20 @@ import (
 type ComposeDownParams struct {
 	ProjectName string
 	ConfigPaths []string
+	Writer      io.Writer
 }
 
 type ComposeDownResult struct{}
 
 func (c ComposeDownParams) Exec(ctx context.Context, s *app.ApplicationServices) (*ComposeDownResult, error) {
-	cli, err := command.NewDockerCli(command.WithAPIClient(s.Docker))
+	cliOptions := []command.CLIOption{
+		command.WithAPIClient(s.Docker),
+	}
+	if c.Writer != nil {
+		cliOptions = append(cliOptions, command.WithCombinedStreams(c.Writer))
+	}
+
+	cli, err := command.NewDockerCli(cliOptions...)
 	if err != nil {
 		return nil, err
 	}

@@ -54,7 +54,7 @@ func (c ComposeUpParams) Exec(ctx context.Context, s *app.ApplicationServices) (
 		cliOptions = append(cliOptions, command.WithCombinedStreams(c.Writer))
 	}
 
-	cli, err := command.NewDockerCli()
+	cli, err := command.NewDockerCli(cliOptions...)
 	if err != nil {
 		return nil, nil, err
 	}

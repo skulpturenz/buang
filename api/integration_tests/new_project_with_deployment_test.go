@@ -8,6 +8,9 @@ import (
 	"io"
 	"net/http"
 	"os"
+	"path/filepath"
+	"skulpture/buang/components/deployments"
+	"skulpture/buang/components/projects"
 	"skulpture/buang/db"
 	testutils "skulpture/buang/integration_tests/utils"
 	"strconv"
@@ -17,6 +20,10 @@ import (
 	deploymentshandlers "skulpture/buang/handlers/deployments"
 	projectshandlers "skulpture/buang/handlers/projects"
 
+	"github.com/docker/cli/cli/command"
+	"github.com/docker/cli/cli/flags"
+	"github.com/docker/compose/v5/pkg/api"
+	"github.com/docker/compose/v5/pkg/compose"
 	"github.com/docker/docker/client"
 	"github.com/gorilla/schema"
 	"github.com/negrel/assert"
@@ -173,7 +180,51 @@ func createNewProjectWithDeployment(t *testing.T, config testutils.DurableExecut
 		require.Contains(t, string(logs), "nginx")
 	}
 
-	// TODO: check new container
+	assertDeployment := func(projectId int64, deploymentId int64) {
+		const EXPECTED_SERVICES = 1
+		const DYNAMIC_CONFIG_DIR = "/app/deployments"
+
+		require.DirExists(t, DYNAMIC_CONFIG_DIR)
+		require.FileExists(t, fmt.Sprintf("%v/project-%v-deployment-%v.yaml", DYNAMIC_CONFIG_DIR, projectId, deploymentId))
+
+		s := appServices.ToAppApplicationServices()
+
+		findDeploymentParams := deployments.FindDeploymentByIdParams{
+			ID:        deploymentId,
+			ProjectId: projectId,
+		}
+
+		deployment, err := findDeploymentParams.Exec(ctx, &s)
+		require.NoError(t, err)
+
+		require.NotNil(t, deployment.Deployment.GetDeployedAt())
+
+		findProjectParams := projects.FindProjectByIdParams{
+			ID: deploymentId,
+		}
+
+		p, err := findProjectParams.Exec(ctx, &s)
+		require.NoError(t, err)
+
+		cli, err := command.NewDockerCli(command.WithAPIClient(docker))
+		require.NoError(t, err)
+		err = cli.Initialize(&flags.ClientOptions{})
+		require.NoError(t, err)
+
+		svc, err := compose.NewComposeService(cli, compose.WithPrompt(compose.AlwaysOkPrompt()))
+		require.NoError(t, err)
+
+		sha := fmt.Sprintf("%.*s", 8, deployment.Deployment.GetSha())
+		projectName := fmt.Sprintf("%v_%v_%v_%v", deployment.Deployment.GetProjectId(),
+			deployment.Deployment.GetId(), deployment.Deployment.GetBranch(), sha)
+		composeProject, err := svc.LoadProject(ctx, api.ProjectLoadOptions{
+			ConfigPaths: []string{filepath.Join(*deployment.Deployment.GetClonePath(), p.Project.GetComposePath())},
+			ProjectName: projectName,
+		})
+		require.NoError(t, err)
+
+		require.Len(t, composeProject.AllServices(), EXPECTED_SERVICES)
+	}
 
 	buangDeploymenbt := func(projectId int64, deploymentId int64) {
 		buangDeploymentUrl := fmt.Sprintf("%v/project/%v/deployment/%v", baseUrl, projectId, deploymentId)
@@ -191,5 +242,6 @@ func createNewProjectWithDeployment(t *testing.T, config testutils.DurableExecut
 	projectId := createProject()
 	deploymentId := createDeployment(projectId)
 	getDeploymentLogs(projectId, deploymentId)
+	assertDeployment(projectId, deploymentId)
 	buangDeploymenbt(projectId, deploymentId)
 }
