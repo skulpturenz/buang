@@ -7,6 +7,7 @@ import (
 	"net/http/httptest"
 	"os"
 	"os/signal"
+	"reflect"
 	"skulpture/buang/app"
 	constantsenvs "skulpture/buang/constants/envs"
 	"skulpture/buang/db/interfaces"
@@ -21,7 +22,6 @@ import (
 	"github.com/negrel/assert"
 	temporalclient "go.temporal.io/sdk/client"
 	temporallog "go.temporal.io/sdk/log"
-	"go.temporal.io/sdk/worker"
 )
 
 type TestApplicationConfig struct {
@@ -45,13 +45,13 @@ type TestHttpApplication struct {
 type TestTemporalApplication struct {
 	client   *temporalclient.Client
 	Services TestApplicationServices
-	workers  []TemporalWorker
+	workers  []app.TemporalWorker
 }
 
 type TestDbosApplication struct {
 	ctx       dbos.DBOSContext
 	Services  TestApplicationServices
-	workflows []DbosWorkflow[any, any]
+	workflows []app.DbosWorkflow[any, any]
 }
 
 type TestApplicationServices struct {
@@ -59,9 +59,9 @@ type TestApplicationServices struct {
 	GorillaSchemaDecoder *schema.Decoder
 	GorillaSchemaEncoder *schema.Encoder
 	Docker               *client.Client
-	DurableExecutor      enumsdurableexecutors.DurableExecutor
-	Temporal             *temporalclient.Client
-	Dbos                 dbos.DBOSContext
+	durableExecutor      enumsdurableexecutors.DurableExecutor
+	temporal             *temporalclient.Client
+	dbos                 *dbos.DBOSContext
 }
 
 // NOTE: MOSTLY FOLLOWS THE REAL THING
@@ -69,7 +69,7 @@ type TestApplicationServices struct {
 // AND SOME TYPE MAPPING
 func (a TestApplicationConfig) New(ctx context.Context, chi *chi.Mux) (*TestApplication, error) {
 	services := a.Services
-	services.DurableExecutor = a.DurableExecutorConfig.DurableExecutor
+	services.durableExecutor = a.DurableExecutorConfig.DurableExecutor
 
 	httpApp := TestHttpApplication{
 		chi:      chi,
@@ -106,8 +106,8 @@ func (a TestApplicationConfig) New(ctx context.Context, chi *chi.Mux) (*TestAppl
 		if err != nil {
 			return nil, err
 		}
-		services.Temporal = &hc
-		httpApp.Services.Temporal = &hc
+		services.temporal = &hc
+		httpApp.Services.temporal = &hc
 
 		app.http = httpApp
 		app.temporal = &TestTemporalApplication{
@@ -124,8 +124,8 @@ func (a TestApplicationConfig) New(ctx context.Context, chi *chi.Mux) (*TestAppl
 		if err != nil {
 			return nil, err
 		}
-		services.Dbos = dbosContext
-		httpApp.Services.Dbos = dbosContext
+		services.dbos = &dbosContext
+		httpApp.Services.dbos = &dbosContext
 
 		app.http = httpApp
 		app.dbos = &TestDbosApplication{
@@ -135,8 +135,8 @@ func (a TestApplicationConfig) New(ctx context.Context, chi *chi.Mux) (*TestAppl
 	}
 
 	assert.True(app.http != TestHttpApplication{}, "app initialized incorrectly")
-	assert.True(app.config.DurableExecutorConfig.DurableExecutor != enumsdurableexecutors.Dbos || app.http.Services.Dbos != nil, "dbos is injected to be used by handlers")
-	assert.True(app.config.DurableExecutorConfig.DurableExecutor != enumsdurableexecutors.Temporal || app.http.Services.Temporal != nil, "temporal is injected to be used by handlers")
+	assert.True(app.config.DurableExecutorConfig.DurableExecutor != enumsdurableexecutors.Dbos || app.http.Services.dbos != nil, "dbos is injected to be used by handlers")
+	assert.True(app.config.DurableExecutorConfig.DurableExecutor != enumsdurableexecutors.Temporal || app.http.Services.temporal != nil, "temporal is injected to be used by handlers")
 	assert.True(app.temporal != initialTemporal || app.dbos != initialDbos, "must use one durable executor")
 	assert.True(app.config.DurableExecutorConfig.DurableExecutor != enumsdurableexecutors.Temporal || app.temporal.client != nil,
 		"must have a client if temporal application")
@@ -158,7 +158,7 @@ func (a *TestApplication) Run(ctx context.Context) (func(ctx context.Context), e
 	runTemporalWorkers := func(ctx context.Context, wg *sync.WaitGroup) {
 		defer wg.Done()
 
-		run := func(w TemporalWorker) {
+		run := func(w app.TemporalWorker) {
 			wg.Add(1)
 			defer wg.Done()
 
@@ -243,40 +243,61 @@ func (a *TestApplication) AddSingletons(xs ...app.AppServiceSingleton) {
 
 type HttpRouter func(s app.ApplicationServices, r chi.Router)
 
-func (a *TestHttpApplication) AddRouters(r chi.Router, x ...HttpRouter) {
+func (a *TestHttpApplication) AddRouters(r chi.Router, x ...app.HttpRouter) {
 	for _, y := range x {
 		y(a.Services.ToAppApplicationServices(), r)
 	}
 }
 
-type TemporalWorker func(s app.ApplicationServices, c *temporalclient.Client) (worker.Worker, error)
-
-func (a *TestTemporalApplication) AddWorkers(ws ...TemporalWorker) {
+func (a *TestTemporalApplication) AddWorkers(ws ...app.TemporalWorker) {
 	a.workers = ws
 }
 
-type DbosWorkflow[P any, R any] func(s app.ApplicationServices, c dbos.DBOSContext)
-
-func (a *TestDbosApplication) AddWorkflows(ws ...DbosWorkflow[any, any]) {
+func (a *TestDbosApplication) AddWorkflows(ws ...app.DbosWorkflow[any, any]) {
 	a.workflows = ws
 }
 
-func (s *TestApplicationServices) GetDurableExecutor() (any, enumsdurableexecutors.DurableExecutor) {
-	if s.DurableExecutor == enumsdurableexecutors.Temporal {
-		return *s.Temporal, s.DurableExecutor
-	}
-
-	return s.Dbos, s.DurableExecutor
-}
-
 func (s TestApplicationServices) ToAppApplicationServices() app.ApplicationServices {
-	return app.ApplicationServices{
+	as := app.ApplicationServices{
 		Queries:              s.Queries,
 		GorillaSchemaDecoder: s.GorillaSchemaDecoder,
 		GorillaSchemaEncoder: s.GorillaSchemaEncoder,
 		Docker:               s.Docker,
-		Temporal:             s.Temporal,
-		DurableExecutor:      s.DurableExecutor,
-		Dbos:                 s.Dbos,
 	}
+
+	// this is a hack just for tests
+	// durable executors should not be initialized from the outside, they are set and configured internally
+	// don't want to have a setter because i think we might as well make it public in that case
+	// and move instantiation of durable executors to the top level
+	// but with temporal workers since we're not deploying them independently we want to control how they're run
+	// and also so that app instantiation is simpler, without workflows app does not function
+	// want to create like:
+	//  - create `ApplicationServices`
+	//  - create `New` `Application` from those services
+	//  - attach workflows and handlers to that
+	// proper handling: similar to how dbs works. `Workflows` interface and each durable executor would have to
+	// implement it. with workflows for each type of durable executor attach there instead of the app itself as it is now
+	setPrivateField(&as, "durableExecutor", s.durableExecutor)
+	setPrivateField(&as, "temporal", s.temporal)
+	setPrivateField(&as, "dbos", s.dbos)
+
+	return as
+}
+
+func setPrivateField[T app.ApplicationServices](v *T, fieldName string, fieldValue any) *T {
+	val := reflect.ValueOf(v).Elem()
+
+	// based on: https://medium.com/@darshan.na185/modifying-private-variables-of-a-struct-in-go-using-unsafe-and-reflect-5447b3019a80
+	member := val.FieldByName(fieldName)
+	// basically get the pointer to the field on the struct
+	// and update the value that it points to
+	// so from zero values for the fields to the new value
+	// - the fields pointer on the struct stays the same, but the value the pointer points to has changed
+	// ... so we make a new copy of `fieldValue` and update the contents of the existing pointer?
+	ptrToMember := reflect.NewAt(member.Type(), member.Addr().UnsafePointer()).Elem()
+	if ptrToMember.IsValid() && ptrToMember.CanSet() {
+		ptrToMember.Set(reflect.ValueOf(fieldValue))
+	}
+
+	return v
 }

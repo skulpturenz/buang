@@ -59,19 +59,14 @@ type ApplicationServices struct {
 	GorillaSchemaDecoder *schema.Decoder
 	GorillaSchemaEncoder *schema.Encoder
 	Docker               *client.Client
-	// TODO: for testing we need to map test application services into the real thing that handlers
-	// and components use
-	// we can't do this if these fields are private because workflow wrappers needs to access these
-	// so we need to make `ApplicationServices` into an interface
-	// or some other way?
-	DurableExecutor enumsdurableexecutors.DurableExecutor // set internally when application is created
-	Temporal        *temporalclient.Client                // set internally when application is created
-	Dbos            dbos.DBOSContext                      // set internally when application is created
+	durableExecutor      enumsdurableexecutors.DurableExecutor
+	temporal             *temporalclient.Client
+	dbos                 *dbos.DBOSContext
 }
 
 func (a ApplicationConfig) New(ctx context.Context, chi *chi.Mux) (*Application, error) {
 	services := a.Services
-	services.DurableExecutor = a.DurableExecutor
+	services.durableExecutor = a.DurableExecutor
 
 	httpApp := HttpApplication{
 		chi:      chi,
@@ -100,8 +95,8 @@ func (a ApplicationConfig) New(ctx context.Context, chi *chi.Mux) (*Application,
 		if err != nil {
 			return nil, err
 		}
-		services.Temporal = &hc
-		httpApp.Services.Temporal = &hc
+		services.temporal = &hc
+		httpApp.Services.temporal = &hc
 
 		app.http = httpApp
 		app.temporal = &TemporalApplication{
@@ -128,8 +123,8 @@ func (a ApplicationConfig) New(ctx context.Context, chi *chi.Mux) (*Application,
 		if err != nil {
 			return nil, err
 		}
-		services.Dbos = dbosContext
-		httpApp.Services.Dbos = dbosContext
+		services.dbos = &dbosContext
+		httpApp.Services.dbos = &dbosContext
 
 		app.http = httpApp
 		app.dbos = &DbosApplication{
@@ -139,8 +134,8 @@ func (a ApplicationConfig) New(ctx context.Context, chi *chi.Mux) (*Application,
 	}
 
 	assert.True(app.http != HttpApplication{}, "app initialized incorrectly")
-	assert.True(app.config.DurableExecutor != enumsdurableexecutors.Dbos || app.http.Services.Dbos != nil, "dbos is injected to be used by handlers")
-	assert.True(app.config.DurableExecutor != enumsdurableexecutors.Temporal || app.http.Services.Temporal != nil, "temporal is injected to be used by handlers")
+	assert.True(app.config.DurableExecutor != enumsdurableexecutors.Dbos || app.http.Services.dbos != nil, "dbos is injected to be used by handlers")
+	assert.True(app.config.DurableExecutor != enumsdurableexecutors.Temporal || app.http.Services.temporal != nil, "temporal is injected to be used by handlers")
 	assert.True(app.temporal != initialTemporal || app.dbos != initialDbos, "must use one durable executor")
 
 	assert.True(app.config.DurableExecutor != enumsdurableexecutors.Temporal || app.temporal.client != nil,
@@ -283,11 +278,11 @@ func (a *DbosApplication) AddWorkflows(ws ...DbosWorkflow[any, any]) {
 }
 
 func (s *ApplicationServices) GetDurableExecutor() (any, enumsdurableexecutors.DurableExecutor) {
-	if s.DurableExecutor == enumsdurableexecutors.Temporal {
-		return *s.Temporal, s.DurableExecutor
+	if s.durableExecutor == enumsdurableexecutors.Temporal {
+		return *s.temporal, s.durableExecutor
 	}
 
-	return s.Dbos, s.DurableExecutor
+	return *s.dbos, s.durableExecutor
 }
 
 type TemporalClient = temporalclient.Client
