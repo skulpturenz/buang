@@ -11,9 +11,7 @@ import (
 	"path/filepath"
 	deploymentscomponent "skulpture/buang/components/deployments"
 	projectscomponent "skulpture/buang/components/projects"
-	"skulpture/buang/db"
 	testutils "skulpture/buang/integration_tests/utils"
-	workersshared "skulpture/buang/workers/shared"
 	"strconv"
 	"testing"
 	"time"
@@ -29,7 +27,6 @@ import (
 	"github.com/docker/docker/api/types/container"
 	"github.com/docker/docker/api/types/filters"
 	"github.com/docker/docker/client"
-	"github.com/gorilla/schema"
 	"github.com/negrel/assert"
 	"github.com/stretchr/testify/require"
 )
@@ -62,46 +59,11 @@ func createNewProjectWithDeployment(t *testing.T, config testutils.DurableExecut
 	ctx, cancel := context.WithTimeout(t.Context(), 1*time.Minute)
 	defer cancel()
 
-	dbCfg := db.DbConfig{
-		Type:             config.DbType,
-		ConnectionString: config.DbConnectionString,
-	}
-	queries, dbCleanup, err := dbCfg.New(ctx)
-	require.NoError(t, err)
-	defer dbCleanup(ctx)
+	testApp, cleanup := testutils.Setup(ctx, config)
+	defer cleanup(ctx)
 
 	docker, err := client.NewClientWithOpts(client.FromEnv, client.WithAPIVersionNegotiation())
 	require.NoError(t, err)
-	defer docker.Close()
-
-	decoder := schema.NewDecoder()
-	encoder := schema.NewEncoder()
-
-	ws := workersshared.WorkflowServices{
-		Queries:              &queries,
-		GorillaSchemaDecoder: decoder,
-		GorillaSchemaEncoder: encoder,
-		Docker:               docker,
-	}
-	workflows, cleanup, err := testutils.CreateWorkflows(ctx, config, ws)
-	require.NoError(t, err)
-	defer cleanup(ctx)
-
-	as := testutils.TestApplicationServices{
-		Queries:              &queries,
-		GorillaSchemaDecoder: decoder,
-		GorillaSchemaEncoder: encoder,
-		Docker:               docker,
-		Workflows:            workflows,
-	}
-
-	appConfig := testutils.TestApplicationConfig{
-		Services:              as,
-		DurableExecutorConfig: config,
-	}
-
-	testApp, cleanup := testutils.CreateApp(ctx, appConfig)
-	defer cleanup(ctx)
 
 	githubPat := os.Getenv("BUANG_TEST_GITHUB_PAT")
 	username := os.Getenv("BUANG_TEST_GITHUB_USER")
@@ -271,7 +233,6 @@ func createNewProjectWithDeployment(t *testing.T, config testutils.DurableExecut
 		defer res.Body.Close()
 
 		assert.Equal(t, http.StatusNoContent, res.StatusCode, "failed to buang deployment")
-		time.Sleep(500 * time.Millisecond) // allow some time to cleanup
 	}
 
 	projectId := createProject()
@@ -279,4 +240,6 @@ func createNewProjectWithDeployment(t *testing.T, config testutils.DurableExecut
 	getDeploymentLogs(projectId, deploymentId)
 	assertDeployment(projectId, deploymentId)
 	buangDeploymenbt(projectId, deploymentId)
+
+	time.Sleep(500 * time.Millisecond) // allow some time to cleanup
 }

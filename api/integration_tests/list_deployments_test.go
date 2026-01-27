@@ -1,0 +1,439 @@
+package integrationtests
+
+import (
+	"bytes"
+	"context"
+	"encoding/json"
+	"fmt"
+	"io"
+	"net/http"
+	"os"
+	deploymentshandlers "skulpture/buang/handlers/deployments"
+	projectshandlers "skulpture/buang/handlers/projects"
+	testutils "skulpture/buang/integration_tests/utils"
+	"slices"
+	"strconv"
+	"testing"
+	"time"
+
+	"github.com/stretchr/testify/require"
+)
+
+func TestListDeployments(t *testing.T) {
+	ctx, cancel := context.WithTimeout(t.Context(), 5*time.Minute)
+	defer cancel()
+
+	dbosConfig, dbosCleanup, err := testutils.CreateDbos(ctx)
+	require.NoError(t, err)
+	defer dbosCleanup(ctx)
+
+	temporalConfig, temporalCleanup, err := testutils.CreateSqliteTemporal(ctx)
+	require.NoError(t, err)
+	defer temporalCleanup(ctx)
+
+	scenarios := map[string]testutils.DurableExecutorConfiguration{
+		"DBOS":           *dbosConfig,
+		"TemporalSqlite": *temporalConfig,
+	}
+
+	for k, v := range scenarios {
+		t.Run(k, func(t *testing.T) {
+			listDeployments(t, v)
+		})
+	}
+}
+
+func TestSearchParams(t *testing.T) {
+	ctx, cancel := context.WithTimeout(t.Context(), 5*time.Minute)
+	defer cancel()
+
+	dbosConfig, dbosCleanup, err := testutils.CreateDbos(ctx)
+	require.NoError(t, err)
+	defer dbosCleanup(ctx)
+
+	temporalConfig, temporalCleanup, err := testutils.CreateSqliteTemporal(ctx)
+	require.NoError(t, err)
+	defer temporalCleanup(ctx)
+
+	scenarios := map[string]testutils.DurableExecutorConfiguration{
+		"DBOS":           *dbosConfig,
+		"TemporalSqlite": *temporalConfig,
+	}
+
+	for k, v := range scenarios {
+		t.Run(k, func(t *testing.T) {
+			searchParams(t, v)
+		})
+	}
+}
+
+func TestDeletedProjects(t *testing.T) {
+	ctx, cancel := context.WithTimeout(t.Context(), 5*time.Minute)
+	defer cancel()
+
+	dbosConfig, dbosCleanup, err := testutils.CreateDbos(ctx)
+	require.NoError(t, err)
+	defer dbosCleanup(ctx)
+
+	temporalConfig, temporalCleanup, err := testutils.CreateSqliteTemporal(ctx)
+	require.NoError(t, err)
+	defer temporalCleanup(ctx)
+
+	scenarios := map[string]testutils.DurableExecutorConfiguration{
+		"DBOS":           *dbosConfig,
+		"TemporalSqlite": *temporalConfig,
+	}
+
+	for k, v := range scenarios {
+		t.Run(k, func(t *testing.T) {
+			deletedProject(t, v)
+		})
+	}
+}
+
+func listDeployments(t *testing.T, config testutils.DurableExecutorConfiguration) {
+	ctx, cancel := context.WithTimeout(t.Context(), 2*time.Minute)
+	defer cancel()
+
+	testApp, cleanup := testutils.Setup(ctx, config)
+	defer cleanup(ctx)
+
+	githubPat := os.Getenv("BUANG_TEST_GITHUB_PAT")
+	username := os.Getenv("BUANG_TEST_GITHUB_USER")
+
+	baseUrl := fmt.Sprintf("%v/api/v1", *testApp.Url)
+
+	createProject := func() int64 {
+		postProjectsUrl := fmt.Sprintf("%v/project", baseUrl)
+		createProjectReq := projectshandlers.CreateProjectRequest{
+			Repository:    "https://github.com/skulpturenz/buangtest", // TODO: from repo vars
+			RequiresAuthn: true,
+			Username:      &username,      // TODO: from repo secrets
+			Password:      &githubPat,     // TODO: from repo secrets
+			ComposePath:   "compose.yaml", // TODO: from repo vars
+		}
+
+		body, err := json.Marshal(createProjectReq)
+		require.NoError(t, err)
+
+		req, err := http.NewRequestWithContext(ctx, http.MethodPost, postProjectsUrl, bytes.NewBuffer(body))
+		require.NoError(t, err)
+		req.Header.Set("Content-Type", "application/json")
+
+		res, err := http.DefaultClient.Do(req)
+		require.NoError(t, err)
+		defer res.Body.Close()
+
+		require.Equal(t, http.StatusOK, res.StatusCode)
+		respBody, err := io.ReadAll(res.Body)
+		require.NoError(t, err)
+		projectId, err := strconv.ParseInt(string(respBody), 10, 64)
+		require.NoError(t, err)
+
+		return projectId
+	}
+
+	createDeployment := func(projectId int64) int64 {
+		postDeploymentUrl := fmt.Sprintf("%v/project/%v/deployment?waitForDeployment=true", baseUrl, projectId)
+		createDeploymentReq := deploymentshandlers.CreateDeploymentRequest{
+			Branch:            "master",                                   // TODO: from repo vars
+			Sha:               "e6792e4fe8a66de90b0945fa9d38f0b25149bd00", // TODO: from repo vars
+			ServiceEntrypoint: "web:80",                                   // TODO: from repo vars
+			Env: map[string]any{
+				"HELLO": "WORLD",
+			},
+		}
+
+		body, err := json.Marshal(createDeploymentReq)
+		require.NoError(t, err)
+
+		req, err := http.NewRequestWithContext(ctx, http.MethodPost, postDeploymentUrl, bytes.NewBuffer(body))
+		require.NoError(t, err)
+		req.Header.Set("Content-Type", "application/json")
+
+		res, err := http.DefaultClient.Do(req)
+		require.NoError(t, err)
+		defer res.Body.Close()
+
+		require.Equal(t, http.StatusOK, res.StatusCode)
+		respBody, err := io.ReadAll(res.Body)
+		require.NoError(t, err)
+		deploymentId, err := strconv.ParseInt(string(respBody), 10, 64)
+		require.NoError(t, err)
+
+		return deploymentId
+	}
+
+	listDeployments := func(projectId int64) []projectshandlers.ListAllDeploymentsItem {
+		listDeploymentsUrl := fmt.Sprintf("%v/project/%v/deployments", baseUrl, projectId)
+		req, err := http.NewRequestWithContext(ctx, http.MethodGet, listDeploymentsUrl, nil)
+		require.NoError(t, err)
+
+		res, err := http.DefaultClient.Do(req)
+		require.NoError(t, err)
+		defer res.Body.Close()
+
+		require.Equal(t, http.StatusOK, res.StatusCode)
+
+		var deployments []projectshandlers.ListAllDeploymentsItem
+		err = json.NewDecoder(res.Body).Decode(&deployments)
+		require.NoError(t, err)
+
+		return deployments
+	}
+
+	projectId := createProject()
+	firstDeployment := createDeployment(projectId)
+	secondDeployment := createDeployment(projectId)
+
+	deployments := listDeployments(projectId)
+
+	hasFirstDeployment := slices.ContainsFunc(deployments, func(d projectshandlers.ListAllDeploymentsItem) bool {
+		return d.ID == firstDeployment
+	})
+	hasSecondDeployment := slices.ContainsFunc(deployments, func(d projectshandlers.ListAllDeploymentsItem) bool {
+		return d.ID == secondDeployment
+	})
+
+	require.True(t, hasFirstDeployment)
+	require.True(t, hasSecondDeployment)
+	require.GreaterOrEqual(t, len(deployments), 2)
+	require.Equal(t, projectId, deployments[0].ProjectID)
+
+	time.Sleep(500 * time.Millisecond) // allow some time to cleanup
+}
+
+func searchParams(t *testing.T, config testutils.DurableExecutorConfiguration) {
+	ctx, cancel := context.WithTimeout(t.Context(), 2*time.Minute)
+	defer cancel()
+
+	testApp, cleanup := testutils.Setup(ctx, config)
+	defer cleanup(ctx)
+
+	githubPat := os.Getenv("BUANG_TEST_GITHUB_PAT")
+	username := os.Getenv("BUANG_TEST_GITHUB_USER")
+
+	baseUrl := fmt.Sprintf("%v/api/v1", *testApp.Url)
+
+	createProject := func() int64 {
+		postProjectsUrl := fmt.Sprintf("%v/project", baseUrl)
+		createProjectReq := projectshandlers.CreateProjectRequest{
+			Repository:    "https://github.com/skulpturenz/buangtest", // TODO: from repo vars
+			RequiresAuthn: true,
+			Username:      &username,      // TODO: from repo secrets
+			Password:      &githubPat,     // TODO: from repo secrets
+			ComposePath:   "compose.yaml", // TODO: from repo vars
+		}
+
+		body, err := json.Marshal(createProjectReq)
+		require.NoError(t, err)
+
+		req, err := http.NewRequestWithContext(ctx, http.MethodPost, postProjectsUrl, bytes.NewBuffer(body))
+		require.NoError(t, err)
+		req.Header.Set("Content-Type", "application/json")
+
+		res, err := http.DefaultClient.Do(req)
+		require.NoError(t, err)
+		defer res.Body.Close()
+
+		require.Equal(t, http.StatusOK, res.StatusCode)
+		respBody, err := io.ReadAll(res.Body)
+		require.NoError(t, err)
+		projectId, err := strconv.ParseInt(string(respBody), 10, 64)
+		require.NoError(t, err)
+
+		return projectId
+	}
+
+	createDeployment := func(projectId int64) int64 {
+		postDeploymentUrl := fmt.Sprintf("%v/project/%v/deployment?waitForDeployment=true", baseUrl, projectId)
+		createDeploymentReq := deploymentshandlers.CreateDeploymentRequest{
+			Branch:            "master",                                   // TODO: from repo vars
+			Sha:               "e6792e4fe8a66de90b0945fa9d38f0b25149bd00", // TODO: from repo vars
+			ServiceEntrypoint: "web:80",                                   // TODO: from repo vars
+			Env: map[string]any{
+				"HELLO": "WORLD",
+			},
+		}
+
+		body, err := json.Marshal(createDeploymentReq)
+		require.NoError(t, err)
+
+		req, err := http.NewRequestWithContext(ctx, http.MethodPost, postDeploymentUrl, bytes.NewBuffer(body))
+		require.NoError(t, err)
+		req.Header.Set("Content-Type", "application/json")
+
+		res, err := http.DefaultClient.Do(req)
+		require.NoError(t, err)
+		defer res.Body.Close()
+
+		require.Equal(t, http.StatusOK, res.StatusCode)
+		respBody, err := io.ReadAll(res.Body)
+		require.NoError(t, err)
+		deploymentId, err := strconv.ParseInt(string(respBody), 10, 64)
+		require.NoError(t, err)
+
+		return deploymentId
+	}
+
+	listDeployments := func(projectId int64, limit int, page int) []projectshandlers.ListAllDeploymentsItem {
+		listDeploymentsUrl := fmt.Sprintf("%v/project/%v/deployments?limit=%v&page=%v", baseUrl, projectId, limit, page)
+		req, err := http.NewRequestWithContext(ctx, http.MethodGet, listDeploymentsUrl, nil)
+		require.NoError(t, err)
+
+		res, err := http.DefaultClient.Do(req)
+		require.NoError(t, err)
+		defer res.Body.Close()
+
+		require.Equal(t, http.StatusOK, res.StatusCode)
+
+		var deployments []projectshandlers.ListAllDeploymentsItem
+		err = json.NewDecoder(res.Body).Decode(&deployments)
+		require.NoError(t, err)
+
+		return deployments
+	}
+
+	deleteProject := func(projectId int64) {
+		deleteProjectUrl := fmt.Sprintf("%v/project/%v", baseUrl, projectId)
+		req, err := http.NewRequestWithContext(ctx, http.MethodDelete, deleteProjectUrl, nil)
+		require.NoError(t, err)
+
+		res, err := http.DefaultClient.Do(req)
+		require.NoError(t, err)
+		defer res.Body.Close()
+
+		require.Equal(t, http.StatusNoContent, res.StatusCode)
+	}
+
+	projectId := createProject()
+	firstDeployment := createDeployment(projectId)
+	secondDeployment := createDeployment(projectId)
+	thirdDeployment := createDeployment(projectId)
+
+	limitedDeployments := listDeployments(projectId, 2, 1)
+	require.Len(t, limitedDeployments, 2)
+	require.Equal(t, thirdDeployment, limitedDeployments[0].ID)
+	require.Equal(t, secondDeployment, limitedDeployments[1].ID)
+
+	pagedDeployments := listDeployments(projectId, 2, 2)
+	require.Len(t, pagedDeployments, 1)
+	require.Equal(t, firstDeployment, pagedDeployments[0].ID)
+
+	deleteProject(projectId)
+
+	time.Sleep(500 * time.Millisecond) // allow some time to cleanup
+}
+
+func deletedProject(t *testing.T, config testutils.DurableExecutorConfiguration) {
+	ctx, cancel := context.WithTimeout(t.Context(), 2*time.Minute)
+	defer cancel()
+
+	testApp, cleanup := testutils.Setup(ctx, config)
+	defer cleanup(ctx)
+
+	githubPat := os.Getenv("BUANG_TEST_GITHUB_PAT")
+	username := os.Getenv("BUANG_TEST_GITHUB_USER")
+
+	baseUrl := fmt.Sprintf("%v/api/v1", *testApp.Url)
+
+	createProject := func() int64 {
+		postProjectsUrl := fmt.Sprintf("%v/project", baseUrl)
+		createProjectReq := projectshandlers.CreateProjectRequest{
+			Repository:    "https://github.com/skulpturenz/buangtest", // TODO: from repo vars
+			RequiresAuthn: true,
+			Username:      &username,      // TODO: from repo secrets
+			Password:      &githubPat,     // TODO: from repo secrets
+			ComposePath:   "compose.yaml", // TODO: from repo vars
+		}
+
+		body, err := json.Marshal(createProjectReq)
+		require.NoError(t, err)
+
+		req, err := http.NewRequestWithContext(ctx, http.MethodPost, postProjectsUrl, bytes.NewBuffer(body))
+		require.NoError(t, err)
+		req.Header.Set("Content-Type", "application/json")
+
+		res, err := http.DefaultClient.Do(req)
+		require.NoError(t, err)
+		defer res.Body.Close()
+
+		require.Equal(t, http.StatusOK, res.StatusCode)
+		respBody, err := io.ReadAll(res.Body)
+		require.NoError(t, err)
+		projectId, err := strconv.ParseInt(string(respBody), 10, 64)
+		require.NoError(t, err)
+
+		return projectId
+	}
+
+	createDeployment := func(projectId int64) int64 {
+		postDeploymentUrl := fmt.Sprintf("%v/project/%v/deployment?waitForDeployment=true", baseUrl, projectId)
+		createDeploymentReq := deploymentshandlers.CreateDeploymentRequest{
+			Branch:            "master",                                   // TODO: from repo vars
+			Sha:               "e6792e4fe8a66de90b0945fa9d38f0b25149bd00", // TODO: from repo vars
+			ServiceEntrypoint: "web:80",                                   // TODO: from repo vars
+			Env: map[string]any{
+				"HELLO": "WORLD",
+			},
+		}
+
+		body, err := json.Marshal(createDeploymentReq)
+		require.NoError(t, err)
+
+		req, err := http.NewRequestWithContext(ctx, http.MethodPost, postDeploymentUrl, bytes.NewBuffer(body))
+		require.NoError(t, err)
+		req.Header.Set("Content-Type", "application/json")
+
+		res, err := http.DefaultClient.Do(req)
+		require.NoError(t, err)
+		defer res.Body.Close()
+
+		require.Equal(t, http.StatusOK, res.StatusCode)
+		respBody, err := io.ReadAll(res.Body)
+		require.NoError(t, err)
+		deploymentId, err := strconv.ParseInt(string(respBody), 10, 64)
+		require.NoError(t, err)
+
+		return deploymentId
+	}
+
+	listDeployments := func(projectId int64) []projectshandlers.ListAllDeploymentsItem {
+		listDeploymentsUrl := fmt.Sprintf("%v/project/%v/deployments", baseUrl, projectId)
+		req, err := http.NewRequestWithContext(ctx, http.MethodGet, listDeploymentsUrl, nil)
+		require.NoError(t, err)
+
+		res, err := http.DefaultClient.Do(req)
+		require.NoError(t, err)
+		defer res.Body.Close()
+
+		require.Equal(t, http.StatusOK, res.StatusCode)
+
+		var deployments []projectshandlers.ListAllDeploymentsItem
+		err = json.NewDecoder(res.Body).Decode(&deployments)
+		require.NoError(t, err)
+
+		return deployments
+	}
+
+	deleteProject := func(projectId int64) {
+		deleteProjectUrl := fmt.Sprintf("%v/project/%v", baseUrl, projectId)
+		req, err := http.NewRequestWithContext(ctx, http.MethodDelete, deleteProjectUrl, nil)
+		require.NoError(t, err)
+
+		res, err := http.DefaultClient.Do(req)
+		require.NoError(t, err)
+		defer res.Body.Close()
+
+		require.Equal(t, http.StatusNoContent, res.StatusCode)
+	}
+
+	projectId := createProject()
+	createDeployment(projectId)
+	deleteProject(projectId)
+
+	deployments := listDeployments(projectId)
+	require.Len(t, deployments, 0)
+
+	time.Sleep(500 * time.Millisecond) // allow some time to cleanup
+}

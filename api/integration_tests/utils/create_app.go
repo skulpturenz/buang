@@ -5,7 +5,6 @@ import (
 	"fmt"
 	"log/slog"
 	"skulpture/buang/components/o11y"
-	"skulpture/buang/db"
 	enumsdurableexecutors "skulpture/buang/enums/durable_executors"
 	deploymentlogs "skulpture/buang/handlers/deployment_logs"
 	"skulpture/buang/handlers/deployments"
@@ -15,30 +14,11 @@ import (
 	workersinterfaces "skulpture/buang/workers/interfaces"
 	workersshared "skulpture/buang/workers/shared"
 
-	"github.com/docker/docker/client"
 	"github.com/go-chi/chi/v5"
 )
 
 func CreateApp(ctx context.Context, cfg TestApplicationConfig) (*TestApplication, func(context.Context)) {
 	r := chi.NewRouter()
-
-	dbCfg := db.DbConfig{ // db choice constrained by the type of durable executor used
-		Type:             cfg.DurableExecutorConfig.DbType,
-		ConnectionString: cfg.DurableExecutorConfig.DbConnectionString,
-	}
-	queries, dbCleanup, err := dbCfg.New(ctx)
-	if err != nil {
-		slog.ErrorContext(ctx, "error", "err", err.Error())
-		panic(err)
-	}
-	defer dbCleanup(ctx)
-
-	docker, err := client.NewClientWithOpts(client.FromEnv, client.WithAPIVersionNegotiation())
-	if err != nil {
-		slog.ErrorContext(ctx, "error", "err", err.Error())
-		panic(err)
-	}
-	defer docker.Close()
 
 	app, err := cfg.New(ctx, r)
 	if err != nil {
@@ -46,7 +26,7 @@ func CreateApp(ctx context.Context, cfg TestApplicationConfig) (*TestApplication
 		panic(err)
 	}
 
-	app.AddSingletons(o11y.NewS(&queries))
+	app.AddSingletons(o11y.NewS(cfg.Services.Queries))
 
 	r.Route("/api/v1", func(r chi.Router) {
 		app.GetHttpApplication().AddRouters(r, projects.Router,
