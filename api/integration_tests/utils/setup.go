@@ -2,14 +2,18 @@ package testutils
 
 import (
 	"context"
+	"io"
+	"log"
 	"skulpture/buang/db"
 	workersshared "skulpture/buang/workers/shared"
 
 	"github.com/docker/docker/client"
 	"github.com/gorilla/schema"
+	"github.com/testcontainers/testcontainers-go"
 )
 
 func Setup(ctx context.Context, config DurableExecutorConfiguration) (*TestApplication, func(context.Context)) {
+	testcontainers.WithLogger(log.New(io.Discard, "", 0))
 	dbCfg := db.DbConfig{
 		Type:             config.DbType,
 		ConnectionString: config.DbConnectionString,
