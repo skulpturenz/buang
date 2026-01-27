@@ -54,7 +54,7 @@ func DockerStats(s app.ApplicationServices) http.HandlerFunc {
 		}
 
 		ret := orderedmap.New[string, ContainerStats]()
-		for pair := res.Newest(); pair != nil; pair = pair.Prev() {
+		for pair := res.Oldest(); pair != nil; pair = pair.Next() {
 			ret.Set(pair.Key, ContainerStats{
 				Name:        pair.Value.Name,
 				Status:      pair.Value.Status,

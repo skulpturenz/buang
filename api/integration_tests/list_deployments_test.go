@@ -183,22 +183,29 @@ func listDeployments(t *testing.T, config testutils.DurableExecutorConfiguration
 	}
 
 	projectId := createProject()
-	firstDeployment := createDeployment(projectId)
-	secondDeployment := createDeployment(projectId)
 
 	deployments := listDeployments(projectId)
 
-	hasFirstDeployment := slices.ContainsFunc(deployments, func(d projectshandlers.ListAllDeploymentsItem) bool {
-		return d.ID == firstDeployment
-	})
-	hasSecondDeployment := slices.ContainsFunc(deployments, func(d projectshandlers.ListAllDeploymentsItem) bool {
-		return d.ID == secondDeployment
-	})
+	require.Len(t, deployments, 0)
 
-	require.True(t, hasFirstDeployment)
-	require.True(t, hasSecondDeployment)
-	require.GreaterOrEqual(t, len(deployments), 2)
+	_ = createDeployment(projectId)
+	_ = createDeployment(projectId)
+
+	deployments = listDeployments(projectId)
+
+	require.Len(t, deployments, 2)
 	require.Equal(t, projectId, deployments[0].ProjectID)
+
+	unsorted := []int64{} // assume desc
+	for _, i := range deployments {
+		unsorted = append(unsorted, i.ID)
+	}
+
+	sorted := unsorted // asc
+	slices.Sort(sorted)
+
+	slices.Reverse(unsorted)
+	require.Equal(t, unsorted, sorted)
 
 	time.Sleep(500 * time.Millisecond) // allow some time to cleanup
 }

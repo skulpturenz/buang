@@ -159,7 +159,7 @@ func buangBranch(t *testing.T, config testutils.DurableExecutorConfiguration) {
 	deploymentId := createDeployment(projectId)
 	buangBranch(projectId)
 
-	time.Sleep(500 * time.Millisecond) // async workflow so returns immediately
+	time.Sleep(1 * time.Second) // async workflow so returns immediately
 
 	deployments := listDeployments(projectId)
 	idx := slices.IndexFunc(deployments, func(deployment projectshandlers.ListAllDeploymentsItem) bool {

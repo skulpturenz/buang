@@ -141,8 +141,8 @@ func (c StatsParams) Stats(ctx context.Context, s *app.ApplicationServices) (*St
 	results := collect(statsChan)
 	sort.Slice(results, func(x int, y int) bool {
 		return cmp.Or(
-			cmp.Compare(results[y].CpuStats.UsagePercent, results[x].CpuStats.UsagePercent),
-			cmp.Compare(results[y].MemoryStats.UsagePercent, results[x].MemoryStats.UsagePercent),
+			cmp.Compare(results[x].CpuStats.UsagePercent, results[y].CpuStats.UsagePercent),
+			cmp.Compare(results[x].MemoryStats.UsagePercent, results[y].MemoryStats.UsagePercent),
 		) > 0 // desc
 	})
 

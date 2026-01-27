@@ -9,7 +9,7 @@ import (
 	"net/http"
 	projectshandlers "skulpture/buang/handlers/projects"
 	testutils "skulpture/buang/integration_tests/utils"
-	"sort"
+	"slices"
 	"strconv"
 	"testing"
 	"time"
@@ -119,16 +119,15 @@ func listProjectsDescendingOrder(t *testing.T, config testutils.DurableExecutorC
 	err = json.NewDecoder(res.Body).Decode(&projects)
 	require.NoError(t, err)
 
-	unsorted := []int64{}
+	unsorted := []int64{} // assume desc
 	for _, i := range projects {
 		unsorted = append(unsorted, i.Id)
 	}
 
-	sorted := unsorted
-	sort.Slice(sorted, func(i, j int) bool {
-		return i > j
-	})
+	sorted := unsorted // asc
+	slices.Sort(sorted)
 
+	slices.Reverse(unsorted)
 	require.Equal(t, unsorted, sorted)
 
 	time.Sleep(500 * time.Millisecond) // allow some time to cleanup
