@@ -2,6 +2,8 @@ package testutils
 
 import (
 	"math"
+	"reflect"
+	"runtime"
 	"testing"
 	"time"
 )
@@ -25,8 +27,20 @@ func (p retryParams) Retry(t *testing.T, test func(*testing.T)) {
 			return
 		}
 
-		t.Logf("test failed, retrying, attempt %v of %v\n", i+1, p.maxTries)
+		if i == p.maxTries-1 {
+			p := reflect.ValueOf(test).Pointer()
+			f := runtime.FuncForPC(p)
+
+			t.Errorf("test %v failed", f.Name())
+
+			return
+		}
+
 		if i < p.maxTries-1 {
+			pc := reflect.ValueOf(test).Pointer()
+			f := runtime.FuncForPC(pc)
+
+			t.Logf("test failed %v, retrying, attempt %v of %v\n", f.Name(), i+1, p.maxTries)
 			sleep := p.sleep * time.Duration(math.Pow(2, float64(i)))
 			t.Logf("sleeping for %v\b", sleep)
 

@@ -258,6 +258,4 @@ func createNewProjectWithDeployment(t *testing.T, config testutils.DurableExecut
 	getDeploymentLogs(projectId, deploymentId)
 	assertDeployment(projectId, deploymentId)
 	buangDeploymenbt(projectId, deploymentId)
-
-	time.Sleep(500 * time.Millisecond) // allow some time to cleanup
 }

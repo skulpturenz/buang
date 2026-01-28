@@ -229,8 +229,6 @@ func listDeployments(t *testing.T, config testutils.DurableExecutorConfiguration
 
 	slices.Reverse(unsorted)
 	require.Equal(t, unsorted, sorted)
-
-	time.Sleep(500 * time.Millisecond) // allow some time to cleanup
 }
 
 func searchParams(t *testing.T, config testutils.DurableExecutorConfiguration) {
@@ -351,8 +349,6 @@ func searchParams(t *testing.T, config testutils.DurableExecutorConfiguration) {
 	require.Equal(t, firstDeployment, pagedDeployments[0].ID)
 
 	deleteProject(projectId)
-
-	time.Sleep(500 * time.Millisecond) // allow some time to cleanup
 }
 
 func deletedProject(t *testing.T, config testutils.DurableExecutorConfiguration) {
@@ -464,6 +460,4 @@ func deletedProject(t *testing.T, config testutils.DurableExecutorConfiguration)
 
 	deployments := listDeployments(projectId)
 	require.Len(t, deployments, 0)
-
-	time.Sleep(500 * time.Millisecond) // allow some time to cleanup
 }

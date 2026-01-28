@@ -146,8 +146,6 @@ func listProjectsDescendingOrder(t *testing.T, config testutils.DurableExecutorC
 
 	slices.Reverse(unsorted)
 	require.Equal(t, unsorted, sorted)
-
-	time.Sleep(500 * time.Millisecond) // allow some time to cleanup
 }
 
 func listProjectsExcludesDeleted(t *testing.T, config testutils.DurableExecutorConfiguration) {
@@ -228,6 +226,4 @@ func listProjectsExcludesDeleted(t *testing.T, config testutils.DurableExecutorC
 	require.Contains(t, ids, p1)
 	require.Contains(t, ids, p3)
 	require.NotContains(t, ids, p2)
-
-	time.Sleep(500 * time.Millisecond) // allow some time to cleanup
 }

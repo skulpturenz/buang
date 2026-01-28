@@ -177,6 +177,4 @@ func buangBranch(t *testing.T, config testutils.DurableExecutorConfiguration) {
 		return deployment.ID == deploymentId
 	})
 	require.Equal(t, deployments[idx].Status, int16(enumsdeploymentstatus.Buang))
-
-	time.Sleep(500 * time.Millisecond) // allow some time to cleanup
 }
