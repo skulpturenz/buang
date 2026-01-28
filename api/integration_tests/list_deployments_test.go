@@ -22,7 +22,7 @@ import (
 func TestListDeployments(t *testing.T) {
 	t.Parallel()
 
-	ctx, cancel := context.WithTimeout(t.Context(), 5*time.Minute)
+	ctx, cancel := context.WithTimeout(t.Context(), 1*time.Minute)
 	defer cancel()
 
 	dbosConfig, dbosCleanup, err := testutils.CreateDbos(ctx)
@@ -57,20 +57,25 @@ func TestListDeployments(t *testing.T) {
 func TestSearchParams(t *testing.T) {
 	t.Parallel()
 
-	ctx, cancel := context.WithTimeout(t.Context(), 5*time.Minute)
+	ctx, cancel := context.WithTimeout(t.Context(), 1*time.Minute)
 	defer cancel()
 
 	dbosConfig, dbosCleanup, err := testutils.CreateDbos(ctx)
 	require.NoError(t, err)
 	defer dbosCleanup(ctx)
 
-	temporalConfig, temporalCleanup, err := testutils.CreateSqliteTemporal(ctx)
+	temporalSqliteConfig, temporalSqliteCleanup, err := testutils.CreateSqliteTemporal(ctx)
 	require.NoError(t, err)
-	defer temporalCleanup(ctx)
+	defer temporalSqliteCleanup(ctx)
+
+	temporalPgConfig, temporalPgCleanup, err := testutils.CreatePgTemporal(ctx)
+	require.NoError(t, err)
+	defer temporalPgCleanup(ctx)
 
 	scenarios := map[string]testutils.DurableExecutorConfiguration{
 		"DBOS":           *dbosConfig,
-		"TemporalSqlite": *temporalConfig,
+		"TemporalSqlite": *temporalSqliteConfig,
+		"TemporalPg":     *temporalPgConfig,
 	}
 
 	retry := testutils.NewRetry(3, 500*time.Millisecond)
@@ -87,20 +92,25 @@ func TestSearchParams(t *testing.T) {
 func TestDeletedProjects(t *testing.T) {
 	t.Parallel()
 
-	ctx, cancel := context.WithTimeout(t.Context(), 5*time.Minute)
+	ctx, cancel := context.WithTimeout(t.Context(), 1*time.Minute)
 	defer cancel()
 
 	dbosConfig, dbosCleanup, err := testutils.CreateDbos(ctx)
 	require.NoError(t, err)
 	defer dbosCleanup(ctx)
 
-	temporalConfig, temporalCleanup, err := testutils.CreateSqliteTemporal(ctx)
+	temporalSqliteConfig, temporalSqliteCleanup, err := testutils.CreateSqliteTemporal(ctx)
 	require.NoError(t, err)
-	defer temporalCleanup(ctx)
+	defer temporalSqliteCleanup(ctx)
+
+	temporalPgConfig, temporalPgCleanup, err := testutils.CreatePgTemporal(ctx)
+	require.NoError(t, err)
+	defer temporalPgCleanup(ctx)
 
 	scenarios := map[string]testutils.DurableExecutorConfiguration{
 		"DBOS":           *dbosConfig,
-		"TemporalSqlite": *temporalConfig,
+		"TemporalSqlite": *temporalSqliteConfig,
+		"TemporalPg":     *temporalPgConfig,
 	}
 
 	retry := testutils.NewRetry(3, 500*time.Millisecond)
@@ -115,7 +125,7 @@ func TestDeletedProjects(t *testing.T) {
 }
 
 func listDeployments(t *testing.T, config testutils.DurableExecutorConfiguration) {
-	ctx, cancel := context.WithTimeout(t.Context(), 2*time.Minute)
+	ctx, cancel := context.WithTimeout(t.Context(), 10*time.Second)
 	defer cancel()
 
 	testApp, cleanup := testutils.Setup(ctx, config)
@@ -232,7 +242,7 @@ func listDeployments(t *testing.T, config testutils.DurableExecutorConfiguration
 }
 
 func searchParams(t *testing.T, config testutils.DurableExecutorConfiguration) {
-	ctx, cancel := context.WithTimeout(t.Context(), 2*time.Minute)
+	ctx, cancel := context.WithTimeout(t.Context(), 10*time.Second)
 	defer cancel()
 
 	testApp, cleanup := testutils.Setup(ctx, config)
@@ -352,7 +362,7 @@ func searchParams(t *testing.T, config testutils.DurableExecutorConfiguration) {
 }
 
 func deletedProject(t *testing.T, config testutils.DurableExecutorConfiguration) {
-	ctx, cancel := context.WithTimeout(t.Context(), 2*time.Minute)
+	ctx, cancel := context.WithTimeout(t.Context(), 10*time.Second)
 	defer cancel()
 
 	testApp, cleanup := testutils.Setup(ctx, config)

@@ -62,13 +62,18 @@ func TestListProjectsExcludesDeleted(t *testing.T) {
 	require.NoError(t, err)
 	defer dbosCleanup(ctx)
 
-	temporalConfig, temporalCleanup, err := testutils.CreateSqliteTemporal(ctx)
+	temporalSqliteConfig, temporalSqliteCleanup, err := testutils.CreateSqliteTemporal(ctx)
 	require.NoError(t, err)
-	defer temporalCleanup(ctx)
+	defer temporalSqliteCleanup(ctx)
+
+	temporalPgConfig, temporalPgCleanup, err := testutils.CreatePgTemporal(ctx)
+	require.NoError(t, err)
+	defer temporalPgCleanup(ctx)
 
 	scenarios := map[string]testutils.DurableExecutorConfiguration{
 		"DBOS":           *dbosConfig,
-		"TemporalSqlite": *temporalConfig,
+		"TemporalSqlite": *temporalSqliteConfig,
+		"TemporalPg":     *temporalPgConfig,
 	}
 
 	retry := testutils.NewRetry(3, 500*time.Millisecond)
@@ -83,7 +88,7 @@ func TestListProjectsExcludesDeleted(t *testing.T) {
 }
 
 func listProjectsDescendingOrder(t *testing.T, config testutils.DurableExecutorConfiguration) {
-	ctx, cancel := context.WithTimeout(t.Context(), 1*time.Minute)
+	ctx, cancel := context.WithTimeout(t.Context(), 10*time.Second)
 	defer cancel()
 
 	testApp, cleanup := testutils.Setup(ctx, config)
@@ -149,7 +154,7 @@ func listProjectsDescendingOrder(t *testing.T, config testutils.DurableExecutorC
 }
 
 func listProjectsExcludesDeleted(t *testing.T, config testutils.DurableExecutorConfiguration) {
-	ctx, cancel := context.WithTimeout(t.Context(), 1*time.Minute)
+	ctx, cancel := context.WithTimeout(t.Context(), 10*time.Second)
 	defer cancel()
 
 	testApp, cleanup := testutils.Setup(ctx, config)

@@ -23,7 +23,7 @@ import (
 func TestBuangBranch(t *testing.T) {
 	t.Parallel()
 
-	ctx, cancel := context.WithTimeout(t.Context(), 5*time.Minute)
+	ctx, cancel := context.WithTimeout(t.Context(), 1*time.Minute)
 	defer cancel()
 
 	dbosConfig, dbosCleanup, err := testutils.CreateDbos(ctx)
@@ -56,7 +56,7 @@ func TestBuangBranch(t *testing.T) {
 }
 
 func buangBranch(t *testing.T, config testutils.DurableExecutorConfiguration) {
-	ctx, cancel := context.WithTimeout(t.Context(), 2*time.Minute)
+	ctx, cancel := context.WithTimeout(t.Context(), 20*time.Second)
 	defer cancel()
 
 	testApp, cleanup := testutils.Setup(ctx, config)
