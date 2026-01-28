@@ -20,6 +20,8 @@ import (
 )
 
 func TestListDeployments(t *testing.T) {
+	t.Parallel()
+
 	ctx, cancel := context.WithTimeout(t.Context(), 5*time.Minute)
 	defer cancel()
 
@@ -44,6 +46,8 @@ func TestListDeployments(t *testing.T) {
 }
 
 func TestSearchParams(t *testing.T) {
+	t.Parallel()
+
 	ctx, cancel := context.WithTimeout(t.Context(), 5*time.Minute)
 	defer cancel()
 
@@ -68,6 +72,8 @@ func TestSearchParams(t *testing.T) {
 }
 
 func TestDeletedProjects(t *testing.T) {
+	t.Parallel()
+
 	ctx, cancel := context.WithTimeout(t.Context(), 5*time.Minute)
 	defer cancel()
 

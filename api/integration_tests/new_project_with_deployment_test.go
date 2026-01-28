@@ -32,6 +32,8 @@ import (
 )
 
 func TestNewProjectWithDeployment(t *testing.T) {
+	t.Parallel()
+
 	ctx, cancel := context.WithTimeout(t.Context(), 1*time.Minute)
 	defer cancel()
 
@@ -162,10 +164,7 @@ func createNewProjectWithDeployment(t *testing.T, config testutils.DurableExecut
 
 	assertDeployment := func(projectId int64, deploymentId int64) {
 		const EXPECTED_SERVICES = 1
-		const DYNAMIC_CONFIG_DIR = "/app/deployments"
-
-		require.DirExists(t, DYNAMIC_CONFIG_DIR)
-		require.FileExists(t, fmt.Sprintf("%v/project-%v-deployment-%v.yaml", DYNAMIC_CONFIG_DIR, projectId, deploymentId))
+		const TRAEFIK_DYNAMIC_CONFIG = "/app/deployments"
 
 		s := testApp.GetHttpApplication().Services.ToAppApplicationServices()
 
@@ -186,6 +185,18 @@ func createNewProjectWithDeployment(t *testing.T, config testutils.DurableExecut
 		p, err := findProjectParams.Exec(ctx, &s)
 		require.NoError(t, err)
 
+		require.DirExists(t, TRAEFIK_DYNAMIC_CONFIG)
+
+		sha := fmt.Sprintf("%.*s", 8, deployment.Deployment.GetSha())
+		projectName := fmt.Sprintf("%v_%v_%v_%v_%v",
+			p.Project.GetId(),
+			deployment.Deployment.GetId(),
+			deployment.Deployment.GetBranch(),
+			sha,
+			deployment.Deployment.GetDeployedAt().UnixMilli())
+		deploymentConfigPath := filepath.Join(TRAEFIK_DYNAMIC_CONFIG, fmt.Sprintf("buang-%v.yaml", projectName))
+		require.FileExists(t, deploymentConfigPath)
+
 		cli, err := command.NewDockerCli(command.WithAPIClient(docker))
 		require.NoError(t, err)
 		err = cli.Initialize(&flags.ClientOptions{})
@@ -194,9 +205,6 @@ func createNewProjectWithDeployment(t *testing.T, config testutils.DurableExecut
 		svc, err := compose.NewComposeService(cli, compose.WithPrompt(compose.AlwaysOkPrompt()))
 		require.NoError(t, err)
 
-		sha := fmt.Sprintf("%.*s", 8, deployment.Deployment.GetSha())
-		projectName := fmt.Sprintf("%v_%v_%v_%v", deployment.Deployment.GetProjectId(),
-			deployment.Deployment.GetId(), deployment.Deployment.GetBranch(), sha)
 		composeProject, err := svc.LoadProject(ctx, api.ProjectLoadOptions{
 			ConfigPaths: []string{filepath.Join(*deployment.Deployment.GetClonePath(), p.Project.GetComposePath())},
 			ProjectName: projectName,

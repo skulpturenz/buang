@@ -21,6 +21,8 @@ import (
 )
 
 func TestBuangBranch(t *testing.T) {
+	t.Parallel()
+
 	ctx, cancel := context.WithTimeout(t.Context(), 5*time.Minute)
 	defer cancel()
 
@@ -159,7 +161,7 @@ func buangBranch(t *testing.T, config testutils.DurableExecutorConfiguration) {
 	deploymentId := createDeployment(projectId)
 	buangBranch(projectId)
 
-	time.Sleep(1 * time.Second) // async workflow so returns immediately
+	time.Sleep(5 * time.Second) // async workflow so returns immediately
 
 	deployments := listDeployments(projectId)
 	idx := slices.IndexFunc(deployments, func(deployment projectshandlers.ListAllDeploymentsItem) bool {

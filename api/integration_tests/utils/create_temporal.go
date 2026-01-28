@@ -11,7 +11,7 @@ import (
 )
 
 func CreateSqliteTemporal(ctx context.Context) (*DurableExecutorConfiguration, func(context.Context) error, error) {
-	sqlite := CreateSqlite(ctx)
+	sqlite, sqliteCleanup := CreateSqlite(ctx)
 
 	container, err := testcontainers.GenericContainer(ctx, testcontainers.GenericContainerRequest{
 		ContainerRequest: testcontainers.ContainerRequest{
@@ -34,6 +34,8 @@ func CreateSqliteTemporal(ctx context.Context) (*DurableExecutorConfiguration, f
 	}
 
 	cleanup := func(ctx context.Context) error {
+		sqliteCleanup(ctx)
+
 		if err := container.Terminate(ctx); err != nil {
 			return err
 		}

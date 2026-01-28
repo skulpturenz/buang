@@ -29,9 +29,11 @@ type DeployProjectParams struct {
 type DeployProjectResult struct{}
 
 func (dp *DeployProject) DeployProject(ctx context.Context, d DeployProjectParams) (*DeployProjectResult, error) {
+	DEPLOYED_AT := time.Now()
+
 	s := app.ApplicationServices(*dp)
 
-	err := os.MkdirAll(TRAEFIK_DYNAMIC_CONFIG, os.ModePerm)
+	err := os.MkdirAll(deployments.TRAEFIK_DYNAMIC_CONFIG, os.ModePerm)
 	if err != nil {
 		return nil, err
 	}
@@ -88,8 +90,13 @@ func (dp *DeployProject) DeployProject(ctx context.Context, d DeployProjectParam
 		env = map[string]any{}
 	}
 
-	sha := fmt.Sprintf("%.*s", 8, dply.Deployment.GetSha())
-	projectName := fmt.Sprintf("%v_%v_%v_%v", p.Project.GetId(), dply.Deployment.GetId(), dply.Deployment.GetBranch(), sha)
+	projectName := deployments.GetProjectName(deployments.GetProjectNameParams{
+		ProjectId:    p.Project.GetId(),
+		DeploymentId: dply.Deployment.GetId(),
+		Branch:       dply.Deployment.GetBranch(),
+		Sha:          dply.Deployment.GetSha(),
+		DeployedAt:   DEPLOYED_AT,
+	})
 	url := fmt.Sprintf("/deployment/%v", projectName)
 
 	env["BUANG_DEPLOYMENT_PATH"] = url
@@ -179,16 +186,22 @@ func (dp *DeployProject) DeployProject(ctx context.Context, d DeployProjectParam
 		return nil, err
 	}
 
-	err = os.WriteFile(filepath.Join(TRAEFIK_DYNAMIC_CONFIG, fmt.Sprintf("project-%v-deployment-%v.yaml", p.Project.GetId(), dply.Deployment.GetId())), yml, 0644)
+	deploymentConfigPath := deployments.GetDeploymentPath(deployments.GetDeploymentPathParams{
+		ProjectId:    p.Project.GetId(),
+		DeploymentId: dply.Deployment.GetId(),
+		Branch:       dply.Deployment.GetBranch(),
+		Sha:          dply.Deployment.GetSha(),
+		DeployedAt:   DEPLOYED_AT,
+	})
+	err = os.WriteFile(deploymentConfigPath, yml, 0644)
 	if err != nil {
 		return nil, err
 	}
 
-	deployedAt := time.Now()
 	deployedParams := deployments.UpdateDeploymentParams{
 		ID:         dply.Deployment.GetId(),
 		Url:        &url,
-		DeployedAt: &deployedAt,
+		DeployedAt: &DEPLOYED_AT,
 		Status:     int16(enumsdeploymentstatus.Deployed),
 		ClonePath:  dply.Deployment.GetClonePath(),
 		ProjectID:  p.Project.GetId(),

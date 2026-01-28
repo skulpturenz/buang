@@ -5,6 +5,7 @@ import (
 	"io"
 	"log"
 	"skulpture/buang/db"
+	"skulpture/buang/utils/compensations"
 	workersshared "skulpture/buang/workers/shared"
 
 	"github.com/docker/docker/client"
@@ -14,20 +15,26 @@ import (
 
 func Setup(ctx context.Context, config DurableExecutorConfiguration) (*TestApplication, func(context.Context)) {
 	testcontainers.WithLogger(log.New(io.Discard, "", 0))
+
+	compensations := compensations.New()
+
 	dbCfg := db.DbConfig{
 		Type:             config.DbType,
 		ConnectionString: config.DbConnectionString,
 	}
 
 	queries, dbCleanup, err := dbCfg.New(ctx)
+	compensations.AddCompensation(dbCleanup)
 	if err != nil {
-		panic(err)
+		compensations.CompensateAndPanic(ctx, err)
 	}
 
 	docker, err := client.NewClientWithOpts(client.FromEnv, client.WithAPIVersionNegotiation())
+	compensations.AddCompensation(func(ctx context.Context) {
+		docker.Close()
+	})
 	if err != nil {
-		dbCleanup(ctx)
-		panic(err)
+		compensations.CompensateAndPanic(ctx, err)
 	}
 
 	decoder := schema.NewDecoder()
@@ -40,10 +47,9 @@ func Setup(ctx context.Context, config DurableExecutorConfiguration) (*TestAppli
 		Docker:               docker,
 	}
 	workflows, workflowsCleanup, err := CreateWorkflows(ctx, config, ws)
+	compensations.AddCompensation(workflowsCleanup)
 	if err != nil {
-		docker.Close()
-		dbCleanup(ctx)
-		panic(err)
+		compensations.CompensateAndPanic(ctx, err)
 	}
 
 	as := TestApplicationServices{
@@ -60,13 +66,9 @@ func Setup(ctx context.Context, config DurableExecutorConfiguration) (*TestAppli
 	}
 
 	testApp, appCleanup := CreateApp(ctx, appConfig)
+	compensations.AddCompensation(appCleanup)
 
-	cleanup := func(ctx context.Context) {
-		appCleanup(ctx)
-		workflowsCleanup(ctx)
-		docker.Close()
-		dbCleanup(ctx)
-	}
+	cleanup := compensations.Compensate
 
 	return testApp, cleanup
 }

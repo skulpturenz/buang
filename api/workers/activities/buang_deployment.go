@@ -60,9 +60,20 @@ func (bd *BuangDeployment) BuangDeployment(ctx context.Context, b BuangDeploymen
 	}
 
 	clonePath := *clonePathPtr
-	deploymentConfigPath := filepath.Join(TRAEFIK_DYNAMIC_CONFIG, fmt.Sprintf("project-%v-deployment-%v.yaml", p.Project.GetId(), dply.Deployment.GetId()))
-	sha := fmt.Sprintf("%.*s", 8, dply.Deployment.GetSha())
-	projectName := fmt.Sprintf("%v_%v_%v_%v", p.Project.GetId(), dply.Deployment.GetId(), dply.Deployment.GetBranch(), sha)
+	projectName := deployments.GetProjectName(deployments.GetProjectNameParams{
+		ProjectId:    p.Project.GetId(),
+		DeploymentId: dply.Deployment.GetId(),
+		Branch:       dply.Deployment.GetBranch(),
+		Sha:          dply.Deployment.GetSha(),
+		DeployedAt:   *dply.Deployment.GetDeployedAt(),
+	})
+	deploymentConfigPath := deployments.GetDeploymentPath(deployments.GetDeploymentPathParams{
+		ProjectId:    p.Project.GetId(),
+		DeploymentId: dply.Deployment.GetId(),
+		Branch:       dply.Deployment.GetBranch(),
+		Sha:          dply.Deployment.GetSha(),
+		DeployedAt:   *dply.Deployment.GetDeployedAt(),
+	})
 	configPath := filepath.Join(clonePath, p.Project.GetComposePath())
 
 	err = os.RemoveAll(deploymentConfigPath)
