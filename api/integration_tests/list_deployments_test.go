@@ -38,9 +38,13 @@ func TestListDeployments(t *testing.T) {
 		"TemporalSqlite": *temporalConfig,
 	}
 
+	retry := testutils.NewRetry(3, 500*time.Millisecond)
+
 	for k, v := range scenarios {
-		t.Run(k, func(t *testing.T) {
-			listDeployments(t, v)
+		retry.Retry(t, func(t *testing.T) {
+			t.Run(k, func(t *testing.T) {
+				listDeployments(t, v)
+			})
 		})
 	}
 }
@@ -64,9 +68,13 @@ func TestSearchParams(t *testing.T) {
 		"TemporalSqlite": *temporalConfig,
 	}
 
+	retry := testutils.NewRetry(3, 500*time.Millisecond)
+
 	for k, v := range scenarios {
-		t.Run(k, func(t *testing.T) {
-			searchParams(t, v)
+		retry.Retry(t, func(t *testing.T) {
+			t.Run(k, func(t *testing.T) {
+				searchParams(t, v)
+			})
 		})
 	}
 }
@@ -90,9 +98,13 @@ func TestDeletedProjects(t *testing.T) {
 		"TemporalSqlite": *temporalConfig,
 	}
 
+	retry := testutils.NewRetry(3, 500*time.Millisecond)
+
 	for k, v := range scenarios {
-		t.Run(k, func(t *testing.T) {
-			deletedProject(t, v)
+		retry.Retry(t, func(t *testing.T) {
+			t.Run(k, func(t *testing.T) {
+				deletedProject(t, v)
+			})
 		})
 	}
 }

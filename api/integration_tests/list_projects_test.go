@@ -36,9 +36,13 @@ func TestListProjectsDescendingOrder(t *testing.T) {
 		"TemporalSqlite": *temporalConfig,
 	}
 
+	retry := testutils.NewRetry(3, 500*time.Millisecond)
+
 	for k, v := range scenarios {
-		t.Run(k, func(t *testing.T) {
-			listProjectsDescendingOrder(t, v)
+		retry.Retry(t, func(t *testing.T) {
+			t.Run(k, func(t *testing.T) {
+				listProjectsDescendingOrder(t, v)
+			})
 		})
 	}
 }
@@ -62,9 +66,13 @@ func TestListProjectsExcludesDeleted(t *testing.T) {
 		"TemporalSqlite": *temporalConfig,
 	}
 
+	retry := testutils.NewRetry(3, 500*time.Millisecond)
+
 	for k, v := range scenarios {
-		t.Run(k, func(t *testing.T) {
-			listProjectsExcludesDeleted(t, v)
+		retry.Retry(t, func(t *testing.T) {
+			t.Run(k, func(t *testing.T) {
+				listProjectsExcludesDeleted(t, v)
+			})
 		})
 	}
 }

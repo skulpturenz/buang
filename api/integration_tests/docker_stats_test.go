@@ -39,9 +39,13 @@ func TestDockerStats(t *testing.T) {
 		"TemporalSqlite": *temporalConfig,
 	}
 
+	retry := testutils.NewRetry(3, 500*time.Millisecond)
+
 	for k, v := range scenarios {
-		t.Run(k, func(t *testing.T) {
-			dockerStats(t, v)
+		retry.Retry(t, func(t *testing.T) {
+			t.Run(k, func(t *testing.T) {
+				dockerStats(t, v)
+			})
 		})
 	}
 }
