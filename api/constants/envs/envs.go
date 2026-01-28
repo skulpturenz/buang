@@ -102,7 +102,7 @@ var (
 	BUANG_TRAEFIK_DYNAMIC_CONFIG_DIR = ferrite.
 						String("BUANG_TRAEFIK_DYNAMIC_CONFIG_DIR", "Traefik dynamic config directory").
 						WithDefault("/buang/traefik").
-						Optional()
+						Required()
 	BUANG_SENTRY_DSN = ferrite.
 				String("BUANG_SENTRY_DSN", "Sentry DSN").
 				Optional()

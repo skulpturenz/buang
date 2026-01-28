@@ -3,10 +3,11 @@ package deployments
 import (
 	"fmt"
 	"path/filepath"
+	constantsenvs "skulpture/buang/constants/envs"
 	"time"
 )
 
-const TRAEFIK_DYNAMIC_CONFIG = "/app/deployments"
+var TRAEFIK_DYNAMIC_CONFIG = constantsenvs.BUANG_TRAEFIK_DYNAMIC_CONFIG_DIR.Value()
 
 type GetDeploymentPathParams struct {
 	ProjectId    int64

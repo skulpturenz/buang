@@ -11,6 +11,7 @@ import (
 	"path/filepath"
 	deploymentscomponent "skulpture/buang/components/deployments"
 	projectscomponent "skulpture/buang/components/projects"
+	constantsenvs "skulpture/buang/constants/envs"
 	testutils "skulpture/buang/integration_tests/utils"
 	"strconv"
 	"testing"
@@ -164,7 +165,7 @@ func createNewProjectWithDeployment(t *testing.T, config testutils.DurableExecut
 
 	assertDeployment := func(projectId int64, deploymentId int64) {
 		const EXPECTED_SERVICES = 1
-		const TRAEFIK_DYNAMIC_CONFIG = "/app/deployments"
+		var TRAEFIK_DYNAMIC_CONFIG = constantsenvs.BUANG_TRAEFIK_DYNAMIC_CONFIG_DIR.Value()
 
 		s := testApp.GetHttpApplication().Services.ToAppApplicationServices()
 
