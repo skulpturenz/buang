@@ -22,6 +22,7 @@ jobs:
       - uses: actions/setup-go@v6
         with:
           go-version-file: 'api/go.mod'
+          cache-dependency-path: 'api/go.sum'
 
       - name: Install Task
         uses: arduino/setup-task@v2
