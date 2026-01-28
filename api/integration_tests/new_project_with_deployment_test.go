@@ -42,13 +42,18 @@ func TestNewProjectWithDeployment(t *testing.T) {
 	require.NoError(t, err)
 	defer dbosCleanup(ctx)
 
-	temporalConfig, temporalCleanup, err := testutils.CreateSqliteTemporal(ctx)
+	temporalSqliteConfig, temporalSqliteCleanup, err := testutils.CreateSqliteTemporal(ctx)
 	require.NoError(t, err)
-	defer temporalCleanup(ctx)
+	defer temporalSqliteCleanup(ctx)
+
+	temporalPgConfig, temporalPgCleanup, err := testutils.CreatePgTemporal(ctx)
+	require.NoError(t, err)
+	defer temporalPgCleanup(ctx)
 
 	scenarios := map[string]testutils.DurableExecutorConfiguration{
 		"DBOS":           *dbosConfig,
-		"TemporalSqlite": *temporalConfig,
+		"TemporalSqlite": *temporalSqliteConfig,
+		"TemporalPg":     *temporalPgConfig,
 	}
 
 	retry := testutils.NewRetry(3, 500*time.Millisecond)
