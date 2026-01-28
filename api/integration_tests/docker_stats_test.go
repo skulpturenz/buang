@@ -108,6 +108,9 @@ func dockerStats(t *testing.T, config testutils.DurableExecutorConfiguration) {
 
 	require.NotEmpty(t, stats)
 
+	require.Equal(t, stats.Oldest().Key, busyContainer.ID)
+	require.Equal(t, stats.Newest().Key, idleContainer.ID)
+
 	unsorted := []diagnostics.ContainerStats{} // assume desc
 	for pair := stats.Oldest(); pair != nil; pair = pair.Next() {
 		unsorted = append(unsorted, pair.Value)
