@@ -73,8 +73,7 @@ func TestNewProjectWithDeployment(t *testing.T) {
 }
 
 func createNewProjectWithDeployment(t *testing.T, config testutils.DurableExecutorConfiguration) {
-	ctx, cancel := context.WithTimeout(t.Context(), 30*time.Second)
-	defer cancel()
+	ctx := t.Context()
 
 	compensations := compensations.New()
 	defer compensations.Compensate(ctx)

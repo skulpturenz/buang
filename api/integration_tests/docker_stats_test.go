@@ -2,7 +2,6 @@ package integrationtests
 
 import (
 	"cmp"
-	"context"
 	"encoding/json"
 	"fmt"
 	"io"
@@ -53,8 +52,7 @@ func TestDockerStats(t *testing.T) {
 }
 
 func dockerStats(t *testing.T, config testutils.DurableExecutorConfiguration) {
-	ctx, cancel := context.WithTimeout(t.Context(), 2*time.Minute)
-	defer cancel()
+	ctx := t.Context()
 
 	testApp, cleanup := testutils.Setup(ctx, config)
 	defer cleanup(ctx)

@@ -2,7 +2,6 @@ package integrationtests
 
 import (
 	"bytes"
-	"context"
 	"encoding/json"
 	"fmt"
 	"io"
@@ -53,8 +52,7 @@ func TestBuangBranch(t *testing.T) {
 }
 
 func buangBranch(t *testing.T, config testutils.DurableExecutorConfiguration) {
-	ctx, cancel := context.WithTimeout(t.Context(), 1*time.Minute)
-	defer cancel()
+	ctx := t.Context()
 
 	testApp, cleanup := testutils.Setup(ctx, config)
 	defer cleanup(ctx)

@@ -118,8 +118,7 @@ func TestDeletedProjects(t *testing.T) {
 }
 
 func listDeployments(t *testing.T, config testutils.DurableExecutorConfiguration) {
-	ctx, cancel := context.WithTimeout(t.Context(), 1*time.Minute)
-	defer cancel()
+	ctx := t.Context()
 
 	compensations := compensations.New()
 	defer compensations.Compensate(ctx)
@@ -261,8 +260,7 @@ func listDeployments(t *testing.T, config testutils.DurableExecutorConfiguration
 }
 
 func searchParams(t *testing.T, config testutils.DurableExecutorConfiguration) {
-	ctx, cancel := context.WithTimeout(t.Context(), 1*time.Minute)
-	defer cancel()
+	ctx := t.Context()
 
 	testApp, cleanup := testutils.Setup(ctx, config)
 	defer cleanup(ctx)
@@ -381,8 +379,7 @@ func searchParams(t *testing.T, config testutils.DurableExecutorConfiguration) {
 }
 
 func deletedProject(t *testing.T, config testutils.DurableExecutorConfiguration) {
-	ctx, cancel := context.WithTimeout(t.Context(), 1*time.Minute)
-	defer cancel()
+	ctx := t.Context()
 
 	testApp, cleanup := testutils.Setup(ctx, config)
 	defer cleanup(ctx)
