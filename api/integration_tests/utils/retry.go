@@ -1,6 +1,7 @@
 package testutils
 
 import (
+	"fmt"
 	"math"
 	"reflect"
 	"runtime"
@@ -21,9 +22,11 @@ func NewRetry(maxTries int, sleep time.Duration) retryParams {
 
 func (p retryParams) Retry(t *testing.T, test func(*testing.T)) {
 	for i := 0; i < p.maxTries; i++ {
-		test(t)
+		success := t.Run(fmt.Sprintf("attempt %v of %v\n", i+1, p.maxTries), func(t *testing.T) {
+			test(t)
+		})
 
-		if !t.Failed() {
+		if success {
 			return
 		}
 
@@ -40,11 +43,16 @@ func (p retryParams) Retry(t *testing.T, test func(*testing.T)) {
 			pc := reflect.ValueOf(test).Pointer()
 			f := runtime.FuncForPC(pc)
 
-			t.Logf("test failed %v, retrying, attempt %v of %v\n", f.Name(), i+1, p.maxTries)
+			t.Logf("test failed %v, retrying\n", f.Name())
 			sleep := p.sleep * time.Duration(math.Pow(2, float64(i)))
 			t.Logf("sleeping for %v\b", sleep)
 
-			time.Sleep(sleep)
+			select {
+			case <-time.After(sleep):
+			case <-t.Context().Done():
+				t.Fatalf("test %v timed out", f.Name())
+				return
+			}
 		}
 	}
 }
