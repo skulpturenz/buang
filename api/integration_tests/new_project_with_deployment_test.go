@@ -1,6 +1,7 @@
 package integrationtests
 
 import (
+	"archive/tar"
 	"bytes"
 	"context"
 	"encoding/json"
@@ -13,6 +14,7 @@ import (
 	projectscomponent "skulpture/buang/components/projects"
 	constantsenvs "skulpture/buang/constants/envs"
 	testutils "skulpture/buang/integration_tests/utils"
+	"skulpture/buang/utils/compensations"
 	"strconv"
 	"testing"
 	"time"
@@ -27,7 +29,10 @@ import (
 	"github.com/docker/compose/v5/pkg/compose"
 	"github.com/docker/docker/api/types/container"
 	"github.com/docker/docker/api/types/filters"
-	"github.com/docker/docker/client"
+	"github.com/docker/docker/api/types/image"
+	"github.com/docker/docker/api/types/mount"
+	"github.com/docker/docker/api/types/network"
+	"github.com/docker/go-connections/nat"
 	"github.com/negrel/assert"
 	"github.com/stretchr/testify/require"
 )
@@ -68,14 +73,16 @@ func TestNewProjectWithDeployment(t *testing.T) {
 }
 
 func createNewProjectWithDeployment(t *testing.T, config testutils.DurableExecutorConfiguration) {
-	ctx, cancel := context.WithTimeout(t.Context(), 10*time.Second)
+	ctx, cancel := context.WithTimeout(t.Context(), 30*time.Second)
 	defer cancel()
 
-	testApp, cleanup := testutils.Setup(ctx, config)
-	defer cleanup(ctx)
+	compensations := compensations.New()
+	defer compensations.Compensate(ctx)
 
-	docker, err := client.NewClientWithOpts(client.FromEnv, client.WithAPIVersionNegotiation())
-	require.NoError(t, err)
+	testApp, cleanup := testutils.Setup(ctx, config)
+	compensations.AddCompensation(cleanup)
+
+	docker := testApp.GetHttpApplication().Services.Docker
 
 	githubPat := os.Getenv("BUANG_TEST_GITHUB_PAT")
 	username := os.Getenv("BUANG_TEST_GITHUB_USER")
@@ -141,6 +148,61 @@ func createNewProjectWithDeployment(t *testing.T, config testutils.DurableExecut
 		require.NoError(t, err)
 
 		return deploymentId
+	}
+
+	createTraefik := func() (string, string) {
+		reader, err := docker.ImagePull(ctx, "traefik", image.PullOptions{})
+		require.NoError(t, err)
+		io.Copy(io.Discard, reader)
+
+		web, err := nat.NewPort("tcp", "80")
+		require.NoError(t, err)
+
+		traefikConfig := container.Config{
+			Image: "traefik",
+			Cmd: []string{
+				"--providers.file.directory=/app/deployments",
+				"--providers.file.watch=true",
+				"--entryPoints.web.address=:80",
+			},
+			ExposedPorts: nat.PortSet{
+				web: struct{}{},
+			},
+		}
+		traefikHostConfig := container.HostConfig{
+			PortBindings: nat.PortMap{
+				web: []nat.PortBinding{
+					{
+						HostIP:   "0.0.0.0",
+						HostPort: "0", // random
+					},
+				},
+			},
+			Mounts: []mount.Mount{
+				{
+					Type:   mount.TypeVolume,
+					Source: fmt.Sprintf("traefik-vol-%v", time.Now().Nanosecond()),
+					Target: "/app/deployments",
+				},
+			},
+		}
+
+		containerName := fmt.Sprintf("traefik_%v", time.Now().Nanosecond())
+		traefik, err := docker.ContainerCreate(ctx, &traefikConfig, &traefikHostConfig, nil, nil, containerName)
+		require.NoError(t, err)
+
+		err = docker.ContainerStart(ctx, traefik.ID, container.StartOptions{})
+		require.NoError(t, err)
+		compensations.AddCompensation(func(ctx context.Context) {
+			docker.ContainerRemove(ctx, traefik.ID, container.RemoveOptions{Force: true})
+		})
+
+		inspect, err := docker.ContainerInspect(ctx, traefik.ID)
+		require.NoError(t, err)
+		ports := inspect.NetworkSettings.Ports[web]
+		require.NotEmpty(t, ports)
+
+		return traefik.ID, ports[0].HostPort
 	}
 
 	getDeploymentLogs := func(projectId int64, deploymentId int64) {
@@ -241,6 +303,91 @@ func createNewProjectWithDeployment(t *testing.T, config testutils.DurableExecut
 		}
 	}
 
+	assertProxy := func(projectId int64, deploymentId int64, containerId string, port string) {
+		s := testApp.GetHttpApplication().Services.ToAppApplicationServices()
+
+		findDeploymentParams := deploymentscomponent.FindDeploymentByIdParams{
+			ID:        deploymentId,
+			ProjectId: projectId,
+		}
+
+		deployment, err := findDeploymentParams.Exec(ctx, &s)
+		require.NoError(t, err)
+
+		deploymentConfigPath := deploymentscomponent.GetDeploymentPath(deploymentscomponent.GetDeploymentPathParams{
+			ProjectId:    projectId,
+			DeploymentId: deploymentId,
+			Branch:       deployment.Deployment.GetBranch(),
+			Sha:          deployment.Deployment.GetSha(),
+			DeployedAt:   *deployment.Deployment.GetDeployedAt(),
+		})
+
+		configContent, err := os.ReadFile(deploymentConfigPath)
+		require.NoError(t, err)
+
+		var buf bytes.Buffer
+		tw := tar.NewWriter(&buf)
+		header := &tar.Header{
+			Name: filepath.Base(deploymentConfigPath),
+			Mode: 0644, // creator: rw, others: r
+			Size: int64(len(configContent)),
+		}
+		err = tw.WriteHeader(header)
+		require.NoError(t, err)
+		_, err = tw.Write(configContent)
+		require.NoError(t, err)
+		err = tw.Close()
+		require.NoError(t, err)
+
+		err = docker.CopyToContainer(ctx, containerId, "/app/deployments", &buf, container.CopyToContainerOptions{})
+		require.NoError(t, err)
+
+		projectName := deploymentscomponent.GetProjectName(deploymentscomponent.GetProjectNameParams{
+			ProjectId:    projectId,
+			DeploymentId: deploymentId,
+			Branch:       deployment.Deployment.GetBranch(),
+			Sha:          deployment.Deployment.GetSha(),
+			DeployedAt:   *deployment.Deployment.GetDeployedAt(),
+		})
+		filters := filters.NewArgs()
+		filters.Add("label", fmt.Sprintf("com.docker.compose.project=%s", projectName))
+		testServiceContainers, err := docker.ContainerList(ctx, container.ListOptions{
+			Filters: filters,
+		})
+		require.NoError(t, err)
+		require.Len(t, testServiceContainers, 1)
+
+		var networkID string
+		for _, n := range testServiceContainers[0].NetworkSettings.Networks {
+			if n.NetworkID == "bridge" {
+				continue
+			}
+
+			networkID = n.NetworkID
+		}
+		require.NotEmpty(t, networkID)
+
+		err = docker.NetworkConnect(ctx, networkID, containerId, &network.EndpointSettings{})
+		require.NoError(t, err)
+
+		time.Sleep(3 * time.Second)
+
+		instanceUrl := fmt.Sprintf("http://localhost:%v%v", port, *deployment.Deployment.GetUrl())
+
+		req, err := http.NewRequestWithContext(ctx, http.MethodGet, instanceUrl, nil)
+		require.NoError(t, err)
+
+		res, err := http.DefaultClient.Do(req)
+		require.NoError(t, err)
+		defer res.Body.Close()
+		require.Equal(t, http.StatusOK, res.StatusCode)
+
+		logs, err := io.ReadAll(res.Body)
+		require.NoError(t, err)
+
+		require.Contains(t, string(logs), "nginx")
+	}
+
 	buangDeploymenbt := func(projectId int64, deploymentId int64) {
 		buangDeploymentUrl := fmt.Sprintf("%v/project/%v/deployment/%v", baseUrl, projectId, deploymentId)
 		req, err := http.NewRequestWithContext(ctx, http.MethodDelete, buangDeploymentUrl, nil)
@@ -255,7 +402,9 @@ func createNewProjectWithDeployment(t *testing.T, config testutils.DurableExecut
 
 	projectId := createProject()
 	deploymentId := createDeployment(projectId)
+	traefikId, traefikPort := createTraefik()
 	getDeploymentLogs(projectId, deploymentId)
 	assertDeployment(projectId, deploymentId)
+	assertProxy(projectId, deploymentId, traefikId, traefikPort)
 	buangDeploymenbt(projectId, deploymentId)
 }

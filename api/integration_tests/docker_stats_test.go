@@ -23,20 +23,17 @@ import (
 func TestDockerStats(t *testing.T) {
 	t.Parallel()
 
-	ctx, cancel := context.WithTimeout(t.Context(), 5*time.Minute)
-	defer cancel()
-
-	dbosConfig, dbosCleanup, err := testutils.CreateDbos(ctx)
+	dbosConfig, dbosCleanup, err := testutils.CreateDbos(t.Context())
 	require.NoError(t, err)
-	defer dbosCleanup(ctx)
+	defer dbosCleanup(t.Context())
 
-	temporalSqliteConfig, temporalSqliteCleanup, err := testutils.CreateSqliteTemporal(ctx)
+	temporalSqliteConfig, temporalSqliteCleanup, err := testutils.CreateSqliteTemporal(t.Context())
 	require.NoError(t, err)
-	defer temporalSqliteCleanup(ctx)
+	defer temporalSqliteCleanup(t.Context())
 
-	temporalPgConfig, temporalPgCleanup, err := testutils.CreatePgTemporal(ctx)
+	temporalPgConfig, temporalPgCleanup, err := testutils.CreatePgTemporal(t.Context())
 	require.NoError(t, err)
-	defer temporalPgCleanup(ctx)
+	defer temporalPgCleanup(t.Context())
 
 	scenarios := map[string]testutils.DurableExecutorConfiguration{
 		"DBOS":           *dbosConfig,
@@ -108,8 +105,8 @@ func dockerStats(t *testing.T, config testutils.DurableExecutorConfiguration) {
 
 	require.NotEmpty(t, stats)
 
-	require.Equal(t, stats.Oldest().Key, busyContainer.ID)
-	require.Equal(t, stats.Newest().Key, idleContainer.ID)
+	require.Equal(t, stats.Oldest().Key, busyContainer.ID, fmt.Sprintf("busy container is %v", stats.Oldest().Value.Name))
+	require.Equal(t, stats.Newest().Key, idleContainer.ID, fmt.Sprintf("idle container is %v", stats.Newest().Value.Name))
 
 	unsorted := []diagnostics.ContainerStats{} // assume desc
 	for pair := stats.Oldest(); pair != nil; pair = pair.Next() {

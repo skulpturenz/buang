@@ -19,13 +19,13 @@ func (c *compensations) AddCompensation(f func(context.Context)) *compensations 
 	return c
 }
 
-func (c compensations) Compensate(ctx context.Context) {
+func (c *compensations) Compensate(ctx context.Context) {
 	for _, v := range slices.Backward(c.compensations) {
 		v(ctx)
 	}
 }
 
-func (c compensations) CompensateAndPanic(ctx context.Context, err error) {
+func (c *compensations) CompensateAndPanic(ctx context.Context, err error) {
 	for _, v := range slices.Backward(c.compensations) {
 		v(ctx)
 	}
@@ -33,7 +33,7 @@ func (c compensations) CompensateAndPanic(ctx context.Context, err error) {
 	panic(err)
 }
 
-func (c compensations) CompensateAndError(ctx context.Context, err error) error {
+func (c *compensations) CompensateAndError(ctx context.Context, err error) error {
 	for _, v := range slices.Backward(c.compensations) {
 		v(ctx)
 	}

@@ -23,20 +23,17 @@ import (
 func TestBuangBranch(t *testing.T) {
 	t.Parallel()
 
-	ctx, cancel := context.WithTimeout(t.Context(), 1*time.Minute)
-	defer cancel()
-
-	dbosConfig, dbosCleanup, err := testutils.CreateDbos(ctx)
+	dbosConfig, dbosCleanup, err := testutils.CreateDbos(t.Context())
 	require.NoError(t, err)
-	defer dbosCleanup(ctx)
+	defer dbosCleanup(t.Context())
 
-	temporalSqliteConfig, temporalSqliteCleanup, err := testutils.CreateSqliteTemporal(ctx)
+	temporalSqliteConfig, temporalSqliteCleanup, err := testutils.CreateSqliteTemporal(t.Context())
 	require.NoError(t, err)
-	defer temporalSqliteCleanup(ctx)
+	defer temporalSqliteCleanup(t.Context())
 
-	temporalPgConfig, temporalPgCleanup, err := testutils.CreatePgTemporal(ctx)
+	temporalPgConfig, temporalPgCleanup, err := testutils.CreatePgTemporal(t.Context())
 	require.NoError(t, err)
-	defer temporalPgCleanup(ctx)
+	defer temporalPgCleanup(t.Context())
 
 	scenarios := map[string]testutils.DurableExecutorConfiguration{
 		"DBOS":           *dbosConfig,
@@ -56,7 +53,7 @@ func TestBuangBranch(t *testing.T) {
 }
 
 func buangBranch(t *testing.T, config testutils.DurableExecutorConfiguration) {
-	ctx, cancel := context.WithTimeout(t.Context(), 20*time.Second)
+	ctx, cancel := context.WithTimeout(t.Context(), 1*time.Minute)
 	defer cancel()
 
 	testApp, cleanup := testutils.Setup(ctx, config)

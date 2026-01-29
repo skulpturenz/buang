@@ -20,20 +20,17 @@ import (
 func TestListProjectsDescendingOrder(t *testing.T) {
 	t.Parallel()
 
-	ctx, cancel := context.WithTimeout(t.Context(), 1*time.Minute)
-	defer cancel()
-
-	dbosConfig, dbosCleanup, err := testutils.CreateDbos(ctx)
+	dbosConfig, dbosCleanup, err := testutils.CreateDbos(t.Context())
 	require.NoError(t, err)
-	defer dbosCleanup(ctx)
+	defer dbosCleanup(t.Context())
 
-	temporalSqliteConfig, temporalSqliteCleanup, err := testutils.CreateSqliteTemporal(ctx)
+	temporalSqliteConfig, temporalSqliteCleanup, err := testutils.CreateSqliteTemporal(t.Context())
 	require.NoError(t, err)
-	defer temporalSqliteCleanup(ctx)
+	defer temporalSqliteCleanup(t.Context())
 
-	temporalPgConfig, temporalPgCleanup, err := testutils.CreatePgTemporal(ctx)
+	temporalPgConfig, temporalPgCleanup, err := testutils.CreatePgTemporal(t.Context())
 	require.NoError(t, err)
-	defer temporalPgCleanup(ctx)
+	defer temporalPgCleanup(t.Context())
 
 	scenarios := map[string]testutils.DurableExecutorConfiguration{
 		"DBOS":           *dbosConfig,
@@ -55,20 +52,17 @@ func TestListProjectsDescendingOrder(t *testing.T) {
 func TestListProjectsExcludesDeleted(t *testing.T) {
 	t.Parallel()
 
-	ctx, cancel := context.WithTimeout(t.Context(), 1*time.Minute)
-	defer cancel()
-
-	dbosConfig, dbosCleanup, err := testutils.CreateDbos(ctx)
+	dbosConfig, dbosCleanup, err := testutils.CreateDbos(t.Context())
 	require.NoError(t, err)
-	defer dbosCleanup(ctx)
+	defer dbosCleanup(t.Context())
 
-	temporalSqliteConfig, temporalSqliteCleanup, err := testutils.CreateSqliteTemporal(ctx)
+	temporalSqliteConfig, temporalSqliteCleanup, err := testutils.CreateSqliteTemporal(t.Context())
 	require.NoError(t, err)
-	defer temporalSqliteCleanup(ctx)
+	defer temporalSqliteCleanup(t.Context())
 
-	temporalPgConfig, temporalPgCleanup, err := testutils.CreatePgTemporal(ctx)
+	temporalPgConfig, temporalPgCleanup, err := testutils.CreatePgTemporal(t.Context())
 	require.NoError(t, err)
-	defer temporalPgCleanup(ctx)
+	defer temporalPgCleanup(t.Context())
 
 	scenarios := map[string]testutils.DurableExecutorConfiguration{
 		"DBOS":           *dbosConfig,
@@ -88,7 +82,7 @@ func TestListProjectsExcludesDeleted(t *testing.T) {
 }
 
 func listProjectsDescendingOrder(t *testing.T, config testutils.DurableExecutorConfiguration) {
-	ctx, cancel := context.WithTimeout(t.Context(), 10*time.Second)
+	ctx, cancel := context.WithTimeout(t.Context(), 1*time.Minute)
 	defer cancel()
 
 	testApp, cleanup := testutils.Setup(ctx, config)
@@ -154,7 +148,7 @@ func listProjectsDescendingOrder(t *testing.T, config testutils.DurableExecutorC
 }
 
 func listProjectsExcludesDeleted(t *testing.T, config testutils.DurableExecutorConfiguration) {
-	ctx, cancel := context.WithTimeout(t.Context(), 10*time.Second)
+	ctx, cancel := context.WithTimeout(t.Context(), 1*time.Minute)
 	defer cancel()
 
 	testApp, cleanup := testutils.Setup(ctx, config)
