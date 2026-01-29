@@ -3,10 +3,12 @@ package compensations
 import (
 	"context"
 	"slices"
+	"sync"
 )
 
 type compensations struct {
 	compensations []func(context.Context)
+	once          sync.Once
 }
 
 func New() compensations {
@@ -20,23 +22,21 @@ func (c *compensations) AddCompensation(f func(context.Context)) *compensations 
 }
 
 func (c *compensations) Compensate(ctx context.Context) {
-	for _, v := range slices.Backward(c.compensations) {
-		v(ctx)
-	}
+	c.once.Do(func() {
+		for _, v := range slices.Backward(c.compensations) {
+			v(ctx)
+		}
+	})
 }
 
 func (c *compensations) CompensateAndPanic(ctx context.Context, err error) {
-	for _, v := range slices.Backward(c.compensations) {
-		v(ctx)
-	}
+	c.Compensate(ctx)
 
 	panic(err)
 }
 
 func (c *compensations) CompensateAndError(ctx context.Context, err error) error {
-	for _, v := range slices.Backward(c.compensations) {
-		v(ctx)
-	}
+	c.Compensate(ctx)
 
 	return err
 }

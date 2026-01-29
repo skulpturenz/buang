@@ -11,11 +11,13 @@ import (
 	deploymentshandlers "skulpture/buang/handlers/deployments"
 	projectshandlers "skulpture/buang/handlers/projects"
 	testutils "skulpture/buang/integration_tests/utils"
+	"skulpture/buang/utils/compensations"
 	"slices"
 	"strconv"
 	"testing"
 	"time"
 
+	"github.com/negrel/assert"
 	"github.com/stretchr/testify/require"
 )
 
@@ -119,8 +121,13 @@ func listDeployments(t *testing.T, config testutils.DurableExecutorConfiguration
 	ctx, cancel := context.WithTimeout(t.Context(), 1*time.Minute)
 	defer cancel()
 
+	compensations := compensations.New()
+	defer compensations.Compensate(ctx)
+
 	testApp, cleanup := testutils.Setup(ctx, config)
-	defer cleanup(ctx)
+	compensations.AddCompensation(func(ctx context.Context) {
+		cleanup(ctx)
+	})
 
 	githubPat := os.Getenv("BUANG_TEST_GITHUB_PAT")
 	username := os.Getenv("BUANG_TEST_GITHUB_USER")
@@ -188,6 +195,18 @@ func listDeployments(t *testing.T, config testutils.DurableExecutorConfiguration
 		return deploymentId
 	}
 
+	buangDeploymenbt := func(projectId int64, deploymentId int64) {
+		buangDeploymentUrl := fmt.Sprintf("%v/project/%v/deployment/%v", baseUrl, projectId, deploymentId)
+		req, err := http.NewRequestWithContext(ctx, http.MethodDelete, buangDeploymentUrl, nil)
+		require.NoError(t, err)
+
+		res, err := http.DefaultClient.Do(req)
+		require.NoError(t, err)
+		defer res.Body.Close()
+
+		assert.Equal(t, http.StatusNoContent, res.StatusCode, "failed to buang deployment")
+	}
+
 	listDeployments := func(projectId int64) []projectshandlers.ListAllDeploymentsItem {
 		listDeploymentsUrl := fmt.Sprintf("%v/project/%v/deployments", baseUrl, projectId)
 		req, err := http.NewRequestWithContext(ctx, http.MethodGet, listDeploymentsUrl, nil)
@@ -212,8 +231,17 @@ func listDeployments(t *testing.T, config testutils.DurableExecutorConfiguration
 
 	require.Len(t, deployments, 0)
 
-	_ = createDeployment(projectId)
-	_ = createDeployment(projectId)
+	firstDeploymentId := createDeployment(projectId)
+	compensations.AddCompensation(func(ctx context.Context) {
+		buangDeploymenbt(projectId, firstDeploymentId)
+		time.Sleep(500 * time.Millisecond) // async workflow
+	})
+
+	secondDeploymentId := createDeployment(projectId)
+	compensations.AddCompensation(func(ctx context.Context) {
+		buangDeploymenbt(projectId, secondDeploymentId)
+		time.Sleep(500 * time.Millisecond) // async workflow
+	})
 
 	deployments = listDeployments(projectId)
 
