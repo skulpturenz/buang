@@ -10,7 +10,7 @@ import (
 	"os"
 	deploymentshandlers "skulpture/buang/handlers/deployments"
 	projectshandlers "skulpture/buang/handlers/projects"
-	testutils "skulpture/buang/integration_tests/utils"
+	testutils "skulpture/buang/tests/utils"
 	"skulpture/buang/utils/compensations"
 	"slices"
 	"strconv"

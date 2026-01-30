@@ -27,7 +27,12 @@ jobs:
       - name: Install Task
         uses: arduino/setup-task@v2
 
-      - name: Test API
+      - name: Integration tests
         working-directory: api
         run: |
-            task test-ci -- -v
+            task test-int-ci -- -v
+
+      - name: Fitness tests
+        working-directory: api
+        run: |
+            task test-fitness-ci -- -v

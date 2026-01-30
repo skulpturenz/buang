@@ -9,14 +9,18 @@ import (
 type compensations struct {
 	compensations []func(context.Context)
 	once          sync.Once
+	ch            chan func(context.Context)
 }
 
 func New() compensations {
-	return compensations{}
+	return compensations{ch: make(chan func(context.Context), 1)}
 }
 
 func (c *compensations) AddCompensation(f func(context.Context)) *compensations {
-	c.compensations = append(c.compensations, f)
+	c.ch <- f
+
+	fn := <-c.ch
+	c.compensations = append(c.compensations, fn)
 
 	return c
 }

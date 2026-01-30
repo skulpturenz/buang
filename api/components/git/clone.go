@@ -66,8 +66,13 @@ func (c *CloneParams) Exec(ctx context.Context, s *app.ApplicationServices) (*Cl
 		return nil, cleanup, err
 	}
 
+	hash, ok := plumbing.FromHex(c.Hash)
+	if !ok {
+		return nil, cleanup, fmt.Errorf("unable to clone project from hash %v", c.Hash)
+	}
+
 	err = w.Checkout(&git.CheckoutOptions{
-		Hash: plumbing.NewHash(c.Hash),
+		Hash: hash,
 	})
 	if err != nil {
 		return nil, cleanup, err

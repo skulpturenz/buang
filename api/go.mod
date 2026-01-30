@@ -17,6 +17,7 @@ require (
 	github.com/getsentry/sentry-go v0.41.0
 	github.com/go-chi/chi/v5 v5.2.4
 	github.com/go-chi/httplog/v2 v2.1.1
+	github.com/go-git/go-billy/v6 v6.0.0-20251217170237-e9738f50a3cd
 	github.com/go-git/go-git/v6 v6.0.0-20260114124804-a8db3a6585a6
 	github.com/go-playground/validator/v10 v10.30.1
 	github.com/golang-cz/devslog v0.0.15
@@ -103,7 +104,6 @@ require (
 	github.com/gabriel-vasile/mimetype v1.4.12 // indirect
 	github.com/go-acme/lego/v4 v4.31.0 // indirect
 	github.com/go-git/gcfg/v2 v2.0.2 // indirect
-	github.com/go-git/go-billy/v6 v6.0.0-20251217170237-e9738f50a3cd // indirect
 	github.com/go-jose/go-jose/v4 v4.1.3 // indirect
 	github.com/go-kit/log v0.2.1 // indirect
 	github.com/go-logfmt/logfmt v0.5.1 // indirect

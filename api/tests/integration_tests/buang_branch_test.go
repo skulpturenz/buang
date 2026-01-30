@@ -10,7 +10,7 @@ import (
 	enumsdeploymentstatus "skulpture/buang/enums/deployment_status"
 	deploymentshandlers "skulpture/buang/handlers/deployments"
 	projectshandlers "skulpture/buang/handlers/projects"
-	testutils "skulpture/buang/integration_tests/utils"
+	testutils "skulpture/buang/tests/utils"
 	"slices"
 	"strconv"
 	"testing"

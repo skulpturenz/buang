@@ -13,7 +13,7 @@ import (
 	deploymentscomponent "skulpture/buang/components/deployments"
 	projectscomponent "skulpture/buang/components/projects"
 	constantsenvs "skulpture/buang/constants/envs"
-	testutils "skulpture/buang/integration_tests/utils"
+	testutils "skulpture/buang/tests/utils"
 	"skulpture/buang/utils/compensations"
 	"strconv"
 	"testing"

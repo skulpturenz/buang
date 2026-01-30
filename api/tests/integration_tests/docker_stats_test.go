@@ -7,7 +7,7 @@ import (
 	"io"
 	"net/http"
 	"skulpture/buang/handlers/diagnostics"
-	testutils "skulpture/buang/integration_tests/utils"
+	testutils "skulpture/buang/tests/utils"
 	"slices"
 	"sort"
 	"testing"
