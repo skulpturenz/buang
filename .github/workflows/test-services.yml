@@ -23,6 +23,7 @@ jobs:
         with:
           go-version-file: 'api/go.mod'
           cache-dependency-path: 'api/go.sum'
+          token: ${{ github.token }}
 
       - name: Install Task
         uses: arduino/setup-task@v2
