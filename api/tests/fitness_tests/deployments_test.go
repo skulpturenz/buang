@@ -1,6 +1,7 @@
 package fitnesstests
 
 import (
+	"archive/tar"
 	"bytes"
 	"context"
 	"encoding/json"
@@ -11,6 +12,7 @@ import (
 	"os"
 	"os/exec"
 	"path/filepath"
+	deploymentscomponent "skulpture/buang/components/deployments"
 	deploymentshandlers "skulpture/buang/handlers/deployments"
 	projectshandlers "skulpture/buang/handlers/projects"
 	testutils "skulpture/buang/tests/utils"
@@ -18,7 +20,14 @@ import (
 	"strconv"
 	"sync"
 	"testing"
+	"time"
 
+	"github.com/docker/docker/api/types/container"
+	"github.com/docker/docker/api/types/filters"
+	"github.com/docker/docker/api/types/image"
+	"github.com/docker/docker/api/types/mount"
+	"github.com/docker/docker/api/types/network"
+	"github.com/docker/go-connections/nat"
 	"github.com/go-git/go-billy/v6/osfs"
 	httpbackend "github.com/go-git/go-git/v6/backend/http"
 	"github.com/go-git/go-git/v6/plumbing/transport"
@@ -52,6 +61,62 @@ func TestDeploymentsFitness(t *testing.T) {
 
 	baseUrl := fmt.Sprintf("%v/api/v1", *testApp.Url)
 	var wg sync.WaitGroup
+
+	docker := testApp.GetHttpApplication().Services.Docker
+	createTraefik := func() (string, string) {
+		reader, err := docker.ImagePull(ctx, "traefik", image.PullOptions{})
+		require.NoError(t, err)
+		io.Copy(io.Discard, reader)
+
+		web, err := nat.NewPort("tcp", "80")
+		require.NoError(t, err)
+
+		traefikConfig := container.Config{
+			Image: "traefik",
+			Cmd: []string{
+				"--providers.file.directory=/app/deployments",
+				"--providers.file.watch=true",
+				"--entryPoints.web.address=:80",
+			},
+			ExposedPorts: nat.PortSet{
+				web: struct{}{},
+			},
+		}
+		traefikHostConfig := container.HostConfig{
+			PortBindings: nat.PortMap{
+				web: []nat.PortBinding{
+					{
+						HostIP:   "0.0.0.0",
+						HostPort: "0", // random
+					},
+				},
+			},
+			Mounts: []mount.Mount{
+				{
+					Type:   mount.TypeVolume,
+					Source: fmt.Sprintf("traefik-vol-%v", time.Now().Nanosecond()),
+					Target: "/app/deployments",
+				},
+			},
+		}
+
+		containerName := fmt.Sprintf("traefik_%v", time.Now().Nanosecond())
+		traefik, err := docker.ContainerCreate(ctx, &traefikConfig, &traefikHostConfig, nil, nil, containerName)
+		require.NoError(t, err)
+
+		err = docker.ContainerStart(ctx, traefik.ID, container.StartOptions{})
+		require.NoError(t, err)
+		compensations.AddCompensation(func(ctx context.Context) {
+			docker.ContainerRemove(ctx, traefik.ID, container.RemoveOptions{Force: true})
+		})
+
+		inspect, err := docker.ContainerInspect(ctx, traefik.ID)
+		require.NoError(t, err)
+		ports := inspect.NetworkSettings.Ports[web]
+		require.NotEmpty(t, ports)
+
+		return traefik.ID, ports[0].HostPort
+	}
 
 	createProject := func(repoUrl string) int64 {
 		postProjectsUrl := fmt.Sprintf("%v/project", baseUrl)
@@ -112,6 +177,93 @@ func TestDeploymentsFitness(t *testing.T) {
 		return deploymentId
 	}
 
+	assertProxy := func(projectId int64, deploymentId int64, containerId string, port string) {
+		s := testApp.GetHttpApplication().Services.ToAppApplicationServices()
+
+		findDeploymentParams := deploymentscomponent.FindDeploymentByIdParams{
+			ID:        deploymentId,
+			ProjectId: projectId,
+		}
+
+		deployment, err := findDeploymentParams.Exec(ctx, &s)
+		require.NoError(t, err)
+
+		deploymentConfigPath := deploymentscomponent.GetDeploymentPath(deploymentscomponent.GetDeploymentPathParams{
+			ProjectId:    projectId,
+			DeploymentId: deploymentId,
+			Branch:       deployment.Deployment.GetBranch(),
+			Sha:          deployment.Deployment.GetSha(),
+			DeployedAt:   *deployment.Deployment.GetDeployedAt(),
+		})
+
+		configContent, err := os.ReadFile(deploymentConfigPath)
+		require.NoError(t, err)
+
+		var buf bytes.Buffer
+		tw := tar.NewWriter(&buf)
+		header := &tar.Header{
+			Name: filepath.Base(deploymentConfigPath),
+			Mode: 0644, // creator: rw, others: r
+			Size: int64(len(configContent)),
+		}
+		err = tw.WriteHeader(header)
+		require.NoError(t, err)
+		_, err = tw.Write(configContent)
+		require.NoError(t, err)
+		err = tw.Close()
+		require.NoError(t, err)
+
+		err = docker.CopyToContainer(ctx, containerId, "/app/deployments", &buf, container.CopyToContainerOptions{})
+		require.NoError(t, err)
+
+		projectName := deploymentscomponent.GetProjectName(deploymentscomponent.GetProjectNameParams{
+			ProjectId:    projectId,
+			DeploymentId: deploymentId,
+			Branch:       deployment.Deployment.GetBranch(),
+			Sha:          deployment.Deployment.GetSha(),
+			DeployedAt:   *deployment.Deployment.GetDeployedAt(),
+		})
+		filters := filters.NewArgs()
+		filters.Add("label", fmt.Sprintf("com.docker.compose.project=%s", projectName))
+		testServiceContainers, err := docker.ContainerList(ctx, container.ListOptions{
+			Filters: filters,
+		})
+		require.NoError(t, err)
+		require.Len(t, testServiceContainers, 1)
+
+		var networkID string
+		for _, n := range testServiceContainers[0].NetworkSettings.Networks {
+			if n.NetworkID == "bridge" {
+				continue
+			}
+
+			networkID = n.NetworkID
+		}
+		require.NotEmpty(t, networkID)
+
+		err = docker.NetworkConnect(ctx, networkID, containerId, &network.EndpointSettings{})
+		if err != nil {
+			t.Logf("assert proxy err: %v", err)
+		}
+
+		time.Sleep(3 * time.Second)
+
+		instanceUrl := fmt.Sprintf("http://localhost:%v%v", port, *deployment.Deployment.GetUrl())
+
+		req, err := http.NewRequestWithContext(ctx, http.MethodGet, instanceUrl, nil)
+		require.NoError(t, err)
+
+		res, err := http.DefaultClient.Do(req)
+		require.NoError(t, err)
+		defer res.Body.Close()
+		require.Equal(t, http.StatusOK, res.StatusCode)
+
+		logs, err := io.ReadAll(res.Body)
+		require.NoError(t, err)
+
+		require.Contains(t, string(logs), "nginx")
+	}
+
 	deleteProject := func(projectId int64) { // instead of buang deployments because this blocks
 		deleteProjectUrl := fmt.Sprintf("%v/project/%v", baseUrl, projectId)
 		req, err := http.NewRequestWithContext(ctx, http.MethodDelete, deleteProjectUrl, nil)
@@ -124,6 +276,7 @@ func TestDeploymentsFitness(t *testing.T) {
 		require.Equal(t, http.StatusNoContent, res.StatusCode)
 	}
 
+	traefikId, traefikPort := createTraefik()
 	for i := range MIN_DEPLOYMENTS {
 		wg.Add(1)
 
@@ -131,7 +284,8 @@ func TestDeploymentsFitness(t *testing.T) {
 			defer wg.Done()
 			repoUrl := fmt.Sprintf("%s/repo-%d.git", gitServerUrl, idx)
 			projectId := createProject(repoUrl)
-			createDeployment(projectId)
+			deploymentId := createDeployment(projectId)
+			assertProxy(projectId, deploymentId, traefikId, traefikPort)
 			compensations.AddCompensation(func(ctx context.Context) {
 				deleteProject(projectId) // blocks
 			})
