@@ -9,24 +9,27 @@ import (
 type compensations struct {
 	compensations []func(context.Context)
 	once          sync.Once
-	ch            chan func(context.Context)
+	mu            sync.Mutex
 }
 
-func New() compensations {
-	return compensations{ch: make(chan func(context.Context), 1)}
+func New() *compensations {
+	return &compensations{}
 }
 
 func (c *compensations) AddCompensation(f func(context.Context)) *compensations {
-	c.ch <- f
+	c.mu.Lock()
+	defer c.mu.Unlock()
 
-	fn := <-c.ch
-	c.compensations = append(c.compensations, fn)
+	c.compensations = append(c.compensations, f)
 
 	return c
 }
 
 func (c *compensations) Compensate(ctx context.Context) {
 	c.once.Do(func() {
+		c.mu.Lock()
+		defer c.mu.Unlock()
+
 		for _, v := range slices.Backward(c.compensations) {
 			v(ctx)
 		}
