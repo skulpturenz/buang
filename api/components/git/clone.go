@@ -56,7 +56,7 @@ func (c *CloneParams) Exec(ctx context.Context, s *app.ApplicationServices) (*Cl
 		}
 	}
 
-	r, err := git.PlainCloneContext(ctx, dir, &opts)
+	r, err := s.Ports.Git().PlainCloneContext(ctx, dir, &opts)
 	if err != nil {
 		return nil, cleanup, err
 	}

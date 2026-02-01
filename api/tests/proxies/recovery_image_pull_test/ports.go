@@ -1,13 +1,30 @@
 package proxiesrecoveryimagepull
 
-import "skulpture/buang/ports"
+import (
+	"skulpture/buang/ports"
+)
 
 type recoveryPorts struct {
-	*dockerComposeProxyImpl
+	dockerCompose ports.DockerCompose
+	git           ports.Git
 }
 
 func New() ports.Ports {
-	return recoveryPorts{
-		dockerComposeProxyImpl: &dockerComposeProxyImpl{},
+	return &recoveryPorts{}
+}
+
+func (p *recoveryPorts) DockerCompose() ports.DockerCompose {
+	if p.dockerCompose == nil {
+		p.dockerCompose = &dockerComposeProxyImpl{}
 	}
+
+	return p.dockerCompose
+}
+
+func (p *recoveryPorts) Git() ports.Git {
+	if p.git == nil {
+		p.git = &ports.GitImpl{}
+	}
+
+	return p.git
 }

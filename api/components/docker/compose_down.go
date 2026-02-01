@@ -36,7 +36,7 @@ func (c ComposeDownParams) Exec(ctx context.Context, s *app.ApplicationServices)
 		return nil, err
 	}
 
-	svc, err := s.Ports.NewComposeService(cli)
+	svc, err := s.Ports.DockerCompose().NewComposeService(cli)
 	if err != nil {
 		return nil, err
 	}

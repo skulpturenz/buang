@@ -79,7 +79,7 @@ func (c ComposeUpParams) Exec(ctx context.Context, s *app.ApplicationServices) (
 		options = append(options, compose.WithEventProcessor(c.EventProcessor))
 	}
 
-	svc, err := s.Ports.NewComposeService(cli, options...)
+	svc, err := s.Ports.DockerCompose().NewComposeService(cli, options...)
 	if err != nil {
 		return nil, nil, err
 	}
