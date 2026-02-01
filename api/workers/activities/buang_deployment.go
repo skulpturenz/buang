@@ -2,6 +2,7 @@ package activities
 
 import (
 	"context"
+	"errors"
 	"fmt"
 	"log/slog"
 	"os"
@@ -99,10 +100,12 @@ func (bd *BuangDeployment) BuangDeployment(ctx context.Context, b BuangDeploymen
 			ProjectID:  dply.Deployment.GetProjectId(),
 		}
 
-		_, err := p.Exec(ctx, &s)
-		if err != nil {
-			return nil, err
+		_, updateDeploymentErr := p.Exec(ctx, &s)
+		if updateDeploymentErr != nil {
+			return nil, errors.Join(err, updateDeploymentErr)
 		}
+
+		return nil, err
 	}
 
 	err = os.RemoveAll(clonePath)

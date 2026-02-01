@@ -23,6 +23,25 @@ func (bb BuangBranch) BuangBranch(ctx dbos.DBOSContext, p BuangBranchParams) (re
 
 	s := app.ApplicationServices(bb)
 
+	errorDeployment := func(deploymentId int) error {
+		_, err := dbos.RunAsStep(ctx,
+			func(ctx context.Context) (*activities.ErrorDeploymentResult, error) {
+				errorDeployment := activities.ErrorDeployment(s)
+				res, errErrorDeployment := errorDeployment.ErrorDeployment(ctx, activities.ErrorDeploymentParams{
+					ProjectId:    p.ProjectId,
+					DeploymentId: int64(deploymentId),
+				})
+				if errErrorDeployment != nil {
+					return nil, errors.Join(err, errErrorDeployment)
+				}
+
+				return res, nil
+
+			}, dbos.WithStepMaxRetries(3))
+
+		return err
+	}
+
 	activeDeploymentIds, err := dbos.RunAsStep(ctx,
 		func(ctx context.Context) (*activities.GetActiveDeploymentIdsResult, error) {
 			getActiveDeploymentIds := activities.ActiveDeploymentIds(s)
@@ -40,33 +59,29 @@ func (bb BuangBranch) BuangBranch(ctx dbos.DBOSContext, p BuangBranchParams) (re
 		return false, err
 	}
 
-	_, err = dbos.RunAsStep(ctx,
-		func(ctx context.Context) (*activities.BuangDeploymentResult, error) {
-			buangDeployment := activities.BuangDeployment(s)
-			errorDeployment := activities.ErrorDeployment(s)
+	for _, id := range activeDeploymentIds.DeploymentIds {
+		_, err = dbos.RunAsStep(ctx,
+			func(ctx context.Context) (*activities.BuangDeploymentResult, error) {
+				buangDeployment := activities.BuangDeployment(s)
 
-			for _, id := range activeDeploymentIds.DeploymentIds {
 				_, err := buangDeployment.BuangDeployment(ctx, activities.BuangDeploymentParams{
 					ProjectId:    p.ProjectId,
 					DeploymentId: id,
 				})
 				if err != nil {
-					_, errErrorDeployment := errorDeployment.ErrorDeployment(ctx, activities.ErrorDeploymentParams{
-						ProjectId:    p.ProjectId,
-						DeploymentId: id,
-					})
-					if errErrorDeployment != nil {
-						return nil, errors.Join(err, errErrorDeployment)
-					}
-
 					return nil, err
 				}
+
+				return &activities.BuangDeploymentResult{}, nil
+			}, dbos.WithStepMaxRetries(3))
+		if err != nil {
+			errDeploymentErr := errorDeployment(int(id))
+			if errDeploymentErr != nil {
+				return false, errors.Join(err, errDeploymentErr)
 			}
 
-			return &activities.BuangDeploymentResult{}, nil
-		}, dbos.WithStepMaxRetries(3))
-	if err != nil {
-		return false, err
+			return false, err
+		}
 	}
 
 	return true, nil

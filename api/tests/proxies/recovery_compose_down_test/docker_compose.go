@@ -1,19 +1,18 @@
-package proxiesrecoverytest
+package proxiesrecoverycomposedown
 
 import (
 	"context"
 	"fmt"
 	"sync"
 
-	"github.com/compose-spec/compose-go/v2/types"
 	"github.com/docker/cli/cli/command"
 	"github.com/docker/compose/v5/pkg/api"
 	"github.com/docker/compose/v5/pkg/compose"
 )
 
 type dockerComposeProxyImpl struct {
-	mu      sync.Mutex
-	upCount int
+	mu        sync.Mutex
+	downCount int
 }
 
 func (c *dockerComposeProxyImpl) NewComposeService(cli command.Cli, options ...compose.Option) (api.Compose, error) {
@@ -35,20 +34,16 @@ type proxyDockerCompose struct {
 	factory *dockerComposeProxyImpl
 }
 
-func (d *proxyDockerCompose) Up(ctx context.Context, project *types.Project, options api.UpOptions) error {
+func (d *proxyDockerCompose) Down(ctx context.Context, projectName string, options api.DownOptions) error {
 	d.factory.mu.Lock()
 	defer d.factory.mu.Unlock()
 
-	initialCount := d.factory.upCount
-	d.factory.upCount++
+	initialCount := d.factory.downCount
+	d.factory.downCount++
 
 	if initialCount < 2 {
-		return fmt.Errorf("ahhhH!!! error!!!! too many image pull requests!!!")
+		return fmt.Errorf("error!!!!!!")
 	}
 
-	return d.Compose.Up(ctx, project, options)
-}
-
-func (d *proxyDockerCompose) Down(ctx context.Context, projectName string, options api.DownOptions) error {
 	return d.Compose.Down(ctx, projectName, options)
 }
