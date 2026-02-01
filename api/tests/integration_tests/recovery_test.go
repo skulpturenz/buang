@@ -2,16 +2,17 @@ package integrationtests
 
 import (
 	"bytes"
+	"context"
 	"encoding/json"
 	"fmt"
 	"io"
 	"net/http"
 	"os"
-	enumsdeploymentstatus "skulpture/buang/enums/deployment_status"
 	deploymentshandlers "skulpture/buang/handlers/deployments"
 	projectshandlers "skulpture/buang/handlers/projects"
+	proxiesrecoverytest "skulpture/buang/tests/proxies/recovery_test"
 	testutils "skulpture/buang/tests/utils"
-	"slices"
+	"skulpture/buang/utils/compensations"
 	"strconv"
 	"testing"
 	"time"
@@ -19,20 +20,23 @@ import (
 	"github.com/stretchr/testify/require"
 )
 
-func TestBuangBranch(t *testing.T) {
+func TestImagePullError(t *testing.T) {
 	t.Parallel()
 
-	dbosConfig, dbosCleanup, err := testutils.CreateDbos(t.Context())
-	require.NoError(t, err)
-	defer dbosCleanup(t.Context())
+	ctx, cancel := context.WithTimeout(t.Context(), 1*time.Minute)
+	defer cancel()
 
-	temporalSqliteConfig, temporalSqliteCleanup, err := testutils.CreateSqliteTemporal(t.Context())
+	dbosConfig, dbosCleanup, err := testutils.CreateDbos(ctx)
 	require.NoError(t, err)
-	defer temporalSqliteCleanup(t.Context())
+	defer dbosCleanup(ctx)
 
-	temporalPgConfig, temporalPgCleanup, err := testutils.CreatePgTemporal(t.Context())
+	temporalSqliteConfig, temporalSqliteCleanup, err := testutils.CreateSqliteTemporal(ctx)
 	require.NoError(t, err)
-	defer temporalPgCleanup(t.Context())
+	defer temporalSqliteCleanup(ctx)
+
+	temporalPgConfig, temporalPgCleanup, err := testutils.CreatePgTemporal(ctx)
+	require.NoError(t, err)
+	defer temporalPgCleanup(ctx)
 
 	scenarios := map[string]testutils.DurableExecutorConfiguration{
 		"DBOS":           *dbosConfig,
@@ -45,17 +49,20 @@ func TestBuangBranch(t *testing.T) {
 	for k, v := range scenarios {
 		retry.Retry(t, func(t *testing.T) {
 			t.Run(k, func(t *testing.T) {
-				buangBranch(t, v)
+				imagePullError(t, v)
 			})
 		})
 	}
 }
 
-func buangBranch(t *testing.T, config testutils.DurableExecutorConfiguration) {
+func imagePullError(t *testing.T, config testutils.DurableExecutorConfiguration) {
 	ctx := t.Context()
 
-	testApp, cleanup := testutils.Setup(ctx, config, nil)
-	defer cleanup(ctx)
+	compensations := compensations.New()
+	defer compensations.Compensate(ctx)
+
+	testApp, cleanup := testutils.Setup(ctx, config, proxiesrecoverytest.New())
+	compensations.AddCompensation(cleanup)
 
 	githubPat := os.Getenv("BUANG_TEST_GITHUB_PAT")
 	username := os.Getenv("BUANG_TEST_GITHUB_USER")
@@ -83,7 +90,7 @@ func buangBranch(t *testing.T, config testutils.DurableExecutorConfiguration) {
 		require.NoError(t, err)
 		defer res.Body.Close()
 
-		require.Equal(t, http.StatusOK, res.StatusCode)
+		require.Equal(t, http.StatusOK, res.StatusCode, "failed to create project")
 		respBody, err := io.ReadAll(res.Body)
 		require.NoError(t, err)
 		projectId, err := strconv.ParseInt(string(respBody), 10, 64)
@@ -114,7 +121,7 @@ func buangBranch(t *testing.T, config testutils.DurableExecutorConfiguration) {
 		require.NoError(t, err)
 		defer res.Body.Close()
 
-		require.Equal(t, http.StatusOK, res.StatusCode)
+		require.Equal(t, http.StatusOK, res.StatusCode, "failed to create deployment")
 		respBody, err := io.ReadAll(res.Body)
 		require.NoError(t, err)
 		deploymentId, err := strconv.ParseInt(string(respBody), 10, 64)
@@ -123,53 +130,21 @@ func buangBranch(t *testing.T, config testutils.DurableExecutorConfiguration) {
 		return deploymentId
 	}
 
-	buangBranch := func(projectId int64) {
-		buangBranchUrl := fmt.Sprintf("%v/project/%v/branch", baseUrl, projectId)
-		buangBranchReq := projectshandlers.BuangBranchRequest{
-			Branch: "master",
-		}
-
-		body, err := json.Marshal(buangBranchReq)
-		require.NoError(t, err)
-
-		req, err := http.NewRequestWithContext(ctx, http.MethodDelete, buangBranchUrl, bytes.NewBuffer(body))
-		require.NoError(t, err)
-		req.Header.Set("Content-Type", "application/json")
-
-		res, err := http.DefaultClient.Do(req)
-		require.NoError(t, err)
-		defer res.Body.Close()
-
-		require.Equal(t, http.StatusNoContent, res.StatusCode)
-	}
-
-	listDeployments := func(projectId int64) []projectshandlers.ListAllDeploymentsItem {
-		listDeploymentsUrl := fmt.Sprintf("%v/project/%v/deployments", baseUrl, projectId)
-		req, err := http.NewRequestWithContext(ctx, http.MethodGet, listDeploymentsUrl, nil)
+	buangDeployment := func(projectId int64, deploymentId int64) {
+		buangDeploymentUrl := fmt.Sprintf("%v/project/%v/deployment/%v", baseUrl, projectId, deploymentId)
+		req, err := http.NewRequestWithContext(ctx, http.MethodDelete, buangDeploymentUrl, nil)
 		require.NoError(t, err)
 
 		res, err := http.DefaultClient.Do(req)
 		require.NoError(t, err)
 		defer res.Body.Close()
 
-		require.Equal(t, http.StatusOK, res.StatusCode)
+		require.Equal(t, http.StatusNoContent, res.StatusCode, "failed to buang deployment")
 
-		var deployments []projectshandlers.ListAllDeploymentsItem
-		err = json.NewDecoder(res.Body).Decode(&deployments)
-		require.NoError(t, err)
-
-		return deployments
+		time.Sleep(500 * time.Millisecond)
 	}
 
 	projectId := createProject()
 	deploymentId := createDeployment(projectId)
-	buangBranch(projectId)
-
-	time.Sleep(5 * time.Second) // async workflow so returns immediately
-
-	deployments := listDeployments(projectId)
-	idx := slices.IndexFunc(deployments, func(deployment projectshandlers.ListAllDeploymentsItem) bool {
-		return deployment.ID == deploymentId
-	})
-	require.Equal(t, deployments[idx].Status, int16(enumsdeploymentstatus.Buang))
+	buangDeployment(projectId, deploymentId)
 }

@@ -7,6 +7,7 @@ import (
 	"net/http/httptest"
 	"skulpture/buang/app"
 	"skulpture/buang/db/interfaces"
+	"skulpture/buang/ports"
 	workersinterfaces "skulpture/buang/workers/interfaces"
 
 	"github.com/docker/docker/client"
@@ -35,8 +36,9 @@ type TestApplicationServices struct {
 	Queries              *interfaces.Queries
 	GorillaSchemaDecoder *schema.Decoder
 	GorillaSchemaEncoder *schema.Encoder
-	Docker               *client.Client
+	Docker               client.APIClient
 	Workflows            workersinterfaces.Workflows
+	Ports                ports.Ports
 }
 
 func (a TestApplicationConfig) New(ctx context.Context, chi *chi.Mux) (*TestApplication, error) {

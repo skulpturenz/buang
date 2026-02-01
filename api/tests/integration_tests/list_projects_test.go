@@ -83,7 +83,7 @@ func TestListProjectsExcludesDeleted(t *testing.T) {
 func listProjectsDescendingOrder(t *testing.T, config testutils.DurableExecutorConfiguration) {
 	ctx := t.Context()
 
-	testApp, cleanup := testutils.Setup(ctx, config)
+	testApp, cleanup := testutils.Setup(ctx, config, nil)
 	defer cleanup(ctx)
 
 	baseUrl := fmt.Sprintf("%v/api/v1", *testApp.Url)
@@ -148,7 +148,7 @@ func listProjectsDescendingOrder(t *testing.T, config testutils.DurableExecutorC
 func listProjectsExcludesDeleted(t *testing.T, config testutils.DurableExecutorConfiguration) {
 	ctx := t.Context()
 
-	testApp, cleanup := testutils.Setup(ctx, config)
+	testApp, cleanup := testutils.Setup(ctx, config, nil)
 	defer cleanup(ctx)
 
 	baseUrl := fmt.Sprintf("%v/api/v1", *testApp.Url)

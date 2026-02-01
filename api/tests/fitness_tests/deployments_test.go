@@ -56,7 +56,7 @@ func TestDeploymentsFitness(t *testing.T) {
 	compensations := compensations.New()
 	defer compensations.Compensate(ctx)
 
-	testApp, cleanup := testutils.Setup(ctx, *temporalPgConfig)
+	testApp, cleanup := testutils.Setup(ctx, *temporalPgConfig, nil)
 	compensations.AddCompensation(cleanup)
 
 	baseUrl := fmt.Sprintf("%v/api/v1", *testApp.Url)

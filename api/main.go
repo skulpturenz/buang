@@ -20,6 +20,7 @@ import (
 	"skulpture/buang/handlers/projects"
 	authn "skulpture/buang/middleware/authn"
 	limiter "skulpture/buang/middleware/limiter"
+	"skulpture/buang/ports"
 	"skulpture/buang/workers"
 	workersinterfaces "skulpture/buang/workers/interfaces"
 	workersshared "skulpture/buang/workers/shared"
@@ -157,11 +158,13 @@ func main() {
 	}
 	defer docker.Close()
 
+	p := ports.New()
 	ws := workersshared.WorkflowServices{
 		Queries:              &queries,
 		Docker:               docker,
 		GorillaSchemaDecoder: schema.NewDecoder(),
 		GorillaSchemaEncoder: schema.NewEncoder(),
+		Ports:                p,
 	}
 	workflows, cleanup, err := createWorkflows(ctx, ws)
 	if err != nil {
@@ -176,6 +179,7 @@ func main() {
 		GorillaSchemaDecoder: schema.NewDecoder(),
 		GorillaSchemaEncoder: schema.NewEncoder(),
 		Workflows:            workflows,
+		Ports:                p,
 	}
 
 	isExperimentalBootstrapEnabled, ok := constantsenvs.EXPERIMENTAL_BOOTSTRAP.Value()

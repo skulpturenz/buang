@@ -9,7 +9,6 @@ import (
 	"github.com/docker/cli/cli/command"
 	"github.com/docker/cli/cli/flags"
 	"github.com/docker/compose/v5/pkg/api"
-	"github.com/docker/compose/v5/pkg/compose"
 )
 
 type ComposeDownParams struct {
@@ -37,7 +36,7 @@ func (c ComposeDownParams) Exec(ctx context.Context, s *app.ApplicationServices)
 		return nil, err
 	}
 
-	svc, err := compose.NewComposeService(cli)
+	svc, err := s.Ports.NewComposeService(cli)
 	if err != nil {
 		return nil, err
 	}

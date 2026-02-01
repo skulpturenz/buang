@@ -123,7 +123,7 @@ func listDeployments(t *testing.T, config testutils.DurableExecutorConfiguration
 	compensations := compensations.New()
 	defer compensations.Compensate(ctx)
 
-	testApp, cleanup := testutils.Setup(ctx, config)
+	testApp, cleanup := testutils.Setup(ctx, config, nil)
 	compensations.AddCompensation(func(ctx context.Context) {
 		cleanup(ctx)
 	})
@@ -262,7 +262,7 @@ func listDeployments(t *testing.T, config testutils.DurableExecutorConfiguration
 func searchParams(t *testing.T, config testutils.DurableExecutorConfiguration) {
 	ctx := t.Context()
 
-	testApp, cleanup := testutils.Setup(ctx, config)
+	testApp, cleanup := testutils.Setup(ctx, config, nil)
 	defer cleanup(ctx)
 
 	githubPat := os.Getenv("BUANG_TEST_GITHUB_PAT")
@@ -381,7 +381,7 @@ func searchParams(t *testing.T, config testutils.DurableExecutorConfiguration) {
 func deletedProject(t *testing.T, config testutils.DurableExecutorConfiguration) {
 	ctx := t.Context()
 
-	testApp, cleanup := testutils.Setup(ctx, config)
+	testApp, cleanup := testutils.Setup(ctx, config, nil)
 	defer cleanup(ctx)
 
 	githubPat := os.Getenv("BUANG_TEST_GITHUB_PAT")

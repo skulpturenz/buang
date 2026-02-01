@@ -54,7 +54,7 @@ func TestDockerStats(t *testing.T) {
 func dockerStats(t *testing.T, config testutils.DurableExecutorConfiguration) {
 	ctx := t.Context()
 
-	testApp, cleanup := testutils.Setup(ctx, config)
+	testApp, cleanup := testutils.Setup(ctx, config, nil)
 	defer cleanup(ctx)
 
 	docker := testApp.GetHttpApplication().Services.Docker

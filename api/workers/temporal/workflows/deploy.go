@@ -104,6 +104,7 @@ func Deploy(ctx workflow.Context, projectId int64, deploymentId int64) (err erro
 	var createDynamicConfigDir *activities.CreateDynamicConfigDir
 	var createDynamicConfigDirResult activities.CloneDeploymentResult
 
+	// TODO: unrecoverable error
 	err = workflow.
 		ExecuteActivity(ctx,
 			createDynamicConfigDir.CreateDynamicConfigDir,
@@ -131,6 +132,9 @@ func Deploy(ctx workflow.Context, projectId int64, deploymentId int64) (err erro
 	var cloneDeploymentParams *activities.CloneDeployment
 	var cloneDeploymentResult activities.CloneDeploymentResult
 
+	// TODO:
+	// pull rate limit errors would require an hour before retries
+	// invalid compose file and everything else: fail immediately
 	err = workflow.
 		ExecuteActivity(ctx,
 			cloneDeploymentParams.CloneDeployment,
@@ -159,6 +163,9 @@ func Deploy(ctx workflow.Context, projectId int64, deploymentId int64) (err erro
 	var deployProject *activities.DeployProject
 	var deployProjectResult activities.DeployProjectResult
 
+	// TODO:
+	// image pull rate limit errors would require 6 hours before retries
+	// invalid compose file and everything else: fail immediately
 	err = workflow.
 		ExecuteActivity(ctx,
 			deployProject.DeployProject,

@@ -33,7 +33,6 @@ import (
 	"github.com/docker/docker/api/types/mount"
 	"github.com/docker/docker/api/types/network"
 	"github.com/docker/go-connections/nat"
-	"github.com/negrel/assert"
 	"github.com/stretchr/testify/require"
 )
 
@@ -78,7 +77,7 @@ func createNewProjectWithDeployment(t *testing.T, config testutils.DurableExecut
 	compensations := compensations.New()
 	defer compensations.Compensate(ctx)
 
-	testApp, cleanup := testutils.Setup(ctx, config)
+	testApp, cleanup := testutils.Setup(ctx, config, nil)
 	compensations.AddCompensation(cleanup)
 
 	docker := testApp.GetHttpApplication().Services.Docker
@@ -387,7 +386,7 @@ func createNewProjectWithDeployment(t *testing.T, config testutils.DurableExecut
 		require.Contains(t, string(logs), "nginx")
 	}
 
-	buangDeploymenbt := func(projectId int64, deploymentId int64) {
+	buangDeployment := func(projectId int64, deploymentId int64) {
 		buangDeploymentUrl := fmt.Sprintf("%v/project/%v/deployment/%v", baseUrl, projectId, deploymentId)
 		req, err := http.NewRequestWithContext(ctx, http.MethodDelete, buangDeploymentUrl, nil)
 		require.NoError(t, err)
@@ -396,7 +395,9 @@ func createNewProjectWithDeployment(t *testing.T, config testutils.DurableExecut
 		require.NoError(t, err)
 		defer res.Body.Close()
 
-		assert.Equal(t, http.StatusNoContent, res.StatusCode, "failed to buang deployment")
+		require.Equal(t, http.StatusNoContent, res.StatusCode, "failed to buang deployment")
+
+		time.Sleep(500 * time.Millisecond)
 	}
 
 	projectId := createProject()
@@ -405,5 +406,5 @@ func createNewProjectWithDeployment(t *testing.T, config testutils.DurableExecut
 	getDeploymentLogs(projectId, deploymentId)
 	assertDeployment(projectId, deploymentId)
 	assertProxy(projectId, deploymentId, traefikId, traefikPort)
-	buangDeploymenbt(projectId, deploymentId)
+	buangDeployment(projectId, deploymentId)
 }

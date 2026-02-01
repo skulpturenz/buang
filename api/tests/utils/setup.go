@@ -5,6 +5,7 @@ import (
 	"io"
 	"log"
 	"skulpture/buang/db"
+	"skulpture/buang/ports"
 	"skulpture/buang/utils/compensations"
 	workersshared "skulpture/buang/workers/shared"
 
@@ -13,7 +14,7 @@ import (
 	"github.com/testcontainers/testcontainers-go"
 )
 
-func Setup(ctx context.Context, config DurableExecutorConfiguration) (*TestApplication, func(context.Context)) {
+func Setup(ctx context.Context, config DurableExecutorConfiguration, overridePorts ports.Ports) (*TestApplication, func(context.Context)) {
 	testcontainers.WithLogger(log.New(io.Discard, "", 0))
 
 	compensations := compensations.New()
@@ -40,11 +41,19 @@ func Setup(ctx context.Context, config DurableExecutorConfiguration) (*TestAppli
 	decoder := schema.NewDecoder()
 	encoder := schema.NewEncoder()
 
+	var p ports.Ports
+	if overridePorts == nil {
+		p = ports.New()
+	} else {
+		p = overridePorts
+	}
+
 	ws := workersshared.WorkflowServices{
 		Queries:              &queries,
 		GorillaSchemaDecoder: decoder,
 		GorillaSchemaEncoder: encoder,
 		Docker:               docker,
+		Ports:                p,
 	}
 	workflows, workflowsCleanup, err := CreateWorkflows(ctx, config, ws)
 	compensations.AddCompensation(workflowsCleanup)
@@ -58,6 +67,7 @@ func Setup(ctx context.Context, config DurableExecutorConfiguration) (*TestAppli
 		GorillaSchemaEncoder: encoder,
 		Docker:               docker,
 		Workflows:            workflows,
+		Ports:                p,
 	}
 
 	appConfig := TestApplicationConfig{
