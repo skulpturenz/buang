@@ -58,7 +58,7 @@ tasks:
   generate-changelog:
     desc: Generate changelog
     cmds:
-      - git-chglog -o CHANGELOG.md
+      - git-cliff -o CHANGELOG.md
 
   generate-all:
     desc: Run all generators
