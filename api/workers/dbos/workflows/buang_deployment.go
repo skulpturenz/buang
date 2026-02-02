@@ -36,7 +36,7 @@ func (bd BuangDeployment) BuangDeployment(ctx dbos.DBOSContext, p BuangDeploymen
 			}
 
 			return &activities.BuangDeploymentResult{}, nil
-		}, dbos.WithStepMaxRetries(3))
+		}, dbos.WithStepMaxRetries(10))
 	if err != nil {
 		_, errErrorDeployment := dbos.RunAsStep(ctx,
 			func(ctx context.Context) (*activities.ErrorDeploymentResult, error) {
@@ -50,7 +50,7 @@ func (bd BuangDeployment) BuangDeployment(ctx dbos.DBOSContext, p BuangDeploymen
 				}
 
 				return res, err
-			}, dbos.WithStepMaxRetries(3))
+			}, dbos.WithStepMaxRetries(10))
 		if errErrorDeployment != nil {
 			return false, errors.Join(err, errErrorDeployment)
 		}

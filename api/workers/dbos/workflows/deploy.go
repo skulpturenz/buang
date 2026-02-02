@@ -37,7 +37,7 @@ func (d Deploy) Deploy(ctx dbos.DBOSContext, p DeployParams) (res bool, err erro
 
 				return res, nil
 
-			}, dbos.WithStepMaxRetries(3))
+			}, dbos.WithStepMaxRetries(10))
 
 		return err
 	}
@@ -55,7 +55,7 @@ func (d Deploy) Deploy(ctx dbos.DBOSContext, p DeployParams) (res bool, err erro
 			}
 
 			return res, nil
-		}, dbos.WithStepMaxRetries(3))
+		}, dbos.WithStepMaxRetries(10))
 	if err != nil {
 		errorDeploymentErr := errorDeployment()
 		if errorDeploymentErr != nil {
@@ -79,7 +79,7 @@ func (d Deploy) Deploy(ctx dbos.DBOSContext, p DeployParams) (res bool, err erro
 			}
 
 			return res, nil
-		}, dbos.WithStepMaxRetries(3))
+		}, dbos.WithStepMaxRetries(10))
 	if err != nil {
 		errorDeploymentErr := errorDeployment()
 		if errorDeploymentErr != nil {
@@ -105,7 +105,7 @@ func (d Deploy) Deploy(ctx dbos.DBOSContext, p DeployParams) (res bool, err erro
 			}
 
 			return &activities.BuangDeploymentResult{}, nil
-		}, dbos.WithStepMaxRetries(3))
+		}, dbos.WithStepMaxRetries(10))
 	if err != nil {
 		errorDeploymentErr := errorDeployment()
 		if errorDeploymentErr != nil {
@@ -115,7 +115,6 @@ func (d Deploy) Deploy(ctx dbos.DBOSContext, p DeployParams) (res bool, err erro
 		return false, err
 	}
 
-	// TODO: unrecoverable error
 	_, err = dbos.RunAsStep(ctx,
 		func(ctx context.Context) (*activities.CreateDynamicConfigDirResult, error) {
 			createDynamicConfigDir := activities.CreateDynamicConfigDir(s)
@@ -127,7 +126,7 @@ func (d Deploy) Deploy(ctx dbos.DBOSContext, p DeployParams) (res bool, err erro
 			}
 
 			return &activities.CreateDynamicConfigDirResult{}, nil
-		}, dbos.WithStepMaxRetries(3))
+		}, dbos.WithStepMaxRetries(10))
 	if err != nil {
 		errorDeploymentErr := errorDeployment()
 		if errorDeploymentErr != nil {
@@ -154,7 +153,7 @@ func (d Deploy) Deploy(ctx dbos.DBOSContext, p DeployParams) (res bool, err erro
 			}
 
 			return res, nil
-		}, dbos.WithStepMaxRetries(3))
+		}, dbos.WithStepMaxRetries(10))
 	if err != nil {
 		errorDeploymentErr := errorDeployment()
 		if errorDeploymentErr != nil {
@@ -181,7 +180,7 @@ func (d Deploy) Deploy(ctx dbos.DBOSContext, p DeployParams) (res bool, err erro
 			}
 
 			return res, nil
-		}, dbos.WithStepMaxRetries(3))
+		}, dbos.WithStepMaxRetries(10))
 	if err != nil {
 		errorDeploymentErr := errorDeployment()
 		if errorDeploymentErr != nil {

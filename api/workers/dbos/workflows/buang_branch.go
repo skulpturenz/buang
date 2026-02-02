@@ -37,7 +37,7 @@ func (bb BuangBranch) BuangBranch(ctx dbos.DBOSContext, p BuangBranchParams) (re
 
 				return res, nil
 
-			}, dbos.WithStepMaxRetries(3))
+			}, dbos.WithStepMaxRetries(10))
 
 		return err
 	}
@@ -54,7 +54,7 @@ func (bb BuangBranch) BuangBranch(ctx dbos.DBOSContext, p BuangBranchParams) (re
 			}
 
 			return res, nil
-		}, dbos.WithStepMaxRetries(3))
+		}, dbos.WithStepMaxRetries(10))
 	if err != nil {
 		return false, err
 	}
@@ -73,7 +73,7 @@ func (bb BuangBranch) BuangBranch(ctx dbos.DBOSContext, p BuangBranchParams) (re
 				}
 
 				return &activities.BuangDeploymentResult{}, nil
-			}, dbos.WithStepMaxRetries(3))
+			}, dbos.WithStepMaxRetries(10))
 		if err != nil {
 			errDeploymentErr := errorDeployment(int(id))
 			if errDeploymentErr != nil {

@@ -28,7 +28,7 @@ func (p PeriodicUpdateHandler) PeriodicUpdateHandler(ctx dbos.DBOSContext, sched
 			}
 
 			return res, nil
-		}, dbos.WithStepMaxRetries(3))
+		}, dbos.WithStepMaxRetries(10))
 	if err != nil {
 		return false, err
 	}
