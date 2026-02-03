@@ -28,16 +28,19 @@ jobs:
       - uses: zwaldowski/match-label-action@v6
         id: release-label
         with:
-          allowed: release/major, release/minor, release/patch
+          allowed: release/major, release/minor, release/patch, release/prerelease
+          default_match: release/prerelease
 
       - uses: zwaldowski/semver-release-action@v6
         id: bump
         with:
           github_token: ${{ secrets.GITHUB_TOKEN }}
           bump: ${{ case(
+            contains(github.base_ref, 'canary') && contains(steps.release-label.outputs.match, 'prerelease'), 'prerelease',
             contains(github.base_ref, 'canary') && contains(steps.release-label.outputs.match, 'patch'), 'prepatch',
             contains(github.base_ref, 'canary') && contains(steps.release-label.outputs.match, 'minor'), 'preminor',
             contains(github.base_ref, 'canary') && contains(steps.release-label.outputs.match, 'major'), 'premajor',
+            contains(github.base_ref, 'staging') && contains(steps.release-label.outputs.match, 'prerelease'), 'prerelease',
             contains(github.base_ref, 'staging') && contains(steps.release-label.outputs.match, 'patch'), 'prepatch',
             contains(github.base_ref, 'staging') && contains(steps.release-label.outputs.match, 'minor'), 'preminor',
             contains(github.base_ref, 'staging') && contains(steps.release-label.outputs.match, 'major'), 'premajor',
@@ -51,6 +54,7 @@ jobs:
             contains(github.base_ref, 'canary'), 'canary',
             contains(github.base_ref, 'staging'), 'staging',
             '') }}
+          prefix: v
 
       - uses: orhun/git-cliff-action@v4
         with:
@@ -66,7 +70,7 @@ jobs:
       - uses: iarekylew00t/verified-bot-commit@v2
         id: commit-changelog
         with:
-          message: "chore(${{ steps.bump.outputs.version_tag }}): update changelog"
+          message: "chore(release-${{ steps.bump.outputs.version_tag }}): update changelog"
           ref: ${{ github.base_ref }}
           files: |
             CHANGELOG.md
@@ -92,6 +96,7 @@ jobs:
             contains(github.base_ref, 'canary'), 'canary',
             contains(github.base_ref, 'staging'), 'staging',
             '') }}
+          prefix: v
 
       - uses: softprops/action-gh-release@v2
         with:
