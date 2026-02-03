@@ -1,0 +1,80 @@
+name: Release
+
+on:
+  pull_request:
+    branches:
+      - master
+      - staging/*
+      - canary/*
+    types: [closed]
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.base_ref }}
+  cancel-in-progress: false
+
+env:
+  TAG_PREFIX: ${{ contains(github.base_ref, 'canary') && 'canary/v' || contains(github.base_ref, 'staging') && 'staging/v' || contains(github.base_ref, 'master') && 'v' }}
+
+jobs:
+  release:
+    if: ${{ github.event.pull_request.merged == true }}
+    permissions:
+      contents: write
+
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - uses: actions-ecosystem/action-release-label@v1
+        id: release-label
+
+      - uses: WyriHaximus/github-action-get-previous-tag@v1
+        id: get-latest-tag
+        with:
+          prefix: ${{ env.TAG_PREFIX }}
+          fallback: 0.0.0
+
+      - uses: actions-ecosystem/action-bump-semver@v1
+        id: bump-semver
+        with:
+          current_version: ${{ steps.get-latest-tag.outputs.tag }}
+          level: ${{ steps.release-label.outputs.level }}
+
+      - uses: orhun/git-cliff-action@v4
+        with:
+          config: cliff.toml
+          args: --verbose --tag ${{ env.TAG_PREFIX }}${{ steps.bump-semver.outputs.new_version }} --output CHANGELOG.md
+
+      - uses: orhun/git-cliff-action@v4
+        id: unreleased-changelog
+        with:
+          config: cliff.toml
+          args: --verbose --unreleased --tag ${{ env.TAG_PREFIX }}${{ steps.bump-semver.outputs.new_version }} --output CHANGELOG.md
+
+      - uses: iarekylew00t/verified-bot-commit@v2
+        id: commit-changelog
+        with:
+          message: "chore(${{ env.TAG_PREFIX }}${{ steps.bump-semver.outputs.new_version }}): update changelog"
+          ref: ${{ github.base_ref }}
+          files: |
+            CHANGELOG.md
+
+      # For most cases: https://github.com/actions-ecosystem/action-push-tag will suffice
+      # The action currently fails if the repository uses GIT LFS
+      - name: Push tags
+        run: |
+          git tag ${{ env.TAG_PREFIX }}${{ steps.bump-semver.outputs.new_version }} ${{ steps.commit-changelog.outputs.commit }}
+          git push origin --no-verify --tag
+
+      - uses: softprops/action-gh-release@v2
+        if: ${{ steps.release-label.outputs.level != null }}
+        with:
+          prerelease: ${{ github.base_ref != 'master' }}
+          name: ${{ env.TAG_PREFIX }}${{ steps.bump-semver.outputs.new_version }}
+          tag_name: ${{ env.TAG_PREFIX }}${{ steps.bump-semver.outputs.new_version }}
+          target_commitish: ${{ github.base_ref }}
+          generate_release_notes: false
+          body: ${{ steps.unreleased-changelog.outputs.content }}
