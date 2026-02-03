@@ -51,6 +51,7 @@ jobs:
             contains(github.base_ref, 'canary'), 'canary',
             contains(github.base_ref, 'staging'), 'staging',
             '') }}
+          prefix: v
 
       - uses: orhun/git-cliff-action@v4
         with:
@@ -66,7 +67,7 @@ jobs:
       - uses: iarekylew00t/verified-bot-commit@v2
         id: commit-changelog
         with:
-          message: "chore(${{ steps.bump.outputs.version_tag }}): update changelog"
+          message: "chore(release-${{ steps.bump.outputs.version_tag }}): update changelog"
           ref: ${{ github.base_ref }}
           files: |
             CHANGELOG.md
@@ -92,6 +93,7 @@ jobs:
             contains(github.base_ref, 'canary'), 'canary',
             contains(github.base_ref, 'staging'), 'staging',
             '') }}
+          prefix: v
 
       - uses: softprops/action-gh-release@v2
         with:
