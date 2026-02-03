@@ -1,0 +1,24 @@
+package projects
+
+import (
+	"skulpture/buang/app"
+
+	"github.com/go-chi/chi/v5"
+)
+
+func Router(s app.ApplicationServices, r chi.Router) {
+	r.Route("/projects", func(r chi.Router) {
+		r.Get("/", ListAllProjects(s))
+	})
+
+	r.Route("/project", func(r chi.Router) {
+		r.Post("/", CreateProject(s))
+		r.Get("/", FindProjectByRepository(s))
+
+		r.Post("/{projectId}", UpdateProject(s))
+		r.Delete("/{projectId}", DeleteProject(s))
+		r.Delete("/{projectId}/branch", BuangBranch(s))
+
+		r.Get("/{projectId}/deployments", ListAllDeployments(s))
+	})
+}

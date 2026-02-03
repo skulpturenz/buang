@@ -1,0 +1,54 @@
+package testutils
+
+import (
+	"context"
+
+	"github.com/testcontainers/testcontainers-go"
+	"github.com/testcontainers/testcontainers-go/modules/postgres"
+)
+
+type CreatePgResult struct {
+	DatabaseName     string
+	Username         string
+	Password         string
+	ConnectionString string
+	Container        testcontainers.Container
+}
+
+func CreatePg(ctx context.Context) (*CreatePgResult, func(context.Context) error, error) {
+	dbName := "buang"
+	user := "buang"
+	pw := "buang"
+
+	pg, err := postgres.Run(ctx, "postgres:18-alpine",
+		postgres.WithDatabase(dbName),
+		postgres.WithUsername(user),
+		postgres.WithPassword(pw),
+		postgres.BasicWaitStrategies())
+	if err != nil {
+		return nil, nil, err
+	}
+
+	cleanup := func(ctx context.Context) error {
+		if err := testcontainers.TerminateContainer(pg); err != nil {
+			return err
+		}
+
+		return nil
+	}
+
+	connectionString, err := pg.ConnectionString(ctx)
+	if err != nil {
+		return nil, cleanup, err
+	}
+
+	res := CreatePgResult{
+		DatabaseName:     dbName,
+		Username:         user,
+		Password:         pw,
+		ConnectionString: connectionString,
+		Container:        pg,
+	}
+
+	return &res, cleanup, nil
+}

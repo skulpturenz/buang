@@ -1,0 +1,66 @@
+version: "2"
+sql:
+  - engine: "postgresql"
+    queries: "db/pg/queries"
+    schema: "db/pg/schema"
+    gen:
+      go:
+        package: "pg"
+        out: "db/pg/out"
+        sql_package: "pgx/v5"
+        emit_pointers_for_null_types: true
+        emit_json_tags: true
+        overrides:
+          - db_type: "timestamptz"
+            nullable: true
+            go_type:
+              import: "time"
+              type: "Time"
+              pointer: true
+          - db_type: "timestamptz"
+            go_type:
+              import: "time"
+              type: "Time"
+
+  - engine: "sqlite"
+    queries: "db/sqlite/queries"
+    schema: "db/sqlite/schema"
+    gen:
+      go:
+        package: "sqlite"
+        out: "db/sqlite/out"
+        emit_pointers_for_null_types: true
+        emit_json_tags: true
+        overrides:
+          - column: "projects.id"
+            go_type:
+              type: "int64"
+          - column: "projects.created_at"
+            go_type:
+              import: "time"
+              type: "Time"
+          - column: "projects.updated_at"
+            go_type:
+              import: "time"
+              type: "Time"
+          - column: "deployments.id"
+            go_type:
+              type: "int64"
+          - column: "deployment_logs.id"
+            go_type:
+              type: "int64"
+          - column: "deployments.status"
+            go_type:
+              type: "int16"
+          - column: "deployments.deployed_at"
+            go_type:
+              import: "time"
+              type: "Time"
+              pointer: true
+          - column: "diagnostic_logs.id"
+            go_type:
+              type: "int64"
+          - column: "diagnostic_logs.created_at"
+            go_type:
+              import: "time"
+              type: "Time"

@@ -1,0 +1,566 @@
+basePath: /api/v1
+definitions:
+  deployments.CreateDeploymentRequest:
+    properties:
+      branch:
+        type: string
+      env:
+        additionalProperties: {}
+        type: object
+      serviceEntrypoint:
+        type: string
+      sha:
+        type: string
+    required:
+    - branch
+    - serviceEntrypoint
+    - sha
+    type: object
+  deployments.FindDeploymentByIdResponse:
+    properties:
+      branch:
+        type: string
+      deployedAt:
+        type: string
+      id:
+        type: integer
+      projectId:
+        type: integer
+      sha:
+        type: string
+      status:
+        type: integer
+      url:
+        type: string
+    type: object
+  diagnostics.ContainerStats:
+    properties:
+      cpuStats:
+        $ref: '#/definitions/diagnostics.CpuStats'
+      image:
+        type: string
+      imageId:
+        type: string
+      memoryStats:
+        $ref: '#/definitions/diagnostics.MemoryStats'
+      name:
+        type: string
+      state:
+        type: string
+      status:
+        type: string
+    type: object
+  diagnostics.CpuStats:
+    properties:
+      usagePercent:
+        type: number
+    type: object
+  diagnostics.DockerStatsResult:
+    additionalProperties:
+      $ref: '#/definitions/diagnostics.ContainerStats'
+    type: object
+  diagnostics.InfoResult:
+    properties:
+      timezone:
+        type: string
+      uptime:
+        type: string
+      version:
+        type: string
+    type: object
+  diagnostics.MemoryStats:
+    properties:
+      limitMb:
+        type: number
+      usageMb:
+        type: number
+      usagePercent:
+        type: number
+    type: object
+  projects.BuangBranchRequest:
+    properties:
+      branch:
+        type: string
+    required:
+    - branch
+    type: object
+  projects.CreateProjectRequest:
+    properties:
+      composePath:
+        type: string
+      password:
+        type: string
+      repository:
+        type: string
+      requiresAuthn:
+        type: boolean
+      username:
+        type: string
+    required:
+    - composePath
+    - repository
+    type: object
+  projects.FindProjectByRepositoryResponse:
+    properties:
+      composePath:
+        type: string
+      createdAt:
+        type: string
+      id:
+        type: integer
+      repository:
+        type: string
+      requiresAuthn:
+        type: boolean
+      updatedAt:
+        type: string
+    type: object
+  projects.ListAllDeploymentsItem:
+    properties:
+      deployedAt:
+        type: string
+      id:
+        type: integer
+      projectId:
+        type: integer
+      sha:
+        type: string
+      status:
+        type: integer
+      url:
+        type: string
+    type: object
+  projects.ListAllProjectsItem:
+    properties:
+      composePath:
+        type: string
+      createdAt:
+        type: string
+      id:
+        type: integer
+      repository:
+        type: string
+      requiresAuthn:
+        type: boolean
+      updatedAt:
+        type: string
+    type: object
+  projects.UpdateProjectRequest:
+    properties:
+      composePath:
+        type: string
+      password:
+        type: string
+      repository:
+        type: string
+      requiresAuthn:
+        type: boolean
+      username:
+        type: string
+    required:
+    - composePath
+    - repository
+    type: object
+info:
+  contact: {}
+  description: Deploy preview environments with ease
+  title: Buang API
+paths:
+  /diagnostics/info:
+    get:
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/diagnostics.InfoResult'
+        "401":
+          description: Unauthorized
+        "500":
+          description: Internal Server Error
+          schema:
+            type: string
+      security:
+      - ApiKeyAuth: []
+      summary: Service info
+      tags:
+      - api.v1
+      - diagnostics
+  /diagnostics/stats:
+    get:
+      description: Not the most accurate readings but it should tell which services
+        need attention
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/diagnostics.DockerStatsResult'
+        "401":
+          description: Unauthorized
+        "500":
+          description: Internal Server Error
+          schema:
+            type: string
+      security:
+      - ApiKeyAuth: []
+      summary: Docker stats
+      tags:
+      - api.v1
+      - diagnostics
+  /project:
+    get:
+      parameters:
+      - description: Repository
+        in: query
+        name: repository
+        required: true
+        type: string
+      responses:
+        "200":
+          description: OK
+          schema:
+            items:
+              $ref: '#/definitions/projects.FindProjectByRepositoryResponse'
+            type: array
+        "400":
+          description: Bad Request
+          schema: {}
+        "401":
+          description: Unauthorized
+        "500":
+          description: Internal Server Error
+          schema:
+            type: string
+      security:
+      - ApiKeyAuth: []
+      summary: Find project by repository
+      tags:
+      - api.v1
+      - projects
+    post:
+      parameters:
+      - description: Project details
+        in: body
+        name: projectDetails
+        required: true
+        schema:
+          $ref: '#/definitions/projects.CreateProjectRequest'
+      responses:
+        "200":
+          description: OK
+          schema:
+            type: integer
+        "400":
+          description: Bad Request
+          schema: {}
+        "401":
+          description: Unauthorized
+        "500":
+          description: Internal Server Error
+          schema:
+            type: string
+      security:
+      - ApiKeyAuth: []
+      summary: Create a project
+      tags:
+      - api.v1
+      - projects
+  /project/{projectId}:
+    delete:
+      parameters:
+      - description: Project ID
+        in: path
+        name: projectId
+        required: true
+        type: integer
+      responses:
+        "204":
+          description: No Content
+        "400":
+          description: Bad Request
+          schema: {}
+        "401":
+          description: Unauthorized
+        "500":
+          description: Internal Server Error
+          schema:
+            type: string
+      security:
+      - ApiKeyAuth: []
+      summary: Delete a project
+      tags:
+      - api.v1
+      - projects
+    post:
+      parameters:
+      - description: Project ID
+        in: path
+        name: projectId
+        required: true
+        type: integer
+      - description: Project details
+        in: body
+        name: projectDetails
+        required: true
+        schema:
+          $ref: '#/definitions/projects.UpdateProjectRequest'
+      responses:
+        "204":
+          description: No Content
+        "400":
+          description: Bad Request
+          schema: {}
+        "401":
+          description: Unauthorized
+        "500":
+          description: Internal Server Error
+          schema:
+            type: string
+      security:
+      - ApiKeyAuth: []
+      summary: Update a project
+      tags:
+      - api.v1
+      - projects
+  /project/{projectId}/branch:
+    delete:
+      parameters:
+      - description: Project ID
+        in: path
+        name: projectId
+        required: true
+        type: integer
+      - description: Branch details
+        in: body
+        name: branchDetails
+        required: true
+        schema:
+          $ref: '#/definitions/projects.BuangBranchRequest'
+      responses:
+        "204":
+          description: No Content
+        "400":
+          description: Bad Request
+          schema: {}
+        "401":
+          description: Unauthorized
+        "500":
+          description: Internal Server Error
+          schema:
+            type: string
+      security:
+      - ApiKeyAuth: []
+      summary: Spin down a preview branch
+      tags:
+      - api.v1
+      - projects
+  /project/{projectId}/deployment:
+    post:
+      parameters:
+      - description: Project ID
+        in: path
+        name: projectId
+        required: true
+        type: integer
+      - description: Deployment details
+        in: body
+        name: deploymentDetails
+        required: true
+        schema:
+          $ref: '#/definitions/deployments.CreateDeploymentRequest'
+      - description: Wait for deployment completion
+        in: query
+        name: waitForDeployment
+        type: boolean
+      responses:
+        "200":
+          description: OK
+          schema:
+            type: integer
+        "400":
+          description: Bad Request
+          schema: {}
+        "401":
+          description: Unauthorized
+        "500":
+          description: Internal Server Error
+          schema:
+            type: string
+      security:
+      - ApiKeyAuth: []
+      summary: Spin up a preview deployment
+      tags:
+      - api.v1
+      - deployments
+  /project/{projectId}/deployment/{deploymentId}:
+    delete:
+      parameters:
+      - description: Project ID
+        in: path
+        name: projectId
+        required: true
+        type: integer
+      - description: Deployment ID
+        in: path
+        name: deploymentId
+        required: true
+        type: integer
+      responses:
+        "204":
+          description: No Content
+        "401":
+          description: Unauthorized
+        "500":
+          description: Internal Server Error
+          schema:
+            type: string
+      security:
+      - ApiKeyAuth: []
+      summary: Spin down a preview deployment
+      tags:
+      - api.v1
+      - deployments
+    get:
+      parameters:
+      - description: Project ID
+        in: path
+        name: projectId
+        required: true
+        type: integer
+      - description: Deployment ID
+        in: path
+        name: deploymentId
+        required: true
+        type: integer
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/deployments.FindDeploymentByIdResponse'
+        "401":
+          description: Unauthorized
+        "500":
+          description: Internal Server Error
+          schema:
+            type: string
+      security:
+      - ApiKeyAuth: []
+      summary: Find deployment by ID
+      tags:
+      - api.v1
+      - deployments
+  /project/{projectId}/deployment/{deploymentId}/logs:
+    get:
+      parameters:
+      - description: Project ID
+        in: path
+        name: projectId
+        required: true
+        type: integer
+      - description: Deployment ID
+        in: path
+        name: deploymentId
+        required: true
+        type: integer
+      - description: Stream logs
+        in: query
+        name: stream
+        type: boolean
+      responses:
+        "200":
+          description: OK
+          schema:
+            type: string
+        "204":
+          description: No Content
+        "400":
+          description: Bad Request
+          schema: {}
+        "401":
+          description: Unauthorized
+        "500":
+          description: Internal Server Error
+          schema:
+            type: string
+      security:
+      - ApiKeyAuth: []
+      summary: Get deployment logs
+      tags:
+      - api.v1
+      - deployment-logs
+  /project/{projectId}/deployments:
+    get:
+      parameters:
+      - description: Project ID
+        in: path
+        name: projectId
+        required: true
+        type: integer
+      - description: Limit
+        in: query
+        name: limit
+        type: integer
+      - description: Page
+        in: query
+        name: page
+        type: integer
+      responses:
+        "200":
+          description: OK
+          schema:
+            items:
+              $ref: '#/definitions/projects.ListAllDeploymentsItem'
+            type: array
+        "400":
+          description: Bad Request
+          schema: {}
+        "401":
+          description: Unauthorized
+        "500":
+          description: Internal Server Error
+          schema:
+            type: string
+      security:
+      - ApiKeyAuth: []
+      summary: List all deployments
+      tags:
+      - api.v1
+      - projects
+  /projects:
+    get:
+      parameters:
+      - description: Limit
+        in: query
+        name: limit
+        type: integer
+      - description: Page
+        in: query
+        name: page
+        type: integer
+      responses:
+        "200":
+          description: OK
+          schema:
+            items:
+              $ref: '#/definitions/projects.ListAllProjectsItem'
+            type: array
+        "400":
+          description: Bad Request
+          schema: {}
+        "401":
+          description: Unauthorized
+        "500":
+          description: Internal Server Error
+          schema:
+            type: string
+      security:
+      - ApiKeyAuth: []
+      summary: List all projects
+      tags:
+      - api.v1
+      - projects
+securityDefinitions:
+  ApiKeyAuth:
+    in: header
+    name: X-API-Key
+    type: apiKey
+swagger: "2.0"

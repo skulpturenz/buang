@@ -1,0 +1,63 @@
+name: Test services
+
+on:
+  push:
+    branches: [master, staging, dev]
+  pull_request:
+    branches: [master, staging, dev]
+  workflow_dispatch:
+
+jobs:
+  int-test:
+    environment: "test"
+
+    permissions:
+      contents: read
+      id-token: write
+
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-go@v6
+        with:
+          go-version-file: 'api/go.mod'
+          cache-dependency-path: 'api/go.sum'
+          token: ${{ github.token }}
+
+      - name: Install Task
+        uses: arduino/setup-task@v2
+        with:
+          repo-token: ${{ github.token }}
+
+      - name: Integration tests
+        working-directory: api
+        run: |
+            task test-int-ci -- -v
+
+  fitness-test:
+    environment: "test"
+
+    permissions:
+      contents: read
+      id-token: write
+
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-go@v6
+        with:
+          go-version-file: 'api/go.mod'
+          cache-dependency-path: 'api/go.sum'
+          token: ${{ github.token }}
+
+      - name: Install Task
+        uses: arduino/setup-task@v2
+        with:
+          repo-token: ${{ github.token }}
+
+      - name: Fitness tests
+        working-directory: api
+        run: |
+            task test-fitness-ci -- -v

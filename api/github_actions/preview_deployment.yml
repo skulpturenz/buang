@@ -1,0 +1,84 @@
+name: Preview Deployment
+
+on:
+  pull_request:
+    types: [opened, synchronize]
+
+env:
+  API_BASE_URL: https://buang.skulpture.xyz/api/v1 # TODO: update
+  API_KEY: ${{ secrets.BUANG_API_KEY }} # TODO: update
+  PREVIEW_ENVS: ${{ secrets.BUANG_PREVIEW_ENVS_JSON }} # TODO: update
+  SERVICE_ENTRYPONT: ${{ vars.BUANG_SERVICE_ENTRYPOINT }} # TODO: update, format: `hostname:port`
+
+jobs:
+  deploy-preview:
+    runs-on: ubuntu-latest
+    permissions:
+      pull-requests: write
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Get project details
+        id: get_project
+        run: |
+          REPO=$(echo "${{ github.repository }}" | jq -rr @uri)
+
+          RESPONSE=$(curl -s -X GET "${{ env.API_BASE_URL }}/project?repo=$REPO" \
+            -H "X-API-Key: ${{ env.API_KEY }}")
+          
+          PROJECT_ID=$(echo $RESPONSE | jq -r '.id')
+          
+          echo "project_id=$PROJECT_ID" >> $GITHUB_OUTPUT
+
+      - name: Deploy preview environment
+        id: deploy_preview
+        env:
+          PROJECT_ID: ${{ steps.get_project.outputs.project_id }}
+        run: |
+          REQUEST=$(jq -n \
+            --arg branch "${{ github.head_ref }}" \
+            --arg sha "${{ github.event.pull_request.head.sha }}" \
+            --arg serviceEntrypoint "${{ envs.SERVICE_ENTRYPONT }}" \
+            --argjson env "${{ env.PREVIEW_ENVS }}" \
+            '
+            {
+              branch: $branch,
+              sha: $sha,
+              serviceEntrypoint: $serviceEntrypoint,
+              env: $env
+            }
+            ')
+
+          RESPONSE=$(curl -s -X POST "${{ env.API_BASE_URL }}/project/${{ env.PROJECT_ID }}/deployment" \
+            -H "Content-Type: application/json"
+            -H "X-API-Key: ${{ env.API_KEY }}"
+            -d "$REQUEST")
+
+          echo "deployment_id=$RESPONSE" >> $GITHUB_OUTPUT
+
+      - name: Sleep for 5 seconds
+        run: sleep 5s
+        shell: bash
+
+      - name: Get deployment details
+        id: get_deployment
+        env:
+          PROJECT_ID: ${{ steps.get_project.outputs.project_id }}
+          DEPLOYMENT_ID: ${{ steps.deploy_preview.outputs.deployment_id }}
+        run: |
+          RESPONSE=$(curl -s -X GET "${{ env.API_BASE_URL }}/project/${{ env.PROJECT_ID }}/deployment/${{ env.DEPLOYMENT_ID }}" \
+            -H "X-API-Key: ${{ env.API_KEY }}")
+          
+          DEPLOYED_AT=$(echo $RESPONSE | jq -r '.deployedAt')
+          
+          echo "deployed_at=$DEPLOYED_AT" >> $GITHUB_OUTPUT
+
+      - name: Add PR comment
+        uses: mshick/add-pr-comment@v2
+        env:
+          DEPLOYED_AT: ${{ steps.get_deployment.outputs.deployed_at }}
+        with:
+          update-only: true
+          message: |
+            Preview branch deployed to: [${{ env.DEPLOYED_AT }}](${{ env.DEPLOYED_AT }}) 🚀

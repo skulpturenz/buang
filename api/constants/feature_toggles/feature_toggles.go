@@ -1,0 +1,5 @@
+package constantsfeaturetoggles
+
+const (
+	ENABLE_EXPERIMENTAL_BOOTSTRAP = "BUANG_ENABLE_EXPERIMENTAL_BOOTSTRAP"
+)
