@@ -33,7 +33,7 @@ jobs:
       - name: Integration tests
         working-directory: api
         run: |
-            task test-int-ci -- -v
+            BUANG_TEST_GITHUB_USER=${{ secrets.BUANG_TEST_GITHUB_USER }} BUANG_TEST_GITHUB_PAT=${{ secrets.BUANG_TEST_GITHUB_PAT }} task test-int-ci -- -v
 
   fitness-test:
     environment: "test"
@@ -60,4 +60,4 @@ jobs:
       - name: Fitness tests
         working-directory: api
         run: |
-            task test-fitness-ci -- -v
+            BUANG_TEST_GITHUB_USER=${{ secrets.BUANG_TEST_GITHUB_USER }} BUANG_TEST_GITHUB_PAT=${{ secrets.BUANG_TEST_GITHUB_PAT }} task test-fitness-ci -- -v

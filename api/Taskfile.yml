@@ -84,44 +84,32 @@ tasks:
       - echo "Buang depends on Temporal, you can use Temporal Cloud or self host it by following the docs at https://docs.temporal.io/self-hosted-guide"
       - docker-compose -f docker-compose.prod.yml up
 
-  # TODO: base64 encoded token so that we don't trip github secret scanning for now
-  # TODO: from repo secrets
   test-int-ci:
     desc: Run tests
     cmds:
-      - GO_ENV="test" BUANG_TRAEFIK_DYNAMIC_CONFIG_DIR="/tmp/buang_test" TESTCONTAINERS_REUSE_ENABLE=false BUANG_TEST_GITHUB_USER="nmathew98" BUANG_TEST_GITHUB_PAT="$(echo 'Z2l0aHViX3BhdF8xMUFORVFHSUEwRjNac0dMazZoNFpHX283YmR6TTdldUllbm5xWXdOWjlhcVJaaEN6YmdJa2JiUFlVc2pxR1FUTldVUkU1T1dJSmYyWmFYdWhLCg==' | base64 -d)" go test -count=1 {{.CLI_ARGS}} ./tests/integration_tests
+      - GO_ENV="test" BUANG_TRAEFIK_DYNAMIC_CONFIG_DIR="/tmp/buang_test" TESTCONTAINERS_REUSE_ENABLE=false BUANG_TEST_GITHUB_USER=$BUANG_TEST_GITHUB_USER BUANG_TEST_GITHUB_PAT=$BUANG_TEST_GITHUB_PAT go test -count=1 {{.CLI_ARGS}} ./tests/integration_tests
 
-  # TODO: base64 encoded token so that we don't trip github secret scanning for now
-  # TODO: from repo secrets
   test-fitness-ci:
     desc: Run tests
     cmds:
-      - GO_ENV="test" BUANG_TRAEFIK_DYNAMIC_CONFIG_DIR="/tmp/buang_test" TESTCONTAINERS_REUSE_ENABLE=false BUANG_TEST_GITHUB_USER="nmathew98" BUANG_TEST_GITHUB_PAT="$(echo 'Z2l0aHViX3BhdF8xMUFORVFHSUEwRjNac0dMazZoNFpHX283YmR6TTdldUllbm5xWXdOWjlhcVJaaEN6YmdJa2JiUFlVc2pxR1FUTldVUkU1T1dJSmYyWmFYdWhLCg==' | base64 -d)" go test -count=1 {{.CLI_ARGS}} ./tests/fitness_tests
+      - GO_ENV="test" BUANG_TRAEFIK_DYNAMIC_CONFIG_DIR="/tmp/buang_test" TESTCONTAINERS_REUSE_ENABLE=false BUANG_TEST_GITHUB_USER=$BUANG_TEST_GITHUB_USER BUANG_TEST_GITHUB_PAT=$BUANG_TEST_GITHUB_PAT go test -count=1 {{.CLI_ARGS}} ./tests/fitness_tests
 
-  # TODO: base64 encoded token so that we don't trip github secret scanning for now
-  # TODO: from repo secrets
   test-int:
     desc: Run tests
     cmds:
-      - GO_ENV="test" TESTCONTAINERS_REUSE_ENABLE=false BUANG_TEST_GITHUB_USER="nmathew98" BUANG_TEST_GITHUB_PAT="$(echo 'Z2l0aHViX3BhdF8xMUFORVFHSUEwRjNac0dMazZoNFpHX283YmR6TTdldUllbm5xWXdOWjlhcVJaaEN6YmdJa2JiUFlVc2pxR1FUTldVUkU1T1dJSmYyWmFYdWhLCg==' | base64 -d)" go test -count=1 {{.CLI_ARGS}} ./tests/integration_tests
+      - GO_ENV="test" TESTCONTAINERS_REUSE_ENABLE=false BUANG_TEST_GITHUB_USER=$BUANG_TEST_GITHUB_USER BUANG_TEST_GITHUB_PAT=$BUANG_TEST_GITHUB_PAT go test -count=1 {{.CLI_ARGS}} ./tests/integration_tests
 
-  # TODO: base64 encoded token so that we don't trip github secret scanning for now
-  # TODO: from repo secrets
   test-int-watch:
     desc: Run tests in watch mode
     cmds:
-      - GO_ENV="test" TESTCONTAINERS_REUSE_ENABLE=false BUANG_TEST_GITHUB_USER="nmathew98" BUANG_TEST_GITHUB_PAT="$(echo 'Z2l0aHViX3BhdF8xMUFORVFHSUEwRjNac0dMazZoNFpHX283YmR6TTdldUllbm5xWXdOWjlhcVJaaEN6YmdJa2JiUFlVc2pxR1FUTldVUkU1T1dJSmYyWmFYdWhLCg==' | base64 -d)" gow test -count=1 {{.CLI_ARGS}} ./tests/integration_tests
+      - GO_ENV="test" TESTCONTAINERS_REUSE_ENABLE=false BUANG_TEST_GITHUB_USER=$BUANG_TEST_GITHUB_USER BUANG_TEST_GITHUB_PAT=$BUANG_TEST_GITHUB_PAT gow test -count=1 {{.CLI_ARGS}} ./tests/integration_tests
 
-  # TODO: base64 encoded token so that we don't trip github secret scanning for now
-  # TODO: from repo secrets
   test-fitness:
     desc: Run tests
     cmds:
-      - GO_ENV="test" TESTCONTAINERS_REUSE_ENABLE=false BUANG_TEST_GITHUB_USER="nmathew98" BUANG_TEST_GITHUB_PAT="$(echo 'Z2l0aHViX3BhdF8xMUFORVFHSUEwRjNac0dMazZoNFpHX283YmR6TTdldUllbm5xWXdOWjlhcVJaaEN6YmdJa2JiUFlVc2pxR1FUTldVUkU1T1dJSmYyWmFYdWhLCg==' | base64 -d)" go test -count=1 {{.CLI_ARGS}} ./tests/fitness_tests
+      - GO_ENV="test" TESTCONTAINERS_REUSE_ENABLE=false BUANG_TEST_GITHUB_USER=$BUANG_TEST_GITHUB_USER BUANG_TEST_GITHUB_PAT=$BUANG_TEST_GITHUB_PAT go test -count=1 {{.CLI_ARGS}} ./tests/fitness_tests
 
-  # TODO: base64 encoded token so that we don't trip github secret scanning for now
-  # TODO: from repo secrets
   test-fitness-watch:
     desc: Run fitness tests in watch mode
     cmds:
-      - GO_ENV="test" TESTCONTAINERS_REUSE_ENABLE=false BUANG_TEST_GITHUB_USER="nmathew98" BUANG_TEST_GITHUB_PAT="$(echo 'Z2l0aHViX3BhdF8xMUFORVFHSUEwRjNac0dMazZoNFpHX283YmR6TTdldUllbm5xWXdOWjlhcVJaaEN6YmdJa2JiUFlVc2pxR1FUTldVUkU1T1dJSmYyWmFYdWhLCg==' | base64 -d)" gow test -count=1 {{.CLI_ARGS}} ./tests/fitness_tests
+      - GO_ENV="test" TESTCONTAINERS_REUSE_ENABLE=false BUANG_TEST_GITHUB_USER=$BUANG_TEST_GITHUB_USER BUANG_TEST_GITHUB_PAT=$BUANG_TEST_GITHUB_PAT gow test -count=1 {{.CLI_ARGS}} ./tests/fitness_tests
