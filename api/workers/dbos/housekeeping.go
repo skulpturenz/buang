@@ -15,7 +15,7 @@ func Housekeping(s app.ApplicationServices, ctx dbos.DBOSContext) {
 
 	dbos.RegisterWorkflow(ctx, bh.BuangHousekeeping,
 		dbos.WithSchedule(fmt.Sprintf("%v *", constantsenvs.HOUSEKEEPING_PRUNE_DEPLOYMENTS.Value())),
-		dbos.WithMaxRetries(3))
+		dbos.WithMaxRetries(10))
 
 	goEnv, _ := enumsenv.Parse(constantsenvs.GO_ENV.Value())
 	isBootstrapEnabled, _ := constantsenvs.EXPERIMENTAL_BOOTSTRAP.Value()
@@ -27,6 +27,6 @@ func Housekeping(s app.ApplicationServices, ctx dbos.DBOSContext) {
 
 		dbos.RegisterWorkflow(ctx, ab.PeriodicUpdateHandler,
 			dbos.WithSchedule(fmt.Sprintf("%v *", schedule)),
-			dbos.WithMaxRetries(3))
+			dbos.WithMaxRetries(10))
 	}
 }

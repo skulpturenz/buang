@@ -136,9 +136,6 @@ func (d Deploy) Deploy(ctx dbos.DBOSContext, p DeployParams) (res bool, err erro
 		return false, err
 	}
 
-	// TODO:
-	// pull rate limit errors would require an hour before retries
-	// invalid compose file and everything else: fail immediately
 	cloneDeployment, err := dbos.RunAsStep(ctx,
 		func(ctx context.Context) (*activities.CloneDeploymentResult, error) {
 			cloneDeployment := activities.CloneDeployment(s)
@@ -163,9 +160,6 @@ func (d Deploy) Deploy(ctx dbos.DBOSContext, p DeployParams) (res bool, err erro
 		return false, err
 	}
 
-	// TODO:
-	// image pull rate limit errors would require 6 hours before retries
-	// invalid compose file and everything else: fail immediately
 	_, err = dbos.RunAsStep(ctx,
 		func(ctx context.Context) (*activities.DeployProjectResult, error) {
 			deployProject := activities.DeployProject(s)

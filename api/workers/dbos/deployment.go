@@ -9,5 +9,5 @@ import (
 
 func Deployment(s app.ApplicationServices, ctx dbos.DBOSContext) {
 	d := dbosworkflows.Deploy(s)
-	dbos.RegisterWorkflow(ctx, d.Deploy, dbos.WithMaxRetries(3))
+	dbos.RegisterWorkflow(ctx, d.Deploy, dbos.WithMaxRetries(10))
 }
