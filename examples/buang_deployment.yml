@@ -1,0 +1,24 @@
+name: Buang preview deployment
+
+on:
+  pull_request:
+    types:
+      - closed
+      - merged
+
+env:
+  BUANG_API_BASE_URL: '' # TODO
+  BUANG_API_KEY: '' # TODO
+  BUANG_PROJECT_ID: '' # TODO
+  BUANG_DEPLOYMENT_BRANCH: ${{ github.ref }}
+
+jobs:
+  deploy-preview:
+    runs-on: ubuntu-latest
+
+    steps:
+      - run: |
+          curl -X DELETE '${{ env.BUANG_API_BASE_URL }}/api/v1/project/${{ env.BUANG_PROJECT_ID }}/branch'
+               -H 'X-API-KEY: ${{ env.BUANG_API_KEY }}' \
+               -H 'Content-Type: application/json' \
+               -d '{ "branch": "${{ env.BUANG_DEPLOYMENT_BRANCH }}" }'
