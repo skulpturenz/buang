@@ -2,9 +2,17 @@
 
 All notable changes to this project will be documented in this file.
 
+## 1.0.0-canary.3 - 2026-02-04
+
+[b1ae734](b1ae734e5c4c0435ccb39a886cb31cc5e319da9d)...[316b4c9](316b4c9f6ba41c5b2a4d57e2d45773545bf1ed96)
+
+### Miscellaneous Tasks
+
+- Update release workflow (#14) ([200ff8d](200ff8d734e27656a6ae18a63ced5129a6ea3a80))
+
 ## 1.0.0-canary.2 - 2026-02-04
 
-[df15f85](df15f85203a298344a21dcf54a10261ff99dc326)...[b3aa110](b3aa110c932fa11a526466ba69ebdf316ad9567d)
+[df15f85](df15f85203a298344a21dcf54a10261ff99dc326)...[b1ae734](b1ae734e5c4c0435ccb39a886cb31cc5e319da9d)
 
 ### Miscellaneous Tasks
 
@@ -12,6 +20,7 @@ All notable changes to this project will be documented in this file.
 - Add examples ([7e5918e](7e5918e2e3c9ee8d55c5e2835639fc161e2e66a4))
 - Add status checks workflow ([b0dfe9a](b0dfe9a8a65191a3bbc5e3f2746f74e6839d522e))
 - Test workflow secrets (#12) ([6ceba7d](6ceba7daa3acdaa14d662c5a08e9b8e36dacb117))
+- Update changelog ([b1ae734](b1ae734e5c4c0435ccb39a886cb31cc5e319da9d))
 
 ## 1.0.0-canary.1 - 2026-02-03
 
