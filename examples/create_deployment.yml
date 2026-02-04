@@ -1,0 +1,56 @@
+name: Create preview deployment
+
+on:
+  pull_request:
+    types:
+      - opened
+      - reopened
+      - synchronize
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: false
+
+env:
+  BUANG_API_BASE_URL: '' # TODO
+  BUANG_API_KEY: '' # TODO
+  BUANG_PROJECT_ID: '' # TODO
+  CREATE_DEPLOYMENT_BRANCH: ${{ github.ref }}
+  CREATE_DEPLOYMENT_SHA: ${{ github.sha }}
+  CREATE_DEPLOYMENT_SERVICE_ENTRYPOINT: ${{ secrets.SERVICE_ENTRYPOINT }} # TODO
+  CREATE_DEPLOYMENT_ENV: ${{ secrets.PREVIEW_ENV }} # TODO
+
+jobs:
+  deploy-preview:
+    runs-on: ubuntu-latest
+    permissions:
+      pull-requests: write
+
+    steps:
+      - id: json
+        run: |
+          REQUEST='{ "branch": "${{ env.CREATE_DEPLOYMENT_BRANCH }}", "sha": "${{ env.CREATE_DEPLOYMENT_SHA }}", "serviceEntrypoint": "${{ env.CREATE_DEPLOYMENT_SERVICE_ENTRYPOINT }}", "env": ${{ env.CREATE_DEPLOYMENT_ENV }} }'
+
+          echo 'create_deployment=$REQUEST' >> '$GITHUB_OUTPUT'
+
+      - id: new_deployment
+        run: |
+          DEPLOYMENT_ID=$(curl -X POST '${{ env.BUANG_API_BASE_URL }}/api/v1/project/${{ env.BUANG_PROJECT_ID }}/deployment?waitForDeployment=true' \
+                               -H 'X-API-KEY: ${{ env.BUANG_API_KEY }}' \
+                               -H 'Content-Type: application/json' \
+                               -d '${{ steps.json.outputs.create_deployment }}')
+
+          echo 'new_deployment_id=$DEPLOYMENT_ID' >> '$GITHUB_OUTPUT'
+
+      - id: new_deployment_details
+        run: |
+          RES_DEPLOYMENT_DETAILS=$(curl -X GET '${{ env.BUANG_API_BASE_URL }}/api/v1/project/${{ env.BUANG_PROJECT_ID }}/deployment/${{ steps.new_deployment.outputs.new_deployment_id }}' -H 'X-API-KEY: ${{ env.BUANG_API_KEY }}')
+
+          DEPLOYMENT_URL=$(jq -r '.url' $RES_DEPLOYMENT_DETAILS )
+
+          echo 'deployment_url=$DEPLOYMENT_URL' >> '$GITHUB_OUTPUT'
+
+      - uses: thollander/actions-comment-pull-request@v3
+        with:
+          message: Preview branch deployed at [${{ env.BUANG_API_BASE_URL }}${{ steps.new_deployment_details.outputs.deployment_url }}](${{ env.BUANG_API_BASE_URL }}${{ steps.new_deployment_details.outputs.deployment_url }})
+          comment-tag: execution
