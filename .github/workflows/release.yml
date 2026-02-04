@@ -20,6 +20,15 @@ jobs:
 
     runs-on: ubuntu-latest
     steps:
+      - name: Create GitHub App Token
+        uses: actions/create-github-app-token@v2
+        id: github-app-token
+        with:
+          app-id: ${{ secrets.GH_APP_ID }}
+          private-key: ${{ secrets.GH_APP_PRIVATE_KEY }}
+          owner: ${{ github.repository_owner }}
+          repositories: ${{ github.event.repository.name }}
+
       - name: Checkout
         uses: actions/checkout@v4
         with:
@@ -72,12 +81,13 @@ jobs:
         with:
           message: "chore(release-${{ steps.bump.outputs.version_tag }}): update changelog"
           ref: ${{ github.base_ref }}
+          token: ${{ steps.github-app-token.outputs.token }}
           files: |
             CHANGELOG.md
 
       - uses: zwaldowski/semver-release-action@v6
         with:
-          github_token: ${{ secrets.GITHUB_TOKEN }}
+          github_token: ${{ steps.github-app-token.outputs.token }}
           bump: ${{ case(
             contains(github.base_ref, 'canary') && contains(steps.release-label.outputs.match, 'patch'), 'prepatch',
             contains(github.base_ref, 'canary') && contains(steps.release-label.outputs.match, 'minor'), 'preminor',
@@ -106,3 +116,4 @@ jobs:
           target_commitish: ${{ github.base_ref }}
           generate_release_notes: false
           body: ${{ steps.unreleased-changelog.outputs.content }}
+          token: ${{ steps.github-app-token.outputs.token }}
