@@ -2,9 +2,17 @@ name: Test services
 
 on:
   push:
-    branches: [master, staging, dev]
+    branches:
+      - master
+      - staging/*
+      - canary/*
+      - dev
   pull_request:
-    branches: [master, staging, dev]
+    branches:
+      - master
+      - staging/*
+      - canary/*
+      - dev
   workflow_dispatch:
 
 jobs:
