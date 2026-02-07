@@ -36,11 +36,14 @@ jobs:
           username: ${{ secrets.DOCKERHUB_USERNAME }}
           password: ${{ secrets.DOCKERHUB_TOKEN }}
 
+      - name: 'Short sha'
+        id: vars_sha
+        run: echo "short_sha=${GITHUB_SHA::7}" >> "$GITHUB_OUTPUT"
+
       - name: "Build Docker image: buang-api"
         uses: docker/build-push-action@v5
         env:
-          TAG: ${{ case(env.BRANCH_NAME == 'master', 'latest',
-            format('{0}-{1}', env.BRANCH_NAME, steps.vars_sha.outputs.short_sha) )}}
+          TAG: ${{ case(env.BRANCH_NAME == 'master', 'latest', format('{0}-{1}', env.BRANCH_NAME, steps.vars_sha.outputs.short_sha) )}}
         with:
           context: "{{defaultContext}}:api"
           platforms: ${{ matrix.os == 'ubuntu-latest' && 'linux/amd64' || 'linux/arm64' }}
@@ -69,11 +72,14 @@ jobs:
           username: ${{ secrets.DOCKERHUB_USERNAME }}
           password: ${{ secrets.DOCKERHUB_TOKEN }}
 
+      - name: 'Short sha'
+        id: vars_sha
+        run: echo "short_sha=${GITHUB_SHA::7}" >> "$GITHUB_OUTPUT"
+
       - name: Push ${{ matrix.image }}
         uses: Noelware/docker-manifest-action@v1
         env:
-          TAG: ${{ case(env.BRANCH_NAME == 'master', 'latest',
-            format('{0}-{1}', env.BRANCH_NAME, steps.vars_sha.outputs.short_sha) )}}
+          TAG: ${{ case(env.BRANCH_NAME == 'master', 'latest', format('{0}-{1}', env.BRANCH_NAME, steps.vars_sha.outputs.short_sha) )}}
         with:
           inputs: >
             ${{ matrix.image }}:${{ env.TAG }}-amd64,
