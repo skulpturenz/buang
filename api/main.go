@@ -197,7 +197,7 @@ func main() {
 	}
 
 	appConfig := app.ApplicationConfig{
-		HttpPort: ":80",
+		HttpPort: fmt.Sprintf(":%v", constantsenvs.BUANG_PORT.Value()),
 		Services: s,
 	}
 	app, err := appConfig.New(ctx, r)
