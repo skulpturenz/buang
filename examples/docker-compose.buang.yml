@@ -46,7 +46,7 @@ services:
     labels:
       traefik.enable: "true"
       traefik.http.routers.buang.rule: PathRegexp(`*`)
-      traefik.http.services.buang-service.loadbalancer.server.port: ${BUANG_PORT}
+      traefik.http.services.buang-service.loadbalancer.server.port: ${BUANG_PORT:-80}
       traefik.http.services.buang-service.loadbalancer.server.scheme: http
       traefik.http.services.buang-service.loadbalancer.healthcheck.path: /ping
       traefik.http.services.buang-service.loadbalancer.healthcheck.status: 200
@@ -55,8 +55,8 @@ services:
       GO_ENV: "production"
       BUANG_LOG_LEVEL: ${BUANG_LOG_LEVEL}
       BUANG_API_KEY: ${BUANG_API_KEY}
-      BUANG_ENABLE_TELEMETRY: ${BUANG_ENABLE_TELEMETRY}
-      BUANG_OTEL_SERVICE_NAME: ${BUANG_OTEL_SERVICE_NAME}
+      BUANG_ENABLE_TELEMETRY: ${BUANG_ENABLE_TELEMETRY:-false}
+      BUANG_OTEL_SERVICE_NAME: ${BUANG_OTEL_SERVICE_NAME:-buang}
       BUANG_OTEL_EXPORTER_OTLP_ENDPOINT: ${BUANG_OTEL_EXPORTER_OTLP_ENDPOINT}
       BUANG_DB_TYPE: ${BUANG_DB_TYPE}
       BUANG_DB_CONNECTION_STRING: ${BUANG_DB_CONNECTION_STRING}
@@ -66,9 +66,9 @@ services:
       TEMPORAL_NAMESPACE: ${BUANG_TEMPORAL_NAMESPACE}
       TEMPORAL_ADDRESS: ${BUANG_TEMPORAL_ADDRESS}
       BUANG_DURABLE_EXECUTOR: ${BUANG_DURABLE_EXECUTOR}
-      DBOS_CONDUCTOR_API_KEY: ${BUANG_DBOS_CONDUCTOR_API_KEY}
-      DBOS_CONDUCTOR_URL: ${BUANG_DBOS_CONDUCTOR_URL}
-      DBOS_ADMIN_SERVER_PORT: ${BUANG_DBOS_ADMIN_SERVER_PORT}
+      BUANG_DBOS_CONDUCTOR_API_KEY: ${BUANG_DBOS_CONDUCTOR_API_KEY}
+      BUANG_DBOS_CONDUCTOR_URL: ${BUANG_DBOS_CONDUCTOR_URL}
+      BUANG_DBOS_ADMIN_SERVER_PORT: ${BUANG_DBOS_ADMIN_SERVER_PORT}
       BUANG_ENABLE_EXPERIMENTAL_BOOTSTRAP: ${BUANG_ENABLE_EXPERIMENTAL_BOOTSTRAP}
       BUANG_HOUSEKEEPING_PRUNE_DEPLOYMENTS: ${BUANG_HOUSEKEEPING_PRUNE_DEPLOYMENTS}
       BUANG_EXPERIMENTAL_HOUSEKEEPING_AUTO_UPDATE: ${BUANG_EXPERIMENTAL_HOUSEKEEPING_AUTO_UPDATE}
