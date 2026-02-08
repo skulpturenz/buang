@@ -6,7 +6,7 @@ COPY . .
 
 # TODO: BUMP
 ARG VERSION="unknown"
-RUN go build -ldflags "-X skulpture/buang/constants/envs/envs.BUANG_VERSION=$VERSION"
+RUN go build -ldflags "-X skulpture/buang/constants/envs.BUANG_VERSION=$VERSION"
 
 FROM alpine
 
