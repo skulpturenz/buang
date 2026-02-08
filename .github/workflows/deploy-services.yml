@@ -48,7 +48,7 @@ jobs:
           context: "{{defaultContext}}:api"
           platforms: ${{ matrix.os == 'ubuntu-latest' && 'linux/amd64' || 'linux/arm64' }}
           push: true
-          build-args: VERSION='${{ github.sha }}'
+          build-args: VERSION='${{ steps.vars_sha.outputs.short_sha }}'
           tags: |
             skulpture/buang-api:${{ env.TAG }}-${{ matrix.os == 'ubuntu-latest' && 'amd64' || 'arm64' }}
 
@@ -79,11 +79,13 @@ jobs:
       - name: Push ${{ matrix.image }}
         uses: Noelware/docker-manifest-action@v1
         env:
+          BRANCH_TAG: ${{ case(env.BRANCH_NAME == 'master', 'latest', env.BRANCH_NAME )}}
           TAG: ${{ case(env.BRANCH_NAME == 'master', 'latest', format('{0}-{1}', env.BRANCH_NAME, steps.vars_sha.outputs.short_sha) )}}
         with:
           inputs: >
             ${{ matrix.image }}:${{ env.TAG }}-amd64,
             ${{ matrix.image }}:${{ env.TAG }}-arm64
-          tags: >
-            ${{ matrix.image }}:${{ env.TAG }}
+          tags: >-
+            ${{ matrix.image }}:${{ env.TAG }},
+            ${{ matrix.image }}:${{ env.BRANCH_TAG }}
           push: true

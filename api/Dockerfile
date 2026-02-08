@@ -1,7 +1,7 @@
+FROM golang:alpine AS build
+
 # TODO: BUMP
 ARG VERSION="unknown"
-
-FROM golang:alpine AS build
 
 WORKDIR /build
 
