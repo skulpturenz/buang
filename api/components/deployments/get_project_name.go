@@ -24,5 +24,5 @@ func GetProjectName(p GetProjectNameParams) string {
 		p.DeployedAt.UnixMilli())
 	projectNameSha := sha256.Sum256([]byte(projectName))
 
-	return fmt.Sprintf("%.*s", 12, projectNameSha)
+	return fmt.Sprintf("%.*x", 12, projectNameSha)
 }
