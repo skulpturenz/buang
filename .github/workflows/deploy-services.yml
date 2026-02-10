@@ -85,10 +85,6 @@ jobs:
           username: ${{ secrets.DOCKERHUB_USERNAME }}
           password: ${{ secrets.DOCKERHUB_TOKEN }}
 
-      - name: 'Short sha'
-        id: vars_sha
-        run: echo "short_sha=${GITHUB_SHA::7}" >> "$GITHUB_OUTPUT"
-
       - name: Docker meta
         id: meta
         uses: docker/metadata-action@v5
