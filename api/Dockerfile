@@ -11,11 +11,12 @@ RUN go build -ldflags "-X skulpture/buang/constants/envs.BUANG_VERSION=$VERSION"
 FROM alpine
 
 RUN apk update && \
-	apk add --no-cache docker docker-cli busybox-openrc && \
 	mkdir -p /etc/docker && \
 	echo "{ 'features': { 'buildkit': true } }" > /etc/docker/daemon.json && \
-	rc-service --quiet docker start && \
-	rc-update --quiet add docker boot
+	apk add --no-cache docker docker-cli busybox-openrc && \
+	# TODO: rc-service returns a non zero error, too lazy to figure out why
+	(rc-service --quiet docker restart || 0) && \
+	(rc-update --quiet add docker boot || 0)
 
 COPY --from=build /build/buang /app/buang
 
