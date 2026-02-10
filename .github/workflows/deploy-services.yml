@@ -53,7 +53,7 @@ jobs:
           flavor: |
             latest=auto
             prefix=
-            suffix: ${{ matrix.os == 'ubuntu-latest' && 'amd64' || 'arm64' }}
+            suffix= ${{ matrix.os == 'ubuntu-latest' && 'amd64' || 'arm64' }}
           sep-tags: ','
             
       - name: "Build Docker image: buang-api"
