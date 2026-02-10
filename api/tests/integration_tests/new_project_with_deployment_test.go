@@ -4,6 +4,7 @@ import (
 	"archive/tar"
 	"bytes"
 	"context"
+	"crypto/sha256"
 	"encoding/json"
 	"fmt"
 	"io"
@@ -264,7 +265,8 @@ func createNewProjectWithDeployment(t *testing.T, config testutils.DurableExecut
 			deployment.Deployment.GetBranch(),
 			sha,
 			deployment.Deployment.GetDeployedAt().UnixMilli())
-		deploymentConfigPath := filepath.Join(TRAEFIK_DYNAMIC_CONFIG, fmt.Sprintf("buang-%v.yaml", projectName))
+		projectNameSha := fmt.Sprintf("%.*x", 12, sha256.Sum256([]byte(projectName)))
+		deploymentConfigPath := filepath.Join(TRAEFIK_DYNAMIC_CONFIG, fmt.Sprintf("buang-%v.yaml", projectNameSha))
 		require.FileExists(t, deploymentConfigPath)
 
 		cli, err := command.NewDockerCli(command.WithAPIClient(docker))
@@ -277,14 +279,14 @@ func createNewProjectWithDeployment(t *testing.T, config testutils.DurableExecut
 
 		composeProject, err := svc.LoadProject(ctx, api.ProjectLoadOptions{
 			ConfigPaths: []string{filepath.Join(*deployment.Deployment.GetClonePath(), p.Project.GetComposePath())},
-			ProjectName: projectName,
+			ProjectName: projectNameSha,
 		})
 		require.NoError(t, err)
 
 		require.Len(t, composeProject.AllServices(), EXPECTED_SERVICES)
 
 		filters := filters.NewArgs()
-		filters.Add("label", fmt.Sprintf("com.docker.compose.project=%s", projectName))
+		filters.Add("label", fmt.Sprintf("com.docker.compose.project=%s", projectNameSha))
 		containers, err := docker.ContainerList(ctx, container.ListOptions{
 			Filters: filters,
 		})

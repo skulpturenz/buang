@@ -47,6 +47,7 @@ func (c logConsumer) Status(containerName, message string) {
 }
 
 func (c ComposeUpParams) Exec(ctx context.Context, s *app.ApplicationServices) (*ComposeUpResult, func(ctx context.Context), error) {
+	os.Setenv("DOCKER_BUILDKIT", "1")
 	cliOptions := []command.CLIOption{
 		command.WithAPIClient(s.Docker),
 	}
@@ -65,6 +66,7 @@ func (c ComposeUpParams) Exec(ctx context.Context, s *app.ApplicationServices) (
 
 	options := []compose.Option{
 		compose.WithPrompt(compose.AlwaysOkPrompt()),
+		compose.WithContextInfo(&contextInfo{cli: cli}),
 	}
 	if c.Writer != nil {
 		// TODO: idk what this output stream is supposed to be but its not logs when the service is deploying
@@ -173,4 +175,24 @@ func followSvcLogs(ctx context.Context, projectName string, logConsumer logConsu
 			}
 		}
 	}
+}
+
+type contextInfo struct {
+	cli command.Cli
+}
+
+func (c *contextInfo) CurrentContext() string {
+	return c.cli.CurrentContext()
+}
+
+func (c *contextInfo) ServerOSType() string {
+	return c.cli.ServerInfo().OSType
+}
+
+func (c *contextInfo) BuildKitEnabled() (bool, error) {
+	// the cli checks env by default
+	// override and hardcode to true
+	// see: dockerCliContextInfo.BuildKitEnabled
+	// DockerCli.BuildKitEnabled
+	return true, nil
 }
