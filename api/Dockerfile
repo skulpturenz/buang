@@ -12,7 +12,7 @@ FROM alpine
 
 RUN apk update && \
 	mkdir -p /etc/docker && \
-	echo "{ 'features': { 'buildkit': true } }" > /etc/docker/daemon.json && \
+	echo "{ \"features\": { \"buildkit\": true } }" > /etc/docker/daemon.json && \
 	apk add --no-cache docker docker-cli busybox-openrc && \
 	# TODO: rc-service returns a non zero error, too lazy to figure out why
 	(rc-service --quiet docker restart || true) && \
