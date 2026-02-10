@@ -31,18 +31,22 @@ jobs:
           username: ${{ secrets.DOCKERHUB_USERNAME }}
           password: ${{ secrets.DOCKERHUB_TOKEN }}
 
-      - name: 'Short sha'
-        id: vars_sha
-        run: echo "short_sha=${GITHUB_SHA::7}" >> "$GITHUB_OUTPUT"
+      - name: Docker meta
+        id: meta
+        uses: docker/metadata-action@v5
+        with:
+          images: skulpture/buang-api
+          tags: |
+            type=ref,event=branch
+            type=ref,event=pr
+            type=semver,pattern={{version}}
+            type=semver,pattern={{major}}.{{minor}}
+          sep-tags: ','
 
       - name: "Build Docker image: buang-api"
         uses: docker/build-push-action@v5
-        env:
-          TAG: ${{ case(env.BRANCH_NAME == 'master', 'latest',
-            format('{0}-{1}', env.BRANCH_NAME, steps.vars_sha.outputs.short_sha) )}}
         with:
           context: "{{defaultContext}}:api"
           platforms: ${{ matrix.os == 'ubuntu-latest' && 'linux/amd64' || 'linux/arm64' }}
           push: false
-          tags: |
-            skulpture/buang-api:${{ env.TAG }}
+          tags: ${{ steps.meta.outputs.tags }}

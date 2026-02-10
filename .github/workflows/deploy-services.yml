@@ -2,11 +2,10 @@ name: Deploy services
 
 on:
   push:
+    tags:
+      - 'v*'
     branches:
-        - master
-        - staging/*
-        - canary/*
-        - dev
+      - dev
   workflow_dispatch:
 
 concurrency:
@@ -24,6 +23,8 @@ jobs:
 
     if: ${{ always() }}
     runs-on: ${{ matrix.os }}
+    outputs:
+      tags: ${{ steps.meta.outputs.tags }}
     steps:
       - uses: actions/checkout@v4
 
@@ -40,17 +41,29 @@ jobs:
         id: vars_sha
         run: echo "short_sha=${GITHUB_SHA::7}" >> "$GITHUB_OUTPUT"
 
+      - name: Docker meta
+        id: meta
+        uses: docker/metadata-action@v5
+        with:
+          images: skulpture/buang-api
+          tags: |
+            type=ref,event=branch
+            type=semver,pattern={{version}}
+            type=semver,pattern={{major}}.{{minor}}
+          flavor: |
+            latest=auto
+            prefix=
+            suffix: ${{ matrix.os == 'ubuntu-latest' && 'amd64' || 'arm64' }}
+          sep-tags: ','
+            
       - name: "Build Docker image: buang-api"
         uses: docker/build-push-action@v5
-        env:
-          TAG: ${{ case(env.BRANCH_NAME == 'master', 'latest', format('{0}-{1}', env.BRANCH_NAME, steps.vars_sha.outputs.short_sha) )}}
         with:
           context: "{{defaultContext}}:api"
           platforms: ${{ matrix.os == 'ubuntu-latest' && 'linux/amd64' || 'linux/arm64' }}
           push: true
           build-args: VERSION=${{ steps.vars_sha.outputs.short_sha }}
-          tags: |
-            skulpture/buang-api:${{ env.TAG }}-${{ matrix.os == 'ubuntu-latest' && 'amd64' || 'arm64' }}
+          tags: ${{ steps.meta.outputs.tags }}
 
   docker-push:
     needs: build
@@ -72,20 +85,20 @@ jobs:
           username: ${{ secrets.DOCKERHUB_USERNAME }}
           password: ${{ secrets.DOCKERHUB_TOKEN }}
 
-      - name: 'Short sha'
-        id: vars_sha
-        run: echo "short_sha=${GITHUB_SHA::7}" >> "$GITHUB_OUTPUT"
+      - name: Docker meta
+        id: meta
+        uses: docker/metadata-action@v5
+        with:
+          images: skulpture/buang-api
+          tags: |
+            type=ref,event=branch
+            type=semver,pattern={{version}}
+            type=semver,pattern={{major}}.{{minor}}
+          sep-tags: ','
 
       - name: Push ${{ matrix.image }}
         uses: Noelware/docker-manifest-action@v1
-        env:
-          BRANCH_TAG: ${{ case(env.BRANCH_NAME == 'master', 'latest', env.BRANCH_NAME )}}
-          TAG: ${{ case(env.BRANCH_NAME == 'master', 'latest', format('{0}-{1}', env.BRANCH_NAME, steps.vars_sha.outputs.short_sha) )}}
         with:
-          inputs: >
-            ${{ matrix.image }}:${{ env.TAG }}-amd64,
-            ${{ matrix.image }}:${{ env.TAG }}-arm64
-          tags: >-
-            ${{ matrix.image }}:${{ env.TAG }},
-            ${{ matrix.image }}:${{ env.BRANCH_TAG }}
+          inputs: ${{ needs.build.outputs.tags }}
+          tags: ${{ steps.meta.outputs.tags }}
           push: true
