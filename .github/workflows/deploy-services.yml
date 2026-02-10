@@ -23,8 +23,6 @@ jobs:
 
     if: ${{ always() }}
     runs-on: ${{ matrix.os }}
-    outputs:
-      tags: ${{ steps.meta.outputs.tags }}
     steps:
       - uses: actions/checkout@v4
 
@@ -86,6 +84,36 @@ jobs:
           password: ${{ secrets.DOCKERHUB_TOKEN }}
 
       - name: Docker meta
+        id: meta-amd64
+        uses: docker/metadata-action@v5
+        with:
+          images: skulpture/buang-api
+          tags: |
+            type=ref,event=branch
+            type=semver,pattern={{version}}
+            type=semver,pattern={{major}}.{{minor}}
+          flavor: |
+            latest=auto
+            prefix=
+            suffix=amd64
+          sep-tags: ','
+
+      - name: Docker meta
+        id: meta-arm64
+        uses: docker/metadata-action@v5
+        with:
+          images: skulpture/buang-api
+          tags: |
+            type=ref,event=branch
+            type=semver,pattern={{version}}
+            type=semver,pattern={{major}}.{{minor}}
+          flavor: |
+            latest=auto
+            prefix=
+            suffix=arm64
+          sep-tags: ','
+      
+      - name: Docker meta
         id: meta
         uses: docker/metadata-action@v5
         with:
@@ -99,6 +127,6 @@ jobs:
       - name: Push ${{ matrix.image }}
         uses: Noelware/docker-manifest-action@v1
         with:
-          inputs: ${{ needs.build.outputs.tags }}
+          inputs: ${{ steps.meta-amd64.outputs.tags }},${{ steps.meta-arm64.outputs.tags }}
           tags: ${{ steps.meta.outputs.tags }}
           push: true
