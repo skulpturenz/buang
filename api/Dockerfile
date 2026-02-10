@@ -14,8 +14,8 @@ RUN apk update && \
 	apk add --no-cache docker docker-cli busybox-openrc && \
 	mkdir -p /etc/docker && \
 	echo "{ 'features': { 'buildkit': true } }" > /etc/docker/daemon.json && \
-	rc-service docker start && \
-	rc-update add docker boot
+	rc-service --quiet docker start && \
+	rc-update --quiet add docker boot
 
 COPY --from=build /build/buang /app/buang
 
