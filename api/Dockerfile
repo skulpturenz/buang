@@ -15,8 +15,8 @@ RUN apk update && \
 	echo "{ 'features': { 'buildkit': true } }" > /etc/docker/daemon.json && \
 	apk add --no-cache docker docker-cli busybox-openrc && \
 	# TODO: rc-service returns a non zero error, too lazy to figure out why
-	(rc-service --quiet docker restart || 0) && \
-	(rc-update --quiet add docker boot || 0)
+	(rc-service --quiet docker restart || true) && \
+	(rc-update --quiet add docker boot || true)
 
 COPY --from=build /build/buang /app/buang
 
