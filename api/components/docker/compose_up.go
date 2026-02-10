@@ -8,7 +8,6 @@ import (
 	"skulpture/buang/app"
 	"time"
 
-	"github.com/compose-spec/compose-go/v2/types"
 	"github.com/docker/cli/cli/command"
 	"github.com/docker/cli/cli/flags"
 	"github.com/docker/compose/v5/pkg/api"
@@ -118,11 +117,11 @@ func (c ComposeUpParams) Exec(ctx context.Context, s *app.ApplicationServices) (
 	go followSvcLogs(logCtx, project.Name, logConsumer, svc)
 	defer cancelLogCtx()
 
+	os.Setenv("DOCKER_BUILDKIT", "1")
 	buildOptions := api.BuildOptions{
 		Pull: true,
 		Push: true,
 		Deps: true,
-		Args: types.NewMappingWithEquals([]string{"DOCKER_BUILDKIT=1"}),
 	}
 	if c.Writer != nil {
 		buildOptions.Out = c.Writer
