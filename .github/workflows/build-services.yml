@@ -38,8 +38,7 @@ jobs:
       - name: "Build Docker image: buang-api"
         uses: docker/build-push-action@v5
         env:
-          TAG: ${{ case(env.BRANCH_NAME == 'master', 'latest',
-            format('{0}-{1}', env.BRANCH_NAME, steps.vars_sha.outputs.short_sha) )}}
+          TAG: ${{ case(env.BRANCH_NAME == 'master', 'latest', format('pr-{0}-{1}', github.event.pull_request.number, steps.vars_sha.outputs.short_sha) )}}
         with:
           context: "{{defaultContext}}:api"
           platforms: ${{ matrix.os == 'ubuntu-latest' && 'linux/amd64' || 'linux/arm64' }}
