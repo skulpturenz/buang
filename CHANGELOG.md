@@ -2,13 +2,39 @@
 
 All notable changes to this project will be documented in this file.
 
+## 1.0.0-canary.4 - 2026-02-11
+
+[0e309c4](0e309c49e785df8d260e7928bebe920db2da954c)...[6232d3f](6232d3f5a7245135687039a9dd8e2c97af15249e)
+
+### Bug Fixes
+
+- Hash project name (#27) ([c6bab8d](c6bab8dc811f43b0d5dcf5d06e65285d328640b2))
+- Enable docker buildkit (#28) ([cbe1416](cbe141654f9a7b55921e5aa22ee267b91e004f13))
+- Os.Setenv enable buildkit instead (#29) ([d275f43](d275f43ca365baf8de44fc5ab013712d82d1d4cc))
+- Enable build kit (#31) ([11c6ff0](11c6ff00f35848b4fd5f86c7d2d42ff4a9a00253))
+
+### Miscellaneous Tasks
+
+- Add build workflow action (#16) ([f800aef](f800aef5d3b0ee52af4d4e545abd3f71a638ccd1))
+- Add deploy services action (#20) ([616a5c3](616a5c3fc762896839c9abd0ce5b2240c4956844))
+- Add gemini cli (#22) ([80691f3](80691f305fee691555941eb85bd9f1f4d6304001))
+- Update gemini dispatch (#23) ([f99ebd2](f99ebd24db808c98ef20eff849f15fdddf23f111))
+- Fix built image throwing, update workflows (#24) ([3299333](329933320a08f0012ae9eb692810868ed1d392b2))
+- Fix version check (#25) ([c9fd491](c9fd49178cae05d59523df169cfddbcee9cdb36e))
+- Fix setting version during build (#26) ([67e64e2](67e64e259fe9223adb7ca7d3fa282d5878a73c2b))
+- Add docker-cli-compose (#30) ([e1ce975](e1ce9756fa8e80df541ba309d1ecf4740cf69474))
+- Fix json (#32) ([181cb71](181cb71b2311727925db21d2e8b37dbb27283093))
+- Update release, deploy and build actions (#37) ([630b13e](630b13e5320dbc143c6f059f2035d2201449bcce))
+- Update build action trigger (#38) ([8b06d68](8b06d681f06551dcf857c9defdafdd7ba4bb6948))
+
 ## 1.0.0-canary.3 - 2026-02-04
 
-[b1ae734](b1ae734e5c4c0435ccb39a886cb31cc5e319da9d)...[316b4c9](316b4c9f6ba41c5b2a4d57e2d45773545bf1ed96)
+[b1ae734](b1ae734e5c4c0435ccb39a886cb31cc5e319da9d)...[0e309c4](0e309c49e785df8d260e7928bebe920db2da954c)
 
 ### Miscellaneous Tasks
 
 - Update release workflow (#14) ([200ff8d](200ff8d734e27656a6ae18a63ced5129a6ea3a80))
+- Update changelog ([0e309c4](0e309c49e785df8d260e7928bebe920db2da954c))
 
 ## 1.0.0-canary.2 - 2026-02-04
 
