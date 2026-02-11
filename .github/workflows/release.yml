@@ -4,8 +4,8 @@ on:
   pull_request:
     branches:
       - master
-      - staging/*
-      - canary/*
+      - staging/**
+      - canary/**
     types: [closed]
 
 concurrency:
