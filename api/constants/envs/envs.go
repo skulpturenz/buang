@@ -15,7 +15,7 @@ import (
 
 var (
 	versionUnknown = "unknown"
-	BUANG_VERSION  = versionUnknown
+	BUANG_VERSION  string
 	GO_ENV         = ferrite.
 			Enum("GO_ENV", "Golang environment").
 			WithMembers(enumsenv.Production.String(), enumsenv.Development.String(), enumsenv.Test.String()).
@@ -112,8 +112,8 @@ var (
 )
 
 func init() {
-	if v, _ := enumsenv.Parse(GO_ENV.Value()); v == enumsenv.Production && BUANG_VERSION == versionUnknown {
-		panic(fmt.Sprintf("bad buang build, version: %v", BUANG_VERSION))
+	if v, _ := enumsenv.Parse(GO_ENV.Value()); v == enumsenv.Production && BUANG_VERSION == "" {
+		panic(fmt.Sprintf("bad buang build, version: %v", versionUnknown))
 	}
 
 	ferrite.Init()
