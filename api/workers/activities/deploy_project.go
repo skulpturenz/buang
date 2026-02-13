@@ -104,6 +104,17 @@ func (dp *DeployProject) DeployProject(ctx context.Context, d DeployProjectParam
 
 	env["BUANG_DEPLOYMENT_PATH"] = url
 
+	traefikEntrypointRouter := projectName
+	traefikEntrypointService := projectName
+	composePath := filepath.Join(d.Dir, p.Project.GetComposePath())
+	expandedComposePath, _, err := docker.ExpandComposeYaml(composePath, map[string]string{
+		"BUANG_ENTRYPOINT_TRAEFIK_ROUTER":  traefikEntrypointRouter,
+		"BUANG_ENTRYPOINT_TRAEFIK_SERVICE": traefikEntrypointService,
+	})
+	if err != nil {
+		return nil, err
+	}
+
 	// TODO: ideally we want to use the buffered writer so that we don't hit the DB all the time
 	// but temporal's long polling is faster than our short polling in `poll_deployment_log`
 	// so what happens is that the workflow unblocks and we return deployment logs for the deployment
@@ -130,7 +141,7 @@ func (dp *DeployProject) DeployProject(ctx context.Context, d DeployProjectParam
 	upParams := docker.ComposeUpParams{
 		ProjectName: projectName,
 		ConfigPaths: []string{
-			filepath.Join(d.Dir, p.Project.GetComposePath()),
+			*expandedComposePath,
 		},
 		Environment: env,
 		Writer:      deploymentLogsParams,
@@ -147,35 +158,25 @@ func (dp *DeployProject) DeployProject(ctx context.Context, d DeployProjectParam
 	config := dynamic.Configuration{
 		HTTP: &dynamic.HTTPConfiguration{
 			Routers: map[string]*dynamic.Router{
-				projectName: {
-					EntryPoints: []string{"web"},
+				traefikEntrypointRouter: {
+					EntryPoints: []string{"web", "websecure"},
 					Rule:        fmt.Sprintf("PathPrefix(`%v`)", url),
 					Service:     projectName,
-					Middlewares: []string{fmt.Sprintf("%v-stripprefix", projectName)},
+					Middlewares: []string{fmt.Sprintf("%v-stripprefix", traefikEntrypointRouter)},
 				},
 			},
 			Services: map[string]*dynamic.Service{
-				projectName: {
+				traefikEntrypointService: {
 					LoadBalancer: &dynamic.ServersLoadBalancer{
 						Servers: []dynamic.Server{
 							{URL: fmt.Sprintf("http://%v:%v", serviceEntrypoint[0], serviceEntrypoint[1])},
 						},
 						PassHostHeader: &passHostHeader,
-						// TODO: i'm not sure but i think once the initial request to the deployment is made, if we have sticky cookies
-						// enabled, then every subsequent request should get forwarded to the correct service even if we omit the deployment path
-						// since the domain stays the same, only the path changes
-						// need to check
-						Sticky: &dynamic.Sticky{
-							Cookie: &dynamic.Cookie{
-								Name:     projectName,
-								HTTPOnly: true,
-							},
-						},
 					},
 				},
 			},
 			Middlewares: map[string]*dynamic.Middleware{
-				fmt.Sprintf("%v-stripprefix", projectName): &dynamic.Middleware{
+				fmt.Sprintf("%v-stripprefix", traefikEntrypointRouter): &dynamic.Middleware{
 					StripPrefix: &dynamic.StripPrefix{
 						Prefixes: []string{url},
 					},
