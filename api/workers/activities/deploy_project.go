@@ -11,6 +11,7 @@ import (
 	"skulpture/buang/components/docker"
 	"skulpture/buang/components/projects"
 	enumsdeploymentstatus "skulpture/buang/enums/deployment_status"
+	"skulpture/buang/utils/compensations"
 	"strings"
 	"time"
 
@@ -30,6 +31,7 @@ type DeployProjectResult struct{}
 
 func (dp *DeployProject) DeployProject(ctx context.Context, d DeployProjectParams) (*DeployProjectResult, error) {
 	DEPLOYED_AT := time.Now()
+	compensations := compensations.New()
 
 	s := app.ApplicationServices(*dp)
 
@@ -102,7 +104,77 @@ func (dp *DeployProject) DeployProject(ctx context.Context, d DeployProjectParam
 	})
 	url := fmt.Sprintf("/deployment/%v", projectName)
 
+	traefikEntrypointRouter := projectName
+	traefikEntrypointService := projectName
+
 	env["BUANG_DEPLOYMENT_PATH"] = url
+	expansionEnvs := map[string]string{}
+	for k, v := range env {
+		expansionEnvs[k] = fmt.Sprintf("%v", v)
+	}
+	expansionEnvs["BUANG_ENTRYPOINT_TRAEFIK_ROUTER"] = traefikEntrypointRouter
+	expansionEnvs["BUANG_ENTRYPOINT_TRAEFIK_SERVICE"] = traefikEntrypointService
+
+	composePath := filepath.Join(d.Dir, p.Project.GetComposePath())
+	expandedComposePath, _, err := docker.ExpandComposeYaml(composePath, expansionEnvs)
+	if err != nil {
+		return nil, err
+	}
+
+	// create the dynamic config first
+	// if the service is overriding traefik config and wants to use default middleware
+	// then those middleware have to be available before the container is deployed, otherwise we get an error
+	serviceEntrypoint := strings.Split(dply.Deployment.GetServiceEntrypoint(), ":")
+	passHostHeader := true
+	config := dynamic.Configuration{
+		HTTP: &dynamic.HTTPConfiguration{
+			Routers: map[string]*dynamic.Router{
+				traefikEntrypointRouter: {
+					EntryPoints: []string{"web", "websecure"},
+					Rule:        fmt.Sprintf("PathPrefix(`%v`)", url),
+					Service:     projectName,
+					Middlewares: []string{fmt.Sprintf("%v-stripprefix", traefikEntrypointRouter)},
+				},
+			},
+			Services: map[string]*dynamic.Service{
+				traefikEntrypointService: {
+					LoadBalancer: &dynamic.ServersLoadBalancer{
+						Servers: []dynamic.Server{
+							{URL: fmt.Sprintf("http://%v:%v", serviceEntrypoint[0], serviceEntrypoint[1])},
+						},
+						PassHostHeader: &passHostHeader,
+					},
+				},
+			},
+			Middlewares: map[string]*dynamic.Middleware{
+				fmt.Sprintf("%v-stripprefix", traefikEntrypointRouter): &dynamic.Middleware{
+					StripPrefix: &dynamic.StripPrefix{
+						Prefixes: []string{url},
+					},
+				},
+			},
+		},
+	}
+
+	yml, err := yaml.Marshal(&config)
+	if err != nil {
+		return nil, err
+	}
+
+	deploymentConfigPath := deployments.GetDeploymentPath(deployments.GetDeploymentPathParams{
+		ProjectId:    p.Project.GetId(),
+		DeploymentId: dply.Deployment.GetId(),
+		Branch:       dply.Deployment.GetBranch(),
+		Sha:          dply.Deployment.GetSha(),
+		DeployedAt:   DEPLOYED_AT,
+	})
+	err = os.WriteFile(deploymentConfigPath, yml, 0644)
+	if err != nil {
+		return nil, err
+	}
+	compensations.AddCompensation(func(ctx context.Context) {
+		os.Remove(deploymentConfigPath)
+	})
 
 	// TODO: ideally we want to use the buffered writer so that we don't hit the DB all the time
 	// but temporal's long polling is faster than our short polling in `poll_deployment_log`
@@ -130,7 +202,7 @@ func (dp *DeployProject) DeployProject(ctx context.Context, d DeployProjectParam
 	upParams := docker.ComposeUpParams{
 		ProjectName: projectName,
 		ConfigPaths: []string{
-			filepath.Join(d.Dir, p.Project.GetComposePath()),
+			*expandedComposePath,
 		},
 		Environment: env,
 		Writer:      deploymentLogsParams,
@@ -138,66 +210,8 @@ func (dp *DeployProject) DeployProject(ctx context.Context, d DeployProjectParam
 
 	_, _, err = upParams.Exec(ctx, &s)
 	if err != nil {
-		return nil, err
-	}
+		compensations.Compensate(ctx)
 
-	serviceEntrypoint := strings.Split(dply.Deployment.GetServiceEntrypoint(), ":")
-
-	passHostHeader := true
-	config := dynamic.Configuration{
-		HTTP: &dynamic.HTTPConfiguration{
-			Routers: map[string]*dynamic.Router{
-				projectName: {
-					EntryPoints: []string{"web"},
-					Rule:        fmt.Sprintf("PathPrefix(`%v`)", url),
-					Service:     projectName,
-					Middlewares: []string{fmt.Sprintf("%v-stripprefix", projectName)},
-				},
-			},
-			Services: map[string]*dynamic.Service{
-				projectName: {
-					LoadBalancer: &dynamic.ServersLoadBalancer{
-						Servers: []dynamic.Server{
-							{URL: fmt.Sprintf("http://%v:%v", serviceEntrypoint[0], serviceEntrypoint[1])},
-						},
-						PassHostHeader: &passHostHeader,
-						// TODO: i'm not sure but i think once the initial request to the deployment is made, if we have sticky cookies
-						// enabled, then every subsequent request should get forwarded to the correct service even if we omit the deployment path
-						// since the domain stays the same, only the path changes
-						// need to check
-						Sticky: &dynamic.Sticky{
-							Cookie: &dynamic.Cookie{
-								Name:     projectName,
-								HTTPOnly: true,
-							},
-						},
-					},
-				},
-			},
-			Middlewares: map[string]*dynamic.Middleware{
-				fmt.Sprintf("%v-stripprefix", projectName): &dynamic.Middleware{
-					StripPrefix: &dynamic.StripPrefix{
-						Prefixes: []string{url},
-					},
-				},
-			},
-		},
-	}
-
-	yml, err := yaml.Marshal(&config)
-	if err != nil {
-		return nil, err
-	}
-
-	deploymentConfigPath := deployments.GetDeploymentPath(deployments.GetDeploymentPathParams{
-		ProjectId:    p.Project.GetId(),
-		DeploymentId: dply.Deployment.GetId(),
-		Branch:       dply.Deployment.GetBranch(),
-		Sha:          dply.Deployment.GetSha(),
-		DeployedAt:   DEPLOYED_AT,
-	})
-	err = os.WriteFile(deploymentConfigPath, yml, 0644)
-	if err != nil {
 		return nil, err
 	}
 

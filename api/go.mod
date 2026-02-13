@@ -102,6 +102,8 @@ require (
 	github.com/fvbommel/sortorder v1.1.0 // indirect
 	github.com/fxamacker/cbor/v2 v2.9.0 // indirect
 	github.com/gabriel-vasile/mimetype v1.4.12 // indirect
+	github.com/ganbarodigital/go_glob v1.0.0 // indirect
+	github.com/ganbarodigital/go_shellexpand v0.1.0 // indirect
 	github.com/go-acme/lego/v4 v4.31.0 // indirect
 	github.com/go-git/gcfg/v2 v2.0.2 // indirect
 	github.com/go-jose/go-jose/v4 v4.1.3 // indirect
