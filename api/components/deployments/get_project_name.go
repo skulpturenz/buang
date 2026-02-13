@@ -15,6 +15,7 @@ type GetProjectNameParams struct {
 }
 
 func GetProjectName(p GetProjectNameParams) string {
+	PRECISION := 6
 	sha := fmt.Sprintf("%.*s", 8, p.Sha)
 	projectName := fmt.Sprintf("%v_%v_%v_%v_%v",
 		p.ProjectId,
@@ -24,5 +25,6 @@ func GetProjectName(p GetProjectNameParams) string {
 		p.DeployedAt.UnixMilli())
 	projectNameSha := sha256.Sum256([]byte(projectName))
 
-	return fmt.Sprintf("%.*x", 12, projectNameSha)
+	// 6 * 2 = 12 chars. each hex digit is 2 chars
+	return fmt.Sprintf("%.*x", PRECISION, projectNameSha)
 }
