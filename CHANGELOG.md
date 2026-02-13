@@ -2,9 +2,22 @@
 
 All notable changes to this project will be documented in this file.
 
+## 1.0.0-canary.5 - 2026-02-13
+
+[e078298](e07829814fd12fe9e9a32d16e40fcb3a10101cd9)...[65f6a12](65f6a129754dd5fdd69639ed726994348f93eb4f)
+
+### Bug Fixes
+
+- Expansion envs (#40) ([ea44f57](ea44f57544c9ce46f51aee75e7d07fb78ae4db86))
+- Create traefik config before deployment (#41) ([968e31c](968e31c4a60f6b4faeebfb3f4487fc5206bc1265))
+
+### Features
+
+- Support template buang compose files (#39) ([23bddfe](23bddfee6960d505cae7ecaf3e930f956bbbeeb6))
+
 ## 1.0.0-canary.4 - 2026-02-11
 
-[0e309c4](0e309c49e785df8d260e7928bebe920db2da954c)...[6232d3f](6232d3f5a7245135687039a9dd8e2c97af15249e)
+[0e309c4](0e309c49e785df8d260e7928bebe920db2da954c)...[e078298](e07829814fd12fe9e9a32d16e40fcb3a10101cd9)
 
 ### Bug Fixes
 
@@ -26,6 +39,7 @@ All notable changes to this project will be documented in this file.
 - Fix json (#32) ([181cb71](181cb71b2311727925db21d2e8b37dbb27283093))
 - Update release, deploy and build actions (#37) ([630b13e](630b13e5320dbc143c6f059f2035d2201449bcce))
 - Update build action trigger (#38) ([8b06d68](8b06d681f06551dcf857c9defdafdd7ba4bb6948))
+- Update changelog ([e078298](e07829814fd12fe9e9a32d16e40fcb3a10101cd9))
 
 ## 1.0.0-canary.3 - 2026-02-04
 
