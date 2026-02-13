@@ -265,7 +265,7 @@ func createNewProjectWithDeployment(t *testing.T, config testutils.DurableExecut
 			deployment.Deployment.GetBranch(),
 			sha,
 			deployment.Deployment.GetDeployedAt().UnixMilli())
-		projectNameSha := fmt.Sprintf("%.*x", 12, sha256.Sum256([]byte(projectName)))
+		projectNameSha := fmt.Sprintf("%.*x", 6, sha256.Sum256([]byte(projectName)))
 		deploymentConfigPath := filepath.Join(TRAEFIK_DYNAMIC_CONFIG, fmt.Sprintf("buang-%v.yaml", projectNameSha))
 		require.FileExists(t, deploymentConfigPath)
 
