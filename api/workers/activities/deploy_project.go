@@ -159,7 +159,7 @@ func (dp *DeployProject) DeployProject(ctx context.Context, d DeployProjectParam
 		HTTP: &dynamic.HTTPConfiguration{
 			Routers: map[string]*dynamic.Router{
 				traefikEntrypointRouter: {
-					EntryPoints: []string{"web"},
+					EntryPoints: []string{"web", "websecure"},
 					Rule:        fmt.Sprintf("PathPrefix(`%v`)", url),
 					Service:     projectName,
 					Middlewares: []string{fmt.Sprintf("%v-stripprefix", traefikEntrypointRouter)},
