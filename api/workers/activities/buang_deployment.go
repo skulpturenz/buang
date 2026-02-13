@@ -75,7 +75,19 @@ func (bd *BuangDeployment) BuangDeployment(ctx context.Context, b BuangDeploymen
 		Sha:          dply.Deployment.GetSha(),
 		DeployedAt:   *dply.Deployment.GetDeployedAt(),
 	})
-	configPath := filepath.Join(clonePath, p.Project.GetComposePath())
+
+	expandedPath := filepath.Join(clonePath, fmt.Sprintf("expanded-%v", filepath.Base(p.Project.GetComposePath())))
+	_, err = os.Stat(expandedPath)
+	if err != nil && !errors.Is(err, os.ErrNotExist) {
+		return nil, err
+	}
+
+	var configPath string
+	if errors.Is(err, os.ErrNotExist) {
+		configPath = filepath.Join(clonePath, p.Project.GetComposePath())
+	} else {
+		configPath = expandedPath
+	}
 
 	err = os.RemoveAll(deploymentConfigPath)
 	if err != nil {
