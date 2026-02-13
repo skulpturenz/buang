@@ -102,15 +102,14 @@ func (dp *DeployProject) DeployProject(ctx context.Context, d DeployProjectParam
 	})
 	url := fmt.Sprintf("/deployment/%v", projectName)
 
-	env["BUANG_DEPLOYMENT_PATH"] = url
-
 	traefikEntrypointRouter := projectName
 	traefikEntrypointService := projectName
+	env["BUANG_DEPLOYMENT_PATH"] = url
+	env["BUANG_ENTRYPOINT_TRAEFIK_ROUTER"] = traefikEntrypointRouter
+	env["BUANG_ENTRYPOINT_TRAEFIK_SERVICE"] = traefikEntrypointService,
+
 	composePath := filepath.Join(d.Dir, p.Project.GetComposePath())
-	expandedComposePath, _, err := docker.ExpandComposeYaml(composePath, map[string]string{
-		"BUANG_ENTRYPOINT_TRAEFIK_ROUTER":  traefikEntrypointRouter,
-		"BUANG_ENTRYPOINT_TRAEFIK_SERVICE": traefikEntrypointService,
-	})
+	expandedComposePath, _, err := docker.ExpandComposeYaml(composePath, env)
 	if err != nil {
 		return nil, err
 	}
