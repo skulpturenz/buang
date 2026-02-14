@@ -124,8 +124,14 @@ func (c ComposeUpParams) Exec(ctx context.Context, s *app.ApplicationServices) (
 				},
 			}
 		} else {
-			for _, n := range updatedService.Networks {
-				n.Aliases = append(n.Aliases, alias)
+			for networkName, networkConfig := range updatedService.Networks {
+				updatedNetworkConfig := networkConfig
+				if updatedNetworkConfig == nil {
+					updatedNetworkConfig = &types.ServiceNetworkConfig{}
+				}
+
+				updatedNetworkConfig.Aliases = append(updatedNetworkConfig.Aliases, alias)
+				updatedService.Networks[networkName] = updatedNetworkConfig
 			}
 		}
 
