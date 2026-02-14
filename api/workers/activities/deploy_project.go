@@ -108,6 +108,7 @@ func (dp *DeployProject) DeployProject(ctx context.Context, d DeployProjectParam
 	traefikEntrypointService := projectName
 
 	env["BUANG_DEPLOYMENT_PATH"] = url
+	env["BUANG_PROJECT_NAME"] = projectName
 	expansionEnvs := map[string]string{}
 	for k, v := range env {
 		expansionEnvs[k] = fmt.Sprintf("%v", v)
@@ -140,7 +141,7 @@ func (dp *DeployProject) DeployProject(ctx context.Context, d DeployProjectParam
 				traefikEntrypointService: {
 					LoadBalancer: &dynamic.ServersLoadBalancer{
 						Servers: []dynamic.Server{
-							{URL: fmt.Sprintf("http://%v-%v:%v", projectName, serviceEntrypoint[0], serviceEntrypoint[1])},
+							{URL: fmt.Sprintf("http://buang-%v-%v:%v", projectName, serviceEntrypoint[0], serviceEntrypoint[1])},
 						},
 						PassHostHeader: &passHostHeader,
 					},

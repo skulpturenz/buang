@@ -11,11 +11,13 @@ import (
 	"net/http"
 	"os"
 	"path/filepath"
+	"regexp"
 	deploymentscomponent "skulpture/buang/components/deployments"
 	projectscomponent "skulpture/buang/components/projects"
 	constantsenvs "skulpture/buang/constants/envs"
 	testutils "skulpture/buang/tests/utils"
 	"skulpture/buang/utils/compensations"
+	"slices"
 	"strconv"
 	"testing"
 	"time"
@@ -122,7 +124,7 @@ func createNewProjectWithDeployment(t *testing.T, config testutils.DurableExecut
 		postDeploymentUrl := fmt.Sprintf("%v/project/%v/deployment", baseUrl, projectId)
 		createDeploymentReq := deploymentshandlers.CreateDeploymentRequest{
 			Branch:            "master",                                   // TODO: from repo vars
-			Sha:               "e6792e4fe8a66de90b0945fa9d38f0b25149bd00", // TODO: from repo vars
+			Sha:               "4b591d8f2b1b2a28645d98911d84b2eb68f7142d", // TODO: from repo vars
 			ServiceEntrypoint: "web:80",                                   // TODO: from repo vars
 			Env: map[string]any{
 				"HELLO": "WORLD",
@@ -300,6 +302,23 @@ func createNewProjectWithDeployment(t *testing.T, config testutils.DurableExecut
 
 			require.Equal(t, *envs["HELLO"], "WORLD")
 			require.Equal(t, *envs["BUANG_DEPLOYMENT_PATH"], *deployment.Deployment.GetUrl())
+			require.Equal(t, *envs["BUANG_PROJECT_NAME"], projectNameSha)
+
+			aliases := []string{}
+			for _, n := range i.NetworkSettings.Networks {
+				aliases = append(aliases, n.Aliases...)
+			}
+
+			require.True(t, slices.ContainsFunc(aliases, func(alias string) bool {
+				pattern := fmt.Sprintf("buang-%v-.+", projectNameSha)
+
+				matched, err := regexp.MatchString(pattern, alias)
+				if err != nil {
+					return false
+				}
+
+				return matched
+			}))
 		}
 	}
 
