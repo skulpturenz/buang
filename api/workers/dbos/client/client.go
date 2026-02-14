@@ -9,6 +9,7 @@ import (
 	workersshared "skulpture/buang/workers/shared"
 
 	"github.com/dbos-inc/dbos-transact-golang/dbos"
+	"github.com/jackc/pgx/v5/pgxpool"
 )
 
 type DbosWorkflow[P any, R any] func(s app.ApplicationServices, c dbos.DBOSContext)
@@ -31,9 +32,15 @@ type Client struct {
 var _ workersinterfaces.Workflows = (*Client)(nil)
 
 func New(ctx context.Context, cfg DbosConfig) (workersinterfaces.Workflows, error) {
+	pool, err := pgxpool.New(ctx, cfg.DatabaseURL)
+	if err != nil {
+		return nil, err
+	}
+
 	c := dbos.Config{
-		AppName:     cfg.AppName,
-		DatabaseURL: cfg.DatabaseURL,
+		AppName:      cfg.AppName,
+		DatabaseURL:  cfg.DatabaseURL,
+		SystemDBPool: pool,
 	}
 	if cfg.ConductorAPIKey != nil {
 		c.ConductorAPIKey = *cfg.ConductorAPIKey
