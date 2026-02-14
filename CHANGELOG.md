@@ -2,9 +2,23 @@
 
 All notable changes to this project will be documented in this file.
 
+## 1.0.0-canary.6 - 2026-02-14
+
+[6e7cd08](6e7cd08fd026e80b5c4ec2b70ce64379ee17d0e7)...[b861e4d](b861e4dc797c0c80d0c4673aafcc6a6c4538bec7)
+
+### Bug Fixes
+
+- Dbos throwing because of postgres db not being available (#44) ([a51d829](a51d829d01a1f7d60ed7813dbf7ec5c1afe44239))
+- Assign unique network alias to services (#45) ([fd9d58a](fd9d58afae94ccc81a7fcdf4c79c65e13101a557))
+- Update service alias format (#46) ([63da335](63da335d99d504e5b5675c91846d6eaefd26cadc))
+
+### Refactor
+
+- Update project name to shorten it (#43) ([9096b03](9096b03b4bae35cb2f638192e4dfcf3d403f6570))
+
 ## 1.0.0-canary.5 - 2026-02-13
 
-[e078298](e07829814fd12fe9e9a32d16e40fcb3a10101cd9)...[65f6a12](65f6a129754dd5fdd69639ed726994348f93eb4f)
+[e078298](e07829814fd12fe9e9a32d16e40fcb3a10101cd9)...[6e7cd08](6e7cd08fd026e80b5c4ec2b70ce64379ee17d0e7)
 
 ### Bug Fixes
 
@@ -14,6 +28,10 @@ All notable changes to this project will be documented in this file.
 ### Features
 
 - Support template buang compose files (#39) ([23bddfe](23bddfee6960d505cae7ecaf3e930f956bbbeeb6))
+
+### Miscellaneous Tasks
+
+- Update changelog ([6e7cd08](6e7cd08fd026e80b5c4ec2b70ce64379ee17d0e7))
 
 ## 1.0.0-canary.4 - 2026-02-11
 
