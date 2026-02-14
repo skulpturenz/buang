@@ -114,7 +114,7 @@ func (c ComposeUpParams) Exec(ctx context.Context, s *app.ApplicationServices) (
 	}
 
 	projectWithServiceAliases, err := project.WithServicesTransform(func(name string, s types.ServiceConfig) (types.ServiceConfig, error) {
-		alias := fmt.Sprintf("%v_%v", project.Name, name)
+		alias := fmt.Sprintf("%v-%v", project.Name, name)
 		updatedService := s
 
 		if len(s.Networks) == 0 {
