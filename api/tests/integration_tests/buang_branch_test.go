@@ -96,7 +96,7 @@ func buangBranch(t *testing.T, config testutils.DurableExecutorConfiguration) {
 		postDeploymentUrl := fmt.Sprintf("%v/project/%v/deployment?waitForDeployment=true", baseUrl, projectId)
 		createDeploymentReq := deploymentshandlers.CreateDeploymentRequest{
 			Branch:            "master",                                   // TODO: from repo vars
-			Sha:               "e6792e4fe8a66de90b0945fa9d38f0b25149bd00", // TODO: from repo vars
+			Sha:               "4b591d8f2b1b2a28645d98911d84b2eb68f7142d", // TODO: from repo vars
 			ServiceEntrypoint: "web:80",                                   // TODO: from repo vars
 			Env: map[string]any{
 				"HELLO": "WORLD",
