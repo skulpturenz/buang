@@ -11,11 +11,13 @@ import (
 	"net/http"
 	"os"
 	"path/filepath"
+	"regexp"
 	deploymentscomponent "skulpture/buang/components/deployments"
 	projectscomponent "skulpture/buang/components/projects"
 	constantsenvs "skulpture/buang/constants/envs"
 	testutils "skulpture/buang/tests/utils"
 	"skulpture/buang/utils/compensations"
+	"slices"
 	"strconv"
 	"testing"
 	"time"
@@ -300,6 +302,23 @@ func createNewProjectWithDeployment(t *testing.T, config testutils.DurableExecut
 
 			require.Equal(t, *envs["HELLO"], "WORLD")
 			require.Equal(t, *envs["BUANG_DEPLOYMENT_PATH"], *deployment.Deployment.GetUrl())
+			require.Equal(t, *envs["BUANG_PROJECT_NAME"], projectNameSha)
+
+			aliases := []string{}
+			for _, n := range i.NetworkSettings.Networks {
+				aliases = append(aliases, n.Aliases...)
+			}
+
+			require.True(t, slices.ContainsFunc(aliases, func(alias string) bool {
+				pattern := fmt.Sprintf("buang-%v-.+", projectNameSha)
+
+				matched, err := regexp.MatchString(pattern, alias)
+				if err != nil {
+					return false
+				}
+
+				return matched
+			}))
 		}
 	}
 
