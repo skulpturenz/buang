@@ -8,6 +8,7 @@ import (
 	"skulpture/buang/app"
 	"time"
 
+	"github.com/compose-spec/compose-go/v2/types"
 	"github.com/docker/cli/cli/command"
 	"github.com/docker/cli/cli/flags"
 	"github.com/docker/compose/v5/pkg/api"
@@ -112,11 +113,30 @@ func (c ComposeUpParams) Exec(ctx context.Context, s *app.ApplicationServices) (
 		return nil, nil, err
 	}
 
+	projectWithServiceAliases, err := project.WithServicesTransform(func(name string, s types.ServiceConfig) (types.ServiceConfig, error) {
+		alias := fmt.Sprintf("%v_%v", project.Name, name)
+		updatedService := s
+
+		if len(s.Networks) == 0 {
+			updatedService.Networks = map[string]*types.ServiceNetworkConfig{
+				"default": {
+					Aliases: []string{alias},
+				},
+			}
+		} else {
+			for _, n := range updatedService.Networks {
+				n.Aliases = append(n.Aliases, alias)
+			}
+		}
+
+		return updatedService, nil
+	})
+
 	logConsumer := logConsumer{
 		Writer: c.Writer,
 	}
 	logCtx, cancelLogCtx := context.WithCancel(ctx)
-	go followSvcLogs(logCtx, project.Name, logConsumer, svc)
+	go followSvcLogs(logCtx, projectWithServiceAliases.Name, logConsumer, svc)
 	defer cancelLogCtx()
 
 	buildOptions := api.BuildOptions{
@@ -128,7 +148,7 @@ func (c ComposeUpParams) Exec(ctx context.Context, s *app.ApplicationServices) (
 		buildOptions.Out = c.Writer
 	}
 
-	err = svc.Up(ctx, project, api.UpOptions{
+	err = svc.Up(ctx, projectWithServiceAliases, api.UpOptions{
 		Create: api.CreateOptions{
 			Build:         &buildOptions,
 			RemoveOrphans: true,
@@ -144,7 +164,7 @@ func (c ComposeUpParams) Exec(ctx context.Context, s *app.ApplicationServices) (
 
 	cleanup := func(ctx context.Context) {
 		down := ComposeDownParams{
-			ProjectName: project.Name,
+			ProjectName: projectWithServiceAliases.Name,
 			ConfigPaths: c.ConfigPaths,
 		}
 
@@ -152,10 +172,10 @@ func (c ComposeUpParams) Exec(ctx context.Context, s *app.ApplicationServices) (
 	}
 
 	return &ComposeUpResult{
-		ProjectName:  project.Name,
+		ProjectName:  projectWithServiceAliases.Name,
 		ConfigPaths:  c.ConfigPaths,
-		Environment:  project.Environment.Values(),
-		ServiceNames: project.ServiceNames(),
+		Environment:  projectWithServiceAliases.Environment.Values(),
+		ServiceNames: projectWithServiceAliases.ServiceNames(),
 	}, cleanup, nil
 }
 
