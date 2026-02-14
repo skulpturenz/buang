@@ -2,15 +2,27 @@
 
 All notable changes to this project will be documented in this file.
 
+## 1.0.0-canary.7 - 2026-02-14
+
+[4b7f909](4b7f909bb763a599f7231bf953fb55e67ae4d0d6)...[934bb5c](934bb5c173be1b18a66a1f566f237e72c04eecc6)
+
+### Features
+
+- Add BUANG_PROJECT_NAME env for interservice communication (#48) ([d6948ed](d6948ed0df3dfca15e6e1b879c57de76cbaf9395))
+
 ## 1.0.0-canary.6 - 2026-02-14
 
-[6e7cd08](6e7cd08fd026e80b5c4ec2b70ce64379ee17d0e7)...[b861e4d](b861e4dc797c0c80d0c4673aafcc6a6c4538bec7)
+[6e7cd08](6e7cd08fd026e80b5c4ec2b70ce64379ee17d0e7)...[4b7f909](4b7f909bb763a599f7231bf953fb55e67ae4d0d6)
 
 ### Bug Fixes
 
 - Dbos throwing because of postgres db not being available (#44) ([a51d829](a51d829d01a1f7d60ed7813dbf7ec5c1afe44239))
 - Assign unique network alias to services (#45) ([fd9d58a](fd9d58afae94ccc81a7fcdf4c79c65e13101a557))
 - Update service alias format (#46) ([63da335](63da335d99d504e5b5675c91846d6eaefd26cadc))
+
+### Miscellaneous Tasks
+
+- Update changelog ([4b7f909](4b7f909bb763a599f7231bf953fb55e67ae4d0d6))
 
 ### Refactor
 
