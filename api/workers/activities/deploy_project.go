@@ -140,7 +140,7 @@ func (dp *DeployProject) DeployProject(ctx context.Context, d DeployProjectParam
 				traefikEntrypointService: {
 					LoadBalancer: &dynamic.ServersLoadBalancer{
 						Servers: []dynamic.Server{
-							{URL: fmt.Sprintf("http://%v:%v", serviceEntrypoint[0], serviceEntrypoint[1])},
+							{URL: fmt.Sprintf("http://%v_%v:%v", projectName, serviceEntrypoint[0], serviceEntrypoint[1])},
 						},
 						PassHostHeader: &passHostHeader,
 					},
