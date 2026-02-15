@@ -31,7 +31,7 @@ func GetProjectName(p GetProjectNameParams) string {
 	nProjectName := new(big.Int).SetBytes(projectNameSha[:])
 	nWordList := big.NewInt(int64(len(wordlists.NamesMixed)))
 
-	for range 3 {
+	for range 4 {
 		remainder := new(big.Int)
 		nProjectName.QuoRem(nProjectName, nWordList, remainder)
 		words = append(words, wordlists.NamesMixed[remainder.Int64()])
