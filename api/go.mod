@@ -229,6 +229,9 @@ require (
 	github.com/tonistiigi/vt100 v0.0.0-20240514184818-90bafcd6abab // indirect
 	github.com/traefik/paerser v0.2.2 // indirect
 	github.com/unrolled/render v1.0.2 // indirect
+	github.com/wordgen/wordlists v0.3.0 // indirect
+	github.com/wordgen/wordlists/eff v0.3.0 // indirect
+	github.com/wordgen/wordlists/names v0.3.0 // indirect
 	github.com/x448/float16 v0.8.4 // indirect
 	github.com/xhit/go-str2duration/v2 v2.1.0 // indirect
 	github.com/yusufpapurcu/wmi v1.2.4 // indirect

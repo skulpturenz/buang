@@ -3,7 +3,11 @@ package deployments
 import (
 	"crypto/sha256"
 	"fmt"
+	"math/big"
+	"strings"
 	"time"
+
+	"github.com/wordgen/wordlists"
 )
 
 type GetProjectNameParams struct {
@@ -15,16 +19,23 @@ type GetProjectNameParams struct {
 }
 
 func GetProjectName(p GetProjectNameParams) string {
-	PRECISION := 6
-	sha := fmt.Sprintf("%.*s", 8, p.Sha)
 	projectName := fmt.Sprintf("%v_%v_%v_%v_%v",
 		p.ProjectId,
 		p.DeploymentId,
 		p.Branch,
-		sha,
+		p.Sha,
 		p.DeployedAt.UnixMilli())
 	projectNameSha := sha256.Sum256([]byte(projectName))
 
-	// 6 * 2 = 12 chars. each hex digit is 2 chars
-	return fmt.Sprintf("%.*x", PRECISION, projectNameSha)
+	words := []string{}
+	nProjectName := new(big.Int).SetBytes(projectNameSha[:])
+	nWordList := big.NewInt(int64(len(wordlists.NamesMixed)))
+
+	for range 3 {
+		remainder := new(big.Int)
+		nProjectName.QuoRem(nProjectName, nWordList, remainder)
+		words = append(words, wordlists.NamesMixed[remainder.Int64()])
+	}
+
+	return strings.Join(words, "-")
 }
