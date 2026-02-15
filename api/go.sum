@@ -738,6 +738,12 @@ github.com/vbatts/tar-split v0.12.2 h1:w/Y6tjxpeiFMR47yzZPlPj/FcPLpXbTUi/9H7d3CP
 github.com/vbatts/tar-split v0.12.2/go.mod h1:eF6B6i6ftWQcDqEn3/iGFRFRo8cBIMSJVOpnNdfTMFA=
 github.com/wk8/go-ordered-map/v2 v2.1.8 h1:5h/BUHu93oj4gIdvHHHGsScSTMijfx5PeYkE/fJgbpc=
 github.com/wk8/go-ordered-map/v2 v2.1.8/go.mod h1:5nJHM5DyteebpVlHnWMV0rPz6Zp7+xBAnxjb1X5vnTw=
+github.com/wordgen/wordlists v0.3.0 h1:Q9xIl5506DIvNy3INC6Q+4KQwjfczzh/PZye4Tkkw3c=
+github.com/wordgen/wordlists v0.3.0/go.mod h1:M74rW8w0qhadSpPYkCx/rBWWQWEXKCP4VFLaUEhrLs8=
+github.com/wordgen/wordlists/eff v0.3.0 h1:rYCBa4ntXBHDkuu904KCejK+alZsz4+Aue539pXsghE=
+github.com/wordgen/wordlists/eff v0.3.0/go.mod h1:hsLXGcWdZhzUQ9QXCMrXHl4euoclcCadzhQe2ERLL6w=
+github.com/wordgen/wordlists/names v0.3.0 h1:C0MOiqGisPE/KLabX4ZpJnmztF226xSlAbM++Z7anZc=
+github.com/wordgen/wordlists/names v0.3.0/go.mod h1:qpt/50GQaDbuQk+nXs0EuEdVcTywAcL6eDRrD4vikHY=
 github.com/x448/float16 v0.8.4 h1:qLwI1I70+NjRFUR3zs1JPUCgaCXSh3SW62uAKT1mSBM=
 github.com/x448/float16 v0.8.4/go.mod h1:14CWIYCyZA/cWjXOioeEpHeN/83MdbZDRQHoFcYsOfg=
 github.com/xhit/go-str2duration/v2 v2.1.0 h1:lxklc02Drh6ynqX+DdPyp5pCKLUQpRT8bp8Ydu2Bstc=

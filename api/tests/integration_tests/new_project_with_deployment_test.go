@@ -4,7 +4,6 @@ import (
 	"archive/tar"
 	"bytes"
 	"context"
-	"crypto/sha256"
 	"encoding/json"
 	"fmt"
 	"io"
@@ -260,15 +259,20 @@ func createNewProjectWithDeployment(t *testing.T, config testutils.DurableExecut
 
 		require.DirExists(t, TRAEFIK_DYNAMIC_CONFIG)
 
-		sha := fmt.Sprintf("%.*s", 8, deployment.Deployment.GetSha())
-		projectName := fmt.Sprintf("%v_%v_%v_%v_%v",
-			p.Project.GetId(),
-			deployment.Deployment.GetId(),
-			deployment.Deployment.GetBranch(),
-			sha,
-			deployment.Deployment.GetDeployedAt().UnixMilli())
-		projectNameSha := fmt.Sprintf("%.*x", 6, sha256.Sum256([]byte(projectName)))
-		deploymentConfigPath := filepath.Join(TRAEFIK_DYNAMIC_CONFIG, fmt.Sprintf("buang-%v.yaml", projectNameSha))
+		projectName := deploymentscomponent.GetProjectName(deploymentscomponent.GetProjectNameParams{
+			ProjectId:    p.Project.GetId(),
+			DeploymentId: deployment.Deployment.GetId(),
+			Branch:       deployment.Deployment.GetBranch(),
+			Sha:          deployment.Deployment.GetSha(),
+			DeployedAt:   *deployment.Deployment.GetDeployedAt(),
+		})
+		deploymentConfigPath := deploymentscomponent.GetDeploymentPath(deploymentscomponent.GetDeploymentPathParams{
+			ProjectId:    p.Project.GetId(),
+			DeploymentId: deployment.Deployment.GetId(),
+			Branch:       deployment.Deployment.GetBranch(),
+			Sha:          deployment.Deployment.GetSha(),
+			DeployedAt:   *deployment.Deployment.GetDeployedAt(),
+		})
 		require.FileExists(t, deploymentConfigPath)
 
 		cli, err := command.NewDockerCli(command.WithAPIClient(docker))
@@ -281,14 +285,14 @@ func createNewProjectWithDeployment(t *testing.T, config testutils.DurableExecut
 
 		composeProject, err := svc.LoadProject(ctx, api.ProjectLoadOptions{
 			ConfigPaths: []string{filepath.Join(*deployment.Deployment.GetClonePath(), p.Project.GetComposePath())},
-			ProjectName: projectNameSha,
+			ProjectName: projectName,
 		})
 		require.NoError(t, err)
 
 		require.Len(t, composeProject.AllServices(), EXPECTED_SERVICES)
 
 		filters := filters.NewArgs()
-		filters.Add("label", fmt.Sprintf("com.docker.compose.project=%s", projectNameSha))
+		filters.Add("label", fmt.Sprintf("com.docker.compose.project=%s", projectName))
 		containers, err := docker.ContainerList(ctx, container.ListOptions{
 			Filters: filters,
 		})
@@ -302,7 +306,7 @@ func createNewProjectWithDeployment(t *testing.T, config testutils.DurableExecut
 
 			require.Equal(t, *envs["HELLO"], "WORLD")
 			require.Equal(t, *envs["BUANG_DEPLOYMENT_PATH"], *deployment.Deployment.GetUrl())
-			require.Equal(t, *envs["BUANG_PROJECT_NAME"], projectNameSha)
+			require.Equal(t, *envs["BUANG_PROJECT_NAME"], projectName)
 
 			aliases := []string{}
 			for _, n := range i.NetworkSettings.Networks {
@@ -310,7 +314,7 @@ func createNewProjectWithDeployment(t *testing.T, config testutils.DurableExecut
 			}
 
 			require.True(t, slices.ContainsFunc(aliases, func(alias string) bool {
-				pattern := fmt.Sprintf("buang-%v-.+", projectNameSha)
+				pattern := fmt.Sprintf("buang-%v-.+", projectName)
 
 				matched, err := regexp.MatchString(pattern, alias)
 				if err != nil {
