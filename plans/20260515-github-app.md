@@ -217,3 +217,4 @@ Additionally, there are a few variables which are required for every deployment:
      ```
 - Prefer anonymous functions over function declarations
 - Use meaningful variable names but keep it terse
+- Prefix all environment variables with `BUANG_GHA`
