@@ -49,6 +49,7 @@ Additionally, there are a few variables which are required for every deployment:
       - To interact with our database
 - austenite (https://github.com/ezzatron/austenite)
    - Validate environment variables required by the node app
+- vitest
 
 # Scope
 1. Gather repository and user details
