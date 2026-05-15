@@ -102,7 +102,7 @@ Additionally, there are a few variables which are required for every deployment:
    - Users should also be able to authenticate via OAuth with the HonoJS `oidc-auth` middleware
 
 2. Create a deployment
-- For each repository, listen for either: when a new pull request is created or updated (either active or draft) OR when a workflow run is successful for the feature branch
+- For each repository, listen for either: when a new pull request is created or updated (either active or draft) OR when a workflow run is successful (a specific workflow run not any) for the feature branch
 - When a new pull request is created, we should make a request to the Buang API (for the user):
    - POST `${BUANG_API_BASE_URL}/api/v1/project/${BUANG_PROJECT_ID}/deployment?waitForDeployment=true` with:
       - Headers:
@@ -110,7 +110,7 @@ Additionally, there are a few variables which are required for every deployment:
       - Body:
          - branch: The feature branch ref
          - sha: The commit sha to deploy
-         - serviceEntrypoint: The path to the compose file to deploy
+         - serviceEntrypoint: The main service which will accept the http requests. This is usually a load balancer like Traefik or NGINX
          - env: Any environment variables for the project
             - The environment variables for the project are stored when the user sets up the project with the GitHub app. Remember that it is encrypted and can be decrypted with `BUANG_GHA_SECRET_KEY`
 
