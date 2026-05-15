@@ -8,17 +8,17 @@ import {
 } from "vitest";
 
 beforeAll(() => {
-	process.env.DATABASE_URL = "postgres://test:test@localhost:5432/test";
+	process.env.BUANG_GHA_DATABASE_URL = "postgres://test:test@localhost:5432/test";
 	process.env.BUANG_GHA_SECRET_KEY =
 		"0102030405060708090a0b0c0d0e0f101112131415161718191a1b1c1d1e1f20";
-	process.env.GITHUB_APP_ID = "1";
-	process.env.GITHUB_PRIVATE_KEY = "dummy";
-	process.env.GITHUB_WEBHOOK_SECRET = "secret";
-	process.env.OIDC_ISSUER = "https://example.com";
-	process.env.OIDC_CLIENT_ID = "dummy";
-	process.env.OIDC_CLIENT_SECRET = "dummy";
-	process.env.SESSION_SECRET = "dummy";
-	process.env.APP_BASE_URL = "http://localhost:3000";
+	process.env.BUANG_GHA_GITHUB_APP_ID = "1";
+	process.env.BUANG_GHA_GITHUB_PRIVATE_KEY = "dummy";
+	process.env.BUANG_GHA_GITHUB_WEBHOOK_SECRET = "secret";
+	process.env.BUANG_GHA_OIDC_ISSUER = "https://example.com";
+	process.env.BUANG_GHA_OIDC_CLIENT_ID = "dummy";
+	process.env.BUANG_GHA_OIDC_CLIENT_SECRET = "dummy";
+	process.env.BUANG_GHA_SESSION_SECRET = "dummy";
+	process.env.BUANG_GHA_APP_BASE_URL = "http://localhost:3000";
 });
 
 const mockFindRepoByFullName = vi.fn();
