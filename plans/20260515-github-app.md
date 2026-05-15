@@ -47,6 +47,8 @@ Additionally, there are a few variables which are required for every deployment:
 - PostgreSQL
    - node-postgres
       - To interact with our database
+- austenite (https://github.com/ezzatron/austenite)
+   - Validate environment variables required by the node app
 
 # Scope
 1. Gather repository and user details
@@ -119,6 +121,9 @@ Additionally, there are a few variables which are required for every deployment:
          - X-API-KEY: `${BUANG_API_KEY}`
       - Body:
          - branch: The feature branch ref
+
+# Verification
+- Write unit tests where it makes sense to
 
 # Related
 - Implement this under `github-app`. Setup devcontainer for it with the Dockerfile:
