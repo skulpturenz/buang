@@ -17,6 +17,7 @@ import (
 	deploymentlogs "skulpture/buang/handlers/deployment_logs"
 	"skulpture/buang/handlers/deployments"
 	"skulpture/buang/handlers/diagnostics"
+	mcphandlers "skulpture/buang/handlers/mcp"
 	"skulpture/buang/handlers/projects"
 	authn "skulpture/buang/middleware/authn"
 	limiter "skulpture/buang/middleware/limiter"
@@ -218,6 +219,13 @@ func main() {
 			deployments.Router,
 			deploymentlogs.Router,
 			diagnostics.Router)
+	})
+
+	r.Route("/mcp/api/v1", func(r chi.Router) {
+		r.Use(limiter.Handle)
+		r.Use(authnConfig.Handle)
+
+		app.GetHttpApplication().AddRouters(r, mcphandlers.Router)
 	})
 
 	err = app.Run(ctx)
