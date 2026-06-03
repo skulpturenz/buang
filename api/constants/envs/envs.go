@@ -21,6 +21,9 @@ var (
 			WithMembers(enumsenv.Production.String(), enumsenv.Development.String(), enumsenv.Test.String()).
 			WithDefault(enumsenv.Development.String()).
 			Required()
+	BUANG_PORT = ferrite.NetworkPort("BUANG_PORT", "Port").
+			WithDefault("80").
+			Required()
 	API_KEY = ferrite.
 		String("BUANG_API_KEY", "Buang API key").
 		WithSensitiveContent().

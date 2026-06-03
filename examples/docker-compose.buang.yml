@@ -19,8 +19,8 @@ services:
       --ping=true
       --entrypoints.metrics.address=:8082
     ports:
-      - "80:80"
-      - "443:443"
+      - "${BUANG_TRAEFIK_ENTRYPOINT_WEB_PORT:-80}:80"
+      - "${BUANG_TRAEFIK_ENTRYPOINT_WEBSECURE_PORT:-443}:443"
     volumes:
       - /var/run/docker.sock:/var/run/docker.sock
       - ${BUANG_TRAEFIK_DYNAMIC_CONFIG_DIR:-/buang/traefik}:/app/deployments
@@ -53,7 +53,6 @@ services:
       traefik.http.services.buang-service.loadbalancer.healthcheck.port: ${BUANG_PORT:-80}
     environment:
       GO_ENV: "production"
-      BUANG_PORT: ${BUANG_PORT}
       BUANG_LOG_LEVEL: ${BUANG_LOG_LEVEL}
       BUANG_API_KEY: ${BUANG_API_KEY}
       BUANG_ENABLE_TELEMETRY: ${BUANG_ENABLE_TELEMETRY:-false}
