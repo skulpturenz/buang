@@ -29,20 +29,20 @@ export const CompleteProfile = () => {
 		mutationFn: (values: FormValues) => patch("/me", values),
 		onSuccess: () => {
 			queryClient.invalidateQueries({ queryKey: ["me"] });
-			const repo = params.get("repo");
-			const installationId = params.get("installation_id");
-			if (repo && installationId) {
-				navigate(
-					`/setup?repo=${encodeURIComponent(repo)}&installation_id=${installationId}`,
-				);
-			} else {
-				navigate("/setup");
-			}
 		},
 	});
 
 	const onSubmit = async (values: FormValues) => {
 		await mutation.mutateAsync(values);
+		const repo = params.get("repo");
+		const installationId = params.get("installation_id");
+		if (repo && installationId) {
+			navigate(
+				`/setup?repo=${encodeURIComponent(repo)}&installation_id=${installationId}`,
+			);
+		} else {
+			navigate("/setup");
+		}
 	};
 
 	return (

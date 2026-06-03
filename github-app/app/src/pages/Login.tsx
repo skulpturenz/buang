@@ -25,12 +25,12 @@ export const Login = () => {
 		mutationFn: (values: FormValues) => post("/login", values),
 		onSuccess: () => {
 			queryClient.invalidateQueries({ queryKey: ["me"] });
-			navigate("/setup");
 		},
 	});
 
 	const onSubmit = async (values: FormValues) => {
 		await mutation.mutateAsync(values);
+		navigate("/setup");
 	};
 
 	return (
