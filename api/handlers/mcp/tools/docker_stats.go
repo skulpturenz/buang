@@ -3,6 +3,7 @@ package tools
 import (
 	"context"
 	"encoding/json"
+	"fmt"
 	"skulpture/buang/app"
 	"skulpture/buang/components/docker"
 )
@@ -29,7 +30,12 @@ type containerStatsResult struct {
 	MemLimitMb float64 `json:"memLimitMb"`
 }
 
-func dockerStats(ctx context.Context, s app.ApplicationServices, _ map[string]any) (string, error) {
+func dockerStats(ctx context.Context, s app.ApplicationServices, args map[string]any) (string, error) {
+	_, err := validateArgs[DockerStatsArgs](args)
+	if err != nil {
+		return "", fmt.Errorf("validation error: %w", err)
+	}
+
 	p := docker.StatsParams{}
 
 	res, err := p.Stats(ctx, &s)

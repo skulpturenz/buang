@@ -3,6 +3,7 @@ package tools
 import (
 	"context"
 	"encoding/json"
+	"fmt"
 	"skulpture/buang/app"
 	constantsenvs "skulpture/buang/constants/envs"
 	"time"
@@ -18,7 +19,12 @@ var infoTool = Tool{
 	Handler: getInfo,
 }
 
-func getInfo(_ context.Context, _ app.ApplicationServices, _ map[string]any) (string, error) {
+func getInfo(_ context.Context, _ app.ApplicationServices, args map[string]any) (string, error) {
+	_, err := validateArgs[InfoArgs](args)
+	if err != nil {
+		return "", fmt.Errorf("validation error: %w", err)
+	}
+
 	zoneName, _ := time.Now().Zone()
 
 	info := map[string]string{

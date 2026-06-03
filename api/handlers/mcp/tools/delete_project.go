@@ -26,18 +26,13 @@ var deleteProjectTool = Tool{
 }
 
 func deleteProject(ctx context.Context, s app.ApplicationServices, args map[string]any) (string, error) {
-	projectIdRaw, ok := args["projectId"]
-	if !ok {
-		return "", fmt.Errorf("projectId is required")
+	req, err := validateArgs[DeleteProjectArgs](args)
+	if err != nil {
+		return "", fmt.Errorf("validation error: %w", err)
 	}
-	projectIdFloat, ok := projectIdRaw.(float64)
-	if !ok {
-		return "", fmt.Errorf("projectId must be a number")
-	}
-	projectId := int64(projectIdFloat)
 
 	d := deployments.FindActiveDeploymentsByProjectParams{
-		ProjectID: projectId,
+		ProjectID: req.ProjectId,
 	}
 
 	activeDeployments, err := d.Exec(ctx, &s)
@@ -47,7 +42,7 @@ func deleteProject(ctx context.Context, s app.ApplicationServices, args map[stri
 
 	for _, dply := range activeDeployments.Deployments {
 		wp := workersinterfaces.BuangDeploymentParams{
-			ProjectId:    projectId,
+			ProjectId:    req.ProjectId,
 			DeploymentId: dply.GetId(),
 			Block:        true,
 		}
@@ -59,7 +54,7 @@ func deleteProject(ctx context.Context, s app.ApplicationServices, args map[stri
 	}
 
 	p := projects.DeleteProjectParams{
-		Id: projectId,
+		Id: req.ProjectId,
 	}
 
 	_, err = p.Exec(ctx, &s)

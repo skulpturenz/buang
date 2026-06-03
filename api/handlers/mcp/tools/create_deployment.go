@@ -41,39 +41,17 @@ var createDeploymentTool = Tool{
 }
 
 func createDeployment(ctx context.Context, s app.ApplicationServices, args map[string]any) (string, error) {
-	projectIdRaw, ok := args["projectId"]
-	if !ok {
-		return "", fmt.Errorf("projectId is required")
-	}
-	projectIdFloat, ok := projectIdRaw.(float64)
-	if !ok {
-		return "", fmt.Errorf("projectId must be a number")
-	}
-
-	branch, ok := args["branch"].(string)
-	if !ok || branch == "" {
-		return "", fmt.Errorf("branch is required")
-	}
-
-	sha, ok := args["sha"].(string)
-	if !ok || sha == "" {
-		return "", fmt.Errorf("sha is required")
-	}
-
-	serviceEntrypoint, ok := args["serviceEntrypoint"].(string)
-	if !ok || serviceEntrypoint == "" {
-		return "", fmt.Errorf("serviceEntrypoint is required")
+	req, err := validateArgs[CreateDeploymentArgs](args)
+	if err != nil {
+		return "", fmt.Errorf("validation error: %w", err)
 	}
 
 	p := deployments.CreateDeploymentParams{
-		ProjectID:         int64(projectIdFloat),
-		Branch:            branch,
-		Sha:               sha,
-		ServiceEntrypoint: serviceEntrypoint,
-	}
-
-	if v, ok := args["env"].(map[string]any); ok {
-		p.Env = v
+		ProjectID:         req.ProjectId,
+		Branch:            req.Branch,
+		Sha:               req.Sha,
+		ServiceEntrypoint: req.ServiceEntrypoint,
+		Env:               req.Env,
 	}
 
 	res, err := p.Exec(ctx, &s)

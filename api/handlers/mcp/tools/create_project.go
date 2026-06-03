@@ -40,31 +40,17 @@ var createProjectTool = Tool{
 }
 
 func createProject(ctx context.Context, s app.ApplicationServices, args map[string]any) (string, error) {
-	repository, ok := args["repository"].(string)
-	if !ok || repository == "" {
-		return "", fmt.Errorf("repository is required")
-	}
-
-	composePath, ok := args["composePath"].(string)
-	if !ok || composePath == "" {
-		return "", fmt.Errorf("composePath is required")
+	req, err := validateArgs[CreateProjectArgs](args)
+	if err != nil {
+		return "", fmt.Errorf("validation error: %w", err)
 	}
 
 	p := projects.CreateProjectParams{
-		Repository:  repository,
-		ComposePath: composePath,
-	}
-
-	if v, ok := args["requiresAuthn"].(bool); ok {
-		p.RequiresAuthn = v
-	}
-
-	if v, ok := args["username"].(string); ok && v != "" {
-		p.Username = &v
-	}
-
-	if v, ok := args["password"].(string); ok && v != "" {
-		p.Password = &v
+		Repository:    req.Repository,
+		ComposePath:   req.ComposePath,
+		RequiresAuthn: req.RequiresAuthn,
+		Username:      req.Username,
+		Password:      req.Password,
 	}
 
 	res, err := p.Exec(ctx, &s)

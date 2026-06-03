@@ -28,31 +28,18 @@ var buangDeploymentTool = Tool{
 }
 
 func buangDeployment(ctx context.Context, s app.ApplicationServices, args map[string]any) (string, error) {
-	projectIdRaw, ok := args["projectId"]
-	if !ok {
-		return "", fmt.Errorf("projectId is required")
-	}
-	projectIdFloat, ok := projectIdRaw.(float64)
-	if !ok {
-		return "", fmt.Errorf("projectId must be a number")
-	}
-
-	deploymentIdRaw, ok := args["deploymentId"]
-	if !ok {
-		return "", fmt.Errorf("deploymentId is required")
-	}
-	deploymentIdFloat, ok := deploymentIdRaw.(float64)
-	if !ok {
-		return "", fmt.Errorf("deploymentId must be a number")
+	req, err := validateArgs[BuangDeploymentArgs](args)
+	if err != nil {
+		return "", fmt.Errorf("validation error: %w", err)
 	}
 
 	wp := workersinterfaces.BuangDeploymentParams{
-		ProjectId:    int64(projectIdFloat),
-		DeploymentId: int64(deploymentIdFloat),
+		ProjectId:    req.ProjectId,
+		DeploymentId: req.DeploymentId,
 		Block:        true,
 	}
 
-	err := s.Workflows.BuangDeployment(ctx, wp)
+	err = s.Workflows.BuangDeployment(ctx, wp)
 	if err != nil {
 		return "", err
 	}

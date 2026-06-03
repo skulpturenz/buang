@@ -28,26 +28,17 @@ var buangBranchTool = Tool{
 }
 
 func buangBranch(ctx context.Context, s app.ApplicationServices, args map[string]any) (string, error) {
-	projectIdRaw, ok := args["projectId"]
-	if !ok {
-		return "", fmt.Errorf("projectId is required")
-	}
-	projectIdFloat, ok := projectIdRaw.(float64)
-	if !ok {
-		return "", fmt.Errorf("projectId must be a number")
-	}
-
-	branch, ok := args["branch"].(string)
-	if !ok || branch == "" {
-		return "", fmt.Errorf("branch is required")
+	req, err := validateArgs[BuangBranchArgs](args)
+	if err != nil {
+		return "", fmt.Errorf("validation error: %w", err)
 	}
 
 	wp := workersinterfaces.BuangBranchParams{
-		ProjectId: int64(projectIdFloat),
-		Branch:    branch,
+		ProjectId: req.ProjectId,
+		Branch:    req.Branch,
 	}
 
-	err := s.Workflows.BuangBranch(ctx, wp)
+	err = s.Workflows.BuangBranch(ctx, wp)
 	if err != nil {
 		return "", err
 	}
