@@ -1,9 +1,9 @@
 import { yupResolver } from "@hookform/resolvers/yup";
 import { useForm } from "react-hook-form";
+import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { Link, useNavigate, useSearchParams } from "react-router-dom";
 import * as yup from "yup";
 import { post } from "../lib/api.js";
-import { queryClient } from "../lib/queryClient.js";
 
 const schema = yup.object({
 	email: yup.string().email("Invalid email").required("Required"),
@@ -23,17 +23,17 @@ type FormValues = yup.InferType<typeof schema>;
 export const Register = () => {
 	const navigate = useNavigate();
 	const [params] = useSearchParams();
+	const queryClient = useQueryClient();
 	const {
 		register,
 		handleSubmit,
-		setError,
-		formState: { errors, isSubmitting },
+		formState: { errors },
 	} = useForm<FormValues>({ resolver: yupResolver(schema) });
 
-	const onSubmit = async (values: FormValues) => {
-		try {
-			await post("/register", values);
-			await queryClient.invalidateQueries({ queryKey: ["me"] });
+	const mutation = useMutation({
+		mutationFn: (values: FormValues) => post("/register", values),
+		onSuccess: () => {
+			queryClient.invalidateQueries({ queryKey: ["me"] });
 			const repo = params.get("repo");
 			const installationId = params.get("installation_id");
 			if (repo && installationId) {
@@ -43,10 +43,11 @@ export const Register = () => {
 			} else {
 				navigate("/setup");
 			}
-		} catch (err: any) {
-			const msg = err?.body?.errors?.[0] ?? "Registration failed";
-			setError("root", { message: msg });
-		}
+		},
+	});
+
+	const onSubmit = async (values: FormValues) => {
+		await mutation.mutateAsync(values);
 	};
 
 	return (
@@ -54,8 +55,10 @@ export const Register = () => {
 			<h1 className="text-2xl font-semibold">Create account</h1>
 
 			<form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
-				{errors.root && (
-					<p className="text-sm text-destructive">{errors.root.message}</p>
+				{mutation.error && (
+					<p className="text-sm text-destructive">
+						{(mutation.error as any)?.body?.errors?.[0] ?? "Registration failed"}
+					</p>
 				)}
 
 				<div className="space-y-1">
@@ -113,9 +116,9 @@ export const Register = () => {
 
 				<button
 					type="submit"
-					disabled={isSubmitting}
+					disabled={mutation.isPending}
 					className="w-full rounded-md bg-primary px-4 py-2 text-sm font-medium text-primary-foreground hover:opacity-90 disabled:opacity-50">
-					{isSubmitting ? "Creating account…" : "Create account"}
+					{mutation.isPending ? "Creating account…" : "Create account"}
 				</button>
 			</form>
 

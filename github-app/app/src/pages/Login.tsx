@@ -1,9 +1,9 @@
 import { yupResolver } from "@hookform/resolvers/yup";
 import { useForm } from "react-hook-form";
+import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { Link, useNavigate } from "react-router-dom";
 import * as yup from "yup";
 import { post } from "../lib/api.js";
-import { queryClient } from "../lib/queryClient.js";
 
 const schema = yup.object({
 	email: yup.string().email("Invalid email").required("Required"),
@@ -14,21 +14,23 @@ type FormValues = yup.InferType<typeof schema>;
 
 export const Login = () => {
 	const navigate = useNavigate();
+	const queryClient = useQueryClient();
 	const {
 		register,
 		handleSubmit,
-		setError,
-		formState: { errors, isSubmitting },
+		formState: { errors },
 	} = useForm<FormValues>({ resolver: yupResolver(schema) });
 
-	const onSubmit = async (values: FormValues) => {
-		try {
-			await post("/login", values);
-			await queryClient.invalidateQueries({ queryKey: ["me"] });
+	const mutation = useMutation({
+		mutationFn: (values: FormValues) => post("/login", values),
+		onSuccess: () => {
+			queryClient.invalidateQueries({ queryKey: ["me"] });
 			navigate("/setup");
-		} catch (_err) {
-			setError("root", { message: "Invalid email or password" });
-		}
+		},
+	});
+
+	const onSubmit = async (values: FormValues) => {
+		await mutation.mutateAsync(values);
 	};
 
 	return (
@@ -36,8 +38,10 @@ export const Login = () => {
 			<h1 className="text-2xl font-semibold">Sign in to Buang</h1>
 
 			<form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
-				{errors.root && (
-					<p className="text-sm text-destructive">{errors.root.message}</p>
+				{mutation.error && (
+					<p className="text-sm text-destructive">
+						{mutation.error.message || "Invalid email or password"}
+					</p>
 				)}
 
 				<div className="space-y-1">
@@ -66,9 +70,9 @@ export const Login = () => {
 
 				<button
 					type="submit"
-					disabled={isSubmitting}
+					disabled={mutation.isPending}
 					className="w-full rounded-md bg-primary px-4 py-2 text-sm font-medium text-primary-foreground hover:opacity-90 disabled:opacity-50">
-					{isSubmitting ? "Signing in…" : "Sign in"}
+					{mutation.isPending ? "Signing in…" : "Sign in"}
 				</button>
 			</form>
 
