@@ -1,3 +1,4 @@
+@import url("https://fonts.googleapis.com/css2?family=JetBrains+Mono:ital,wght@0,300..800;1,300..800&display=swap");
 @import "tailwindcss";
 
 @layer base {
@@ -33,4 +34,47 @@
 		background-color: hsl(var(--background));
 		color: hsl(var(--foreground));
 	}
+}
+
+/* Design-system tokens */
+:root {
+	--font-mono: "JetBrains Mono", ui-monospace, "SF Mono", Menlo, monospace;
+	--ds-accent: oklch(0.74 0.17 35);
+	--ds-accent-fg: oklch(0.18 0.02 35);
+	--ds-destructive: oklch(0.64 0.22 28);
+	--ds-destructive-fg: oklch(0.99 0 0);
+	/* Light theme defaults */
+	--bg: oklch(0.985 0.003 110);
+	--fg: oklch(0.16 0.01 110);
+	--fg-muted: oklch(0.48 0.008 110);
+	--line: oklch(0.86 0.005 110);
+	--line-strong: oklch(0.16 0.01 110);
+}
+
+@media (prefers-color-scheme: dark) {
+	:root {
+		--bg: oklch(0.135 0.005 110);
+		--fg: oklch(0.96 0.003 110);
+		--fg-muted: oklch(0.62 0.006 110);
+		--line: oklch(0.27 0.005 110);
+		--line-strong: oklch(0.96 0.003 110);
+	}
+}
+
+.theme-light {
+	--bg: oklch(0.985 0.003 110);
+	--fg: oklch(0.16 0.01 110);
+	--fg-muted: oklch(0.48 0.008 110);
+	--line: oklch(0.86 0.005 110);
+	--line-strong: oklch(0.16 0.01 110);
+	color-scheme: light;
+}
+
+.theme-dark {
+	--bg: oklch(0.135 0.005 110);
+	--fg: oklch(0.96 0.003 110);
+	--fg-muted: oklch(0.62 0.006 110);
+	--line: oklch(0.27 0.005 110);
+	--line-strong: oklch(0.96 0.003 110);
+	color-scheme: dark;
 }

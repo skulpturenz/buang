@@ -1,0 +1,406 @@
+/* Buang — terminal-coded design tokens */
+
+@import url("https://fonts.googleapis.com/css2?family=JetBrains+Mono:ital,wght@0,300..800;1,300..800&display=swap");
+
+:root {
+  --font-mono: "JetBrains Mono", ui-monospace, "SF Mono", Menlo, monospace;
+
+  /* Shared accent */
+  --accent: oklch(0.74 0.17 35);           /* coral warning */
+  --accent-fg: oklch(0.18 0.02 35);        /* near-black on accent */
+  --destructive: oklch(0.64 0.22 28);      /* coral-red */
+  --destructive-fg: oklch(0.99 0 0);
+  --ok: oklch(0.72 0.18 158);              /* cooler green for [OK] */
+  --warn: oklch(0.82 0.16 80);             /* amber */
+}
+
+.theme-light {
+  --bg: oklch(0.985 0.003 110);            /* paper white */
+  --bg-elev: oklch(0.97 0.003 110);
+  --fg: oklch(0.16 0.01 110);              /* ink */
+  --fg-muted: oklch(0.48 0.008 110);
+  --fg-faint: oklch(0.68 0.005 110);
+  --line: oklch(0.86 0.005 110);
+  --line-strong: oklch(0.16 0.01 110);
+  --input-bg: oklch(0.985 0.003 110);
+  --grid: oklch(0.93 0.004 110);
+  --selection-bg: var(--accent);
+  --selection-fg: var(--accent-fg);
+  color-scheme: light;
+}
+
+.theme-dark {
+  --bg: oklch(0.135 0.005 110);            /* charcoal */
+  --bg-elev: oklch(0.175 0.005 110);
+  --fg: oklch(0.96 0.003 110);
+  --fg-muted: oklch(0.62 0.006 110);
+  --fg-faint: oklch(0.42 0.005 110);
+  --line: oklch(0.27 0.005 110);
+  --line-strong: oklch(0.96 0.003 110);
+  --input-bg: oklch(0.10 0.005 110);
+  --grid: oklch(0.20 0.005 110);
+  --selection-bg: var(--accent);
+  --selection-fg: var(--accent-fg);
+  color-scheme: dark;
+}
+
+/* ------------------------------------------------------------------ */
+/* base: every artboard inherits this. Mono everywhere, no rounding.   */
+/* ------------------------------------------------------------------ */
+
+.brutal {
+  font-family: var(--font-mono);
+  background: var(--bg);
+  color: var(--fg);
+  font-size: 13px;
+  line-height: 1.5;
+  font-feature-settings: "ss01", "ss02", "calt";
+  -webkit-font-smoothing: antialiased;
+  letter-spacing: 0;
+}
+
+.brutal ::selection { background: var(--selection-bg); color: var(--selection-fg); }
+
+.brutal *,
+.brutal *::before,
+.brutal *::after { box-sizing: border-box; }
+
+/* gridded background (paper) */
+.brutal-grid {
+  background-color: var(--bg);
+  background-image:
+    linear-gradient(to right, var(--grid) 1px, transparent 1px),
+    linear-gradient(to bottom, var(--grid) 1px, transparent 1px);
+  background-size: 24px 24px;
+  background-position: -1px -1px;
+}
+
+/* ------------------------------------------------------------------ */
+/* primitives                                                          */
+/* ------------------------------------------------------------------ */
+
+.b-label {
+  display: block;
+  font-size: 10.5px;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  color: var(--fg-muted);
+  margin-bottom: 6px;
+}
+
+.b-hint {
+  font-size: 11px;
+  color: var(--fg-muted);
+  letter-spacing: 0.01em;
+}
+
+.b-input {
+  display: block;
+  width: 100%;
+  padding: 9px 11px;
+  border: 1px solid var(--line);
+  background: var(--input-bg);
+  color: var(--fg);
+  font: inherit;
+  font-size: 13px;
+  border-radius: 0;
+  outline: none;
+  transition: border-color 80ms linear;
+}
+.b-input::placeholder { color: var(--fg-faint); }
+.b-input:focus { border-color: var(--line-strong); box-shadow: inset 0 0 0 1px var(--line-strong); }
+.b-input:focus.b-input--accent { border-color: var(--accent); box-shadow: inset 0 0 0 1px var(--accent); }
+
+.b-input--with-prefix { padding-left: 38px; }
+
+.b-field { display: block; }
+.b-field + .b-field { margin-top: 16px; }
+
+.b-input-wrap { position: relative; }
+.b-input-prefix {
+  position: absolute;
+  left: 11px; top: 50%;
+  transform: translateY(-50%);
+  color: var(--fg-faint);
+  font-size: 12px;
+  pointer-events: none;
+}
+
+/* Buttons — squared, mono, hover = invert */
+.b-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  width: 100%;
+  padding: 10px 14px;
+  border: 1px solid var(--line-strong);
+  background: var(--fg);
+  color: var(--bg);
+  font: inherit;
+  font-size: 12px;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  border-radius: 0;
+  cursor: pointer;
+  white-space: nowrap;
+  transition: background 80ms linear, color 80ms linear;
+}
+.b-btn:hover { background: var(--bg); color: var(--fg); }
+
+.b-btn--accent {
+  background: var(--accent);
+  border-color: var(--accent);
+  color: var(--accent-fg);
+}
+.b-btn--accent:hover { background: var(--bg); color: var(--fg); border-color: var(--line-strong); }
+
+.b-btn--ghost {
+  background: transparent;
+  color: var(--fg);
+}
+.b-btn--ghost:hover { background: var(--fg); color: var(--bg); }
+
+.b-btn--sm { padding: 6px 10px; font-size: 10.5px; }
+.b-btn--icon { width: auto; padding: 6px; }
+
+/* Inline link */
+.b-link {
+  color: var(--fg);
+  text-decoration: none;
+  border-bottom: 1px solid var(--accent);
+  padding-bottom: 1px;
+}
+.b-link:hover { background: var(--accent); color: var(--accent-fg); border-bottom-color: var(--accent); }
+
+/* Checkbox — square, no rounding */
+.b-check {
+  appearance: none;
+  width: 16px; height: 16px;
+  border: 1px solid var(--line-strong);
+  background: var(--input-bg);
+  display: inline-grid;
+  place-content: center;
+  cursor: pointer;
+  flex-shrink: 0;
+  margin: 0;
+}
+.b-check:checked {
+  background: var(--accent);
+  border-color: var(--accent);
+}
+.b-check:checked::after {
+  content: "×";
+  font-size: 16px;
+  line-height: 1;
+  color: var(--accent-fg);
+  font-weight: 700;
+  margin-top: -2px;
+}
+
+/* Tags / badges */
+.b-tag {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  padding: 2px 6px;
+  border: 1px solid var(--line);
+  font-size: 10px;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  color: var(--fg-muted);
+  line-height: 1;
+  white-space: nowrap;
+}
+.b-tag--accent { color: var(--accent-fg); background: var(--accent); border-color: var(--accent); }
+.b-tag--err    { color: var(--destructive-fg); background: var(--destructive); border-color: var(--destructive); }
+.b-tag--ok     { color: var(--bg); background: var(--ok); border-color: var(--ok); }
+
+.b-dot {
+  display: inline-block;
+  width: 7px; height: 7px;
+  background: currentColor;
+}
+
+/* ASCII divider — "── ─── ──" */
+.b-divider {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  font-size: 10px;
+  text-transform: uppercase;
+  letter-spacing: 0.16em;
+  color: var(--fg-muted);
+  margin: 18px 0;
+  font-weight: 600;
+}
+.b-divider::before,
+.b-divider::after {
+  content: "";
+  flex: 1;
+  border-top: 1px dashed var(--line);
+}
+
+/* Card / window chrome */
+.b-window {
+  border: 1px solid var(--line-strong);
+  background: var(--bg);
+  position: relative;
+}
+.b-window__bar {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 8px 10px;
+  border-bottom: 1px solid var(--line-strong);
+  font-size: 10.5px;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  font-weight: 600;
+  color: var(--fg);
+  background: var(--bg);
+}
+.b-window__dot {
+  width: 8px; height: 8px;
+  border: 1px solid var(--line-strong);
+  background: var(--bg);
+}
+.b-window__title { flex: 1; }
+.b-window__sub { color: var(--fg-muted); font-weight: 500; }
+
+/* page header strip — used on auth artboards above the form */
+.b-pagehead {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 10px 14px;
+  border-bottom: 1px solid var(--line-strong);
+  font-size: 10.5px;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  font-weight: 600;
+}
+.b-pagehead__crumbs { display: flex; gap: 4px; color: var(--fg-muted); }
+.b-pagehead__crumbs > span:not(:last-child)::after { content: " /"; }
+.b-pagehead__crumbs > span:last-child { color: var(--fg); }
+
+/* corner crosshairs decoration */
+.b-crosshair {
+  position: relative;
+}
+.b-crosshair::before,
+.b-crosshair::after,
+.b-crosshair > .b-crosshair__bl,
+.b-crosshair > .b-crosshair__br {
+  content: "";
+  position: absolute;
+  width: 8px; height: 8px;
+  border: 1px solid var(--fg);
+  background: var(--bg);
+  z-index: 2;
+}
+.b-crosshair::before { top: -4px; left: -4px; }
+.b-crosshair::after { top: -4px; right: -4px; }
+.b-crosshair > .b-crosshair__bl { bottom: -4px; left: -4px; }
+.b-crosshair > .b-crosshair__br { bottom: -4px; right: -4px; }
+
+/* Table — env vars */
+.b-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 12px;
+}
+.b-table th, .b-table td {
+  text-align: left;
+  padding: 6px 8px;
+  border: 1px solid var(--line);
+}
+.b-table th {
+  font-size: 10px;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  color: var(--fg-muted);
+  background: var(--bg-elev);
+}
+.b-table td input.b-input {
+  border: none;
+  padding: 4px 0;
+  font-size: 12px;
+  background: transparent;
+}
+.b-table td input.b-input:focus { box-shadow: none; }
+.b-table .b-table__del {
+  background: none;
+  border: 1px solid var(--line);
+  width: 22px; height: 22px;
+  display: grid; place-items: center;
+  cursor: pointer;
+  color: var(--fg-muted);
+}
+.b-table .b-table__del:hover { color: var(--destructive); border-color: var(--destructive); }
+
+/* Error banner */
+.b-banner {
+  display: flex;
+  align-items: flex-start;
+  gap: 10px;
+  padding: 10px 12px;
+  border: 1px solid var(--destructive);
+  background: color-mix(in oklch, var(--destructive) 8%, var(--bg));
+  color: var(--fg);
+  font-size: 12px;
+}
+.b-banner__icon {
+  color: var(--destructive);
+  font-weight: 700;
+  flex-shrink: 0;
+}
+.b-banner--ok {
+  border-color: var(--ok);
+  background: color-mix(in oklch, var(--ok) 10%, var(--bg));
+}
+.b-banner--ok .b-banner__icon { color: var(--ok); }
+
+/* Stat pills — used in setup summary */
+.b-stat {
+  display: flex;
+  justify-content: space-between;
+  align-items: baseline;
+  padding: 8px 0;
+  border-top: 1px dashed var(--line);
+  font-size: 12px;
+}
+.b-stat:first-child { border-top: none; }
+.b-stat__k { color: var(--fg-muted); text-transform: uppercase; font-size: 10.5px; letter-spacing: 0.08em; }
+.b-stat__v { color: var(--fg); text-align: right; max-width: 60%; word-break: break-all; }
+
+/* logo */
+.b-wordmark {
+  font-family: var(--font-mono);
+  font-weight: 700;
+  letter-spacing: -0.02em;
+}
+
+/* utility */
+.b-row { display: flex; align-items: center; gap: 8px; }
+.b-col { display: flex; flex-direction: column; }
+.b-grow { flex: 1; }
+.b-mono { font-family: var(--font-mono); }
+.b-caps { text-transform: uppercase; letter-spacing: 0.08em; font-weight: 600; }
+.b-muted { color: var(--fg-muted); }
+.b-faint { color: var(--fg-faint); }
+.b-accent { color: var(--accent); }
+.b-destructive { color: var(--destructive); }
+
+/* blinking cursor */
+.b-cursor::after {
+  content: "▍";
+  margin-left: 2px;
+  color: var(--accent);
+  animation: b-blink 1s steps(1) infinite;
+}
+@keyframes b-blink { 50% { opacity: 0; } }
