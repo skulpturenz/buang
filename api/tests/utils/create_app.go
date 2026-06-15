@@ -4,6 +4,7 @@ import (
 	"context"
 	"fmt"
 	"log/slog"
+	apppkg "skulpture/buang/app"
 	"skulpture/buang/components/o11y"
 	enumsdurableexecutors "skulpture/buang/enums/durable_executors"
 	deploymentlogs "skulpture/buang/handlers/deployment_logs"
@@ -26,7 +27,12 @@ func CreateApp(ctx context.Context, cfg TestApplicationConfig) (*TestApplication
 		panic(err)
 	}
 
-	app.AddSingletons(o11y.NewS(cfg.Services.Queries))
+	appSvc := apppkg.ApplicationServices{Services: cfg.Services}
+	queries, ok := appSvc.GetQueries()
+	if !ok {
+		panic("queries service not found")
+	}
+	app.AddSingletons(o11y.NewS(&queries))
 
 	r.Route("/api/v1", func(r chi.Router) {
 		app.GetHttpApplication().AddRouters(r, projects.Router,

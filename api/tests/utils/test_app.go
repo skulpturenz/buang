@@ -5,19 +5,15 @@ import (
 	"fmt"
 	"log/slog"
 	"net/http/httptest"
-	"skulpture/buang/app"
-	"skulpture/buang/db/interfaces"
-	"skulpture/buang/ports"
-	workersinterfaces "skulpture/buang/workers/interfaces"
+	"skulpture/buang/services"
+	apppkg "skulpture/buang/app"
 
-	"github.com/docker/docker/client"
 	"github.com/go-chi/chi/v5"
-	"github.com/gorilla/schema"
 	"github.com/negrel/assert"
 )
 
 type TestApplicationConfig struct {
-	Services              TestApplicationServices
+	Services              *services.Services[any, any]
 	DurableExecutorConfig DurableExecutorConfiguration
 }
 
@@ -29,16 +25,11 @@ type TestApplication struct {
 
 type TestHttpApplication struct {
 	chi      *chi.Mux
-	Services TestApplicationServices
+	Services *services.Services[any, any]
 }
 
 type TestApplicationServices struct {
-	Queries              *interfaces.Queries
-	GorillaSchemaDecoder *schema.Decoder
-	GorillaSchemaEncoder *schema.Encoder
-	Docker               client.APIClient
-	Workflows            workersinterfaces.Workflows
-	Ports                ports.Ports
+	*services.Services[any, any]
 }
 
 func (a TestApplicationConfig) New(ctx context.Context, chi *chi.Mux) (*TestApplication, error) {
@@ -52,7 +43,9 @@ func (a TestApplicationConfig) New(ctx context.Context, chi *chi.Mux) (*TestAppl
 	}
 
 	assert.True(app.http != TestHttpApplication{}, "app initialized incorrectly")
-	assert.True(app.http.Services.Workflows != nil, "workflows must be initialized")
+	appSvc := apppkg.ApplicationServices{Services: app.http.Services}
+	_, ok := appSvc.GetWorkflows()
+	assert.True(ok, "workflows must be initialized")
 
 	return &app, nil
 }
@@ -73,22 +66,20 @@ func (a *TestApplication) GetHttpApplication() *TestHttpApplication {
 	return &a.http
 }
 
-func (a *TestApplication) AddSingletons(xs ...app.AppServiceSingleton) {
+func (a *TestApplication) AddSingletons(xs ...apppkg.AppServiceSingleton) {
 	for _, x := range xs {
 		x.AssertInitialized()
 	}
 }
 
-type HttpRouter func(s app.ApplicationServices, r chi.Router)
+type HttpRouter func(s apppkg.ApplicationServices, r chi.Router)
 
-func (a *TestHttpApplication) AddRouters(r chi.Router, x ...app.HttpRouter) {
+func (a *TestHttpApplication) AddRouters(r chi.Router, x ...apppkg.HttpRouter) {
 	for _, y := range x {
-		y(a.Services.ToAppApplicationServices(), r)
+		y(apppkg.ApplicationServices{Services: a.Services}, r)
 	}
 }
 
-func (s TestApplicationServices) ToAppApplicationServices() app.ApplicationServices {
-	as := app.ApplicationServices(s)
-
-	return as
+func (s TestApplicationServices) ToAppApplicationServices() apppkg.ApplicationServices {
+	return apppkg.ApplicationServices{Services: s.Services}
 }

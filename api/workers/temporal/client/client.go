@@ -60,7 +60,7 @@ func New(ctx context.Context, cfg TemporalConfig) (workersinterfaces.Workflows, 
 	client := &Client{c: tc}
 
 	run := func(w TemporalWorker) {
-		_, err := w(cfg.Services.ToAppServices(), &tc)
+		_, err := w(app.ApplicationServices{Services: cfg.Services.Services}, &tc)
 		if err != nil {
 			p := reflect.ValueOf(w).Pointer()
 			f := runtime.FuncForPC(p)

@@ -27,3 +27,7 @@ Temporary Items
 .apdisk
 .gemini/
 gha-creds-*.json
+
+# Binaries
+buang
+api/buang

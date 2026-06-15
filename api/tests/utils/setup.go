@@ -4,6 +4,7 @@ import (
 	"context"
 	"io"
 	"log"
+	"skulpture/buang/services"
 	"skulpture/buang/db"
 	"skulpture/buang/ports"
 	"skulpture/buang/utils/compensations"
@@ -48,12 +49,15 @@ func Setup(ctx context.Context, config DurableExecutorConfiguration, overridePor
 		p = overridePorts
 	}
 
+	svc := services.New()
+	services.Set(svc, services.KeyQueries, queries)
+	services.Set(svc, services.KeyDocker, docker)
+	services.Set(svc, services.KeyGorillaSchemaDecoder, *decoder)
+	services.Set(svc, services.KeyGorillaSchemaEncoder, *encoder)
+	services.Set(svc, services.KeyPorts, p)
+
 	ws := workersshared.WorkflowServices{
-		Queries:              &queries,
-		GorillaSchemaDecoder: decoder,
-		GorillaSchemaEncoder: encoder,
-		Docker:               docker,
-		Ports:                p,
+		Services: svc,
 	}
 	workflows, workflowsCleanup, err := CreateWorkflows(ctx, config, ws)
 	compensations.AddCompensation(workflowsCleanup)
@@ -61,17 +65,14 @@ func Setup(ctx context.Context, config DurableExecutorConfiguration, overridePor
 		compensations.CompensateAndPanic(ctx, err)
 	}
 
+	services.Set(svc, services.KeyWorkflows, workflows)
+
 	as := TestApplicationServices{
-		Queries:              &queries,
-		GorillaSchemaDecoder: decoder,
-		GorillaSchemaEncoder: encoder,
-		Docker:               docker,
-		Workflows:            workflows,
-		Ports:                p,
+		Services: svc,
 	}
 
 	appConfig := TestApplicationConfig{
-		Services:              as,
+		Services:              as.Services,
 		DurableExecutorConfig: config,
 	}
 

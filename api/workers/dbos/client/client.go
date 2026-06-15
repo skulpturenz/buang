@@ -58,7 +58,7 @@ func New(ctx context.Context, cfg DbosConfig) (workersinterfaces.Workflows, erro
 		return nil, err
 	}
 
-	client := &Client{ctx: dbosContext, s: cfg.Services.ToAppServices()}
+	client := &Client{ctx: dbosContext, s: app.ApplicationServices{Services: cfg.Services.Services}}
 
 	workflows := []DbosWorkflow[any, any]{
 		workersdbos.Deployment,
@@ -67,7 +67,7 @@ func New(ctx context.Context, cfg DbosConfig) (workersinterfaces.Workflows, erro
 	}
 
 	for _, w := range workflows {
-		w(cfg.Services.ToAppServices(), dbosContext)
+		w(app.ApplicationServices{Services: cfg.Services.Services}, dbosContext)
 	}
 
 	err = dbos.Launch(dbosContext)

@@ -23,7 +23,8 @@ type CreateProjectResult struct {
 }
 
 func (p CreateProjectParams) Exec(ctx context.Context, s *app.ApplicationServices) (*CreateProjectResult, error) {
-	q := *s.Queries
+	q, ok := s.GetQueries()
+	assert.True(ok, "queries service not found")
 
 	activeProject, err := q.SelectProjectByRepository(ctx, p.Repository)
 	if err != nil && !dberrors.IsNoRows(err) {

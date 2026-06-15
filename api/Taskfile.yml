@@ -11,7 +11,7 @@ tasks:
   dev:
     desc: Run development API
     cmds:
-      - gow run -tags assert .
+      - go tool gow run -tags assert .
 
   build:
     desc: Build API
@@ -21,17 +21,8 @@ tasks:
   create-migration:
     desc: Create a new migration
     cmds:
-      - migrate create -ext sql -dir db/pg/schema -seq {{.CLI_ARGS}}
-      - migrate create -ext sql -dir db/sqlite/schema -seq {{.CLI_ARGS}}
-
-  bundle-migrations:
-    desc: Bundle migrations in executable
-    cmds:
-      - go get github.com/jteeuwen/go-bindata/...
-      - go install github.com/jteeuwen/go-bindata/...
-      - go mod tidy
-      - cd db/pg/schema && go-bindata -pkg migrations .
-      - cd db/sqlite/schema && go-bindata -pkg migrations .
+      - go tool migrate create -ext sql -dir db/pg/schema -seq {{.CLI_ARGS}}
+      - go tool migrate create -ext sql -dir db/sqlite/schema -seq {{.CLI_ARGS}}
 
   create-query:
     desc: Create a new query
@@ -42,13 +33,12 @@ tasks:
   generate-models:
     desc: Generate DB models
     cmds:
-      - sqlc generate
+      - go generate ./...
 
   generate-swagger:
     desc: Generate Swagger documentation
     cmds:
-      - swag init -d ./,./handlers/projects
-      - swag fmt
+      - go generate ./...
 
   generate-env-docs:
     desc: Generate docs for env configuration
@@ -60,7 +50,6 @@ tasks:
     deps:
       - generate-models
       - generate-swagger
-      - bundle-migrations
       - generate-env-docs
 
   run-temporal-dev:
@@ -102,7 +91,7 @@ tasks:
   test-int-watch:
     desc: Run tests in watch mode
     cmds:
-      - GO_ENV="test" TESTCONTAINERS_REUSE_ENABLE=false BUANG_TEST_GITHUB_USER=$BUANG_TEST_GITHUB_USER BUANG_TEST_GITHUB_PAT=$BUANG_TEST_GITHUB_PAT gow test -count=1 {{.CLI_ARGS}} ./tests/integration_tests
+      - GO_ENV="test" TESTCONTAINERS_REUSE_ENABLE=false BUANG_TEST_GITHUB_USER=$BUANG_TEST_GITHUB_USER BUANG_TEST_GITHUB_PAT=$BUANG_TEST_GITHUB_PAT go tool gow test -count=1 {{.CLI_ARGS}} ./tests/integration_tests
 
   test-fitness:
     desc: Run tests
@@ -112,4 +101,4 @@ tasks:
   test-fitness-watch:
     desc: Run fitness tests in watch mode
     cmds:
-      - GO_ENV="test" TESTCONTAINERS_REUSE_ENABLE=false BUANG_TEST_GITHUB_USER=$BUANG_TEST_GITHUB_USER BUANG_TEST_GITHUB_PAT=$BUANG_TEST_GITHUB_PAT gow test -count=1 {{.CLI_ARGS}} ./tests/fitness_tests
+      - GO_ENV="test" TESTCONTAINERS_REUSE_ENABLE=false BUANG_TEST_GITHUB_USER=$BUANG_TEST_GITHUB_USER BUANG_TEST_GITHUB_PAT=$BUANG_TEST_GITHUB_PAT go tool gow test -count=1 {{.CLI_ARGS}} ./tests/fitness_tests

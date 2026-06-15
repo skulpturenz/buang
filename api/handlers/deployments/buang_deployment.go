@@ -1,6 +1,7 @@
 package deployments
 
 import (
+	"errors"
 	"log/slog"
 	"net/http"
 	"skulpture/buang/app"
@@ -37,12 +38,19 @@ func BuangDeployment(s app.ApplicationServices) http.HandlerFunc {
 			return
 		}
 
+		workflows, ok := s.GetWorkflows()
+		if !ok {
+			slog.ErrorContext(r.Context(), "buang deployment", "err", "workflows not found")
+			http.Error(w, errors.New("workflows not found").Error(), http.StatusInternalServerError)
+			return
+		}
+
 		wp := workersinterfaces.BuangDeploymentParams{
 			ProjectId:    int64(projectId),
 			DeploymentId: int64(deploymentId),
 		}
 
-		err = s.Workflows.BuangDeployment(r.Context(), wp)
+		err = workflows.BuangDeployment(r.Context(), wp)
 		if err != nil {
 			slog.ErrorContext(r.Context(), "buang deployment", "err", err.Error())
 			http.Error(w, err.Error(), http.StatusInternalServerError)

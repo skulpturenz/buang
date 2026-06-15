@@ -2,13 +2,14 @@ package wrappers
 
 import (
 	"context"
+
 	"skulpture/buang/db/interfaces"
 	pg "skulpture/buang/db/pg/out"
-	migrations "skulpture/buang/db/pg/schema"
+	schema "skulpture/buang/db/pg/schema"
 
 	"github.com/golang-migrate/migrate/v4"
 	"github.com/golang-migrate/migrate/v4/database/pgx"
-	bindata "github.com/golang-migrate/migrate/v4/source/go_bindata"
+	"github.com/golang-migrate/migrate/v4/source/iofs"
 	"github.com/jackc/pgx/v5/pgxpool"
 	"github.com/jackc/pgx/v5/stdlib"
 )
@@ -26,10 +27,7 @@ func (c PgConfig) New(ctx context.Context) (interfaces.Queries, func(ctx context
 		pool.Close()
 	}
 
-	s := bindata.Resource(migrations.AssetNames(), func(name string) ([]byte, error) {
-		return migrations.Asset(name)
-	})
-	d, err := bindata.WithInstance(s)
+	d, err := iofs.New(schema.Files, ".")
 	if err != nil {
 		return nil, cleanup, err
 	}
@@ -40,7 +38,7 @@ func (c PgConfig) New(ctx context.Context) (interfaces.Queries, func(ctx context
 	}
 	defer driver.Close()
 
-	m, err := migrate.NewWithInstance("go-bindata", d, "pg", driver)
+	m, err := migrate.NewWithInstance("iofs", d, "pg", driver)
 	if err := m.Up(); err != nil && err != migrate.ErrNoChange {
 		return nil, cleanup, err
 	}

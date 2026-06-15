@@ -22,7 +22,8 @@ func (d ListDeploymentsParams) Exec(ctx context.Context, s *app.ApplicationServi
 	assert.True(d.Limit > 0, "invalid limit")
 	assert.True(d.Page > 0, "invalid page")
 
-	q := *s.Queries
+	q, ok := s.GetQueries()
+	assert.True(ok, "queries service not found")
 
 	result, err := q.SelectDeploymentsDesc(ctx, interfaces.SelectDeploymentsDescParams(d))
 	if err != nil {

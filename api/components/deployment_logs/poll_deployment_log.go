@@ -7,6 +7,8 @@ import (
 	dberrors "skulpture/buang/db/db_errors"
 	"skulpture/buang/db/interfaces"
 	"time"
+
+	"github.com/negrel/assert"
 )
 
 type PollDeploymentLogParams struct {
@@ -19,7 +21,8 @@ type PollDeploymentLogResult struct {
 }
 
 func (p PollDeploymentLogParams) Exec(ctx context.Context, s *app.ApplicationServices) <-chan PollDeploymentLogResult {
-	q := *s.Queries
+	q, ok := s.GetQueries()
+	assert.True(ok, "queries service not found")
 
 	results := make(chan PollDeploymentLogResult)
 

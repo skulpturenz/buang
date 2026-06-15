@@ -6,6 +6,7 @@ import (
 	"skulpture/buang/app"
 
 	"github.com/docker/docker/api/types/container"
+	"github.com/negrel/assert"
 )
 
 type StopContainerParams struct {
@@ -18,14 +19,17 @@ type StopContainerResult struct {
 }
 
 func (c StopContainerParams) StopContainer(ctx context.Context, s *app.ApplicationServices) (*StopContainerResult, error) {
-	if err := s.Docker.ContainerRemove(ctx, c.ID, container.RemoveOptions{
+	docker, ok := s.GetDocker()
+	assert.True(ok, "docker service not found")
+
+	if err := docker.ContainerRemove(ctx, c.ID, container.RemoveOptions{
 		RemoveVolumes: true,
 		RemoveLinks:   true,
 	}); err != nil {
 		return nil, err
 	}
 
-	statusCh, errCh := s.Docker.ContainerWait(ctx, c.ID, container.WaitConditionRemoved)
+	statusCh, errCh := docker.ContainerWait(ctx, c.ID, container.WaitConditionRemoved)
 	select {
 	case err := <-errCh:
 		if err != nil {
@@ -34,7 +38,7 @@ func (c StopContainerParams) StopContainer(ctx context.Context, s *app.Applicati
 	case <-statusCh:
 	}
 
-	out, err := s.Docker.ContainerLogs(ctx, c.ID, container.LogsOptions{ShowStdout: true, ShowStderr: true})
+	out, err := docker.ContainerLogs(ctx, c.ID, container.LogsOptions{ShowStdout: true, ShowStderr: true})
 	if err != nil {
 		return nil, err
 	}
