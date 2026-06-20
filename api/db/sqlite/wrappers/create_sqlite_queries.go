@@ -3,13 +3,14 @@ package wrappers
 import (
 	"context"
 	"database/sql"
+
 	"skulpture/buang/db/interfaces"
+	schema "skulpture/buang/db/sqlite/schema"
 	sqlite "skulpture/buang/db/sqlite/out"
-	migrations "skulpture/buang/db/sqlite/schema"
 
 	"github.com/golang-migrate/migrate/v4"
 	"github.com/golang-migrate/migrate/v4/database/sqlite3"
-	bindata "github.com/golang-migrate/migrate/v4/source/go_bindata"
+	"github.com/golang-migrate/migrate/v4/source/iofs"
 )
 
 type SqliteConfig struct {
@@ -25,10 +26,7 @@ func (c SqliteConfig) New(_ context.Context) (interfaces.Queries, func(ctx conte
 		db.Close()
 	}
 
-	s := bindata.Resource(migrations.AssetNames(), func(name string) ([]byte, error) {
-		return migrations.Asset(name)
-	})
-	d, err := bindata.WithInstance(s)
+	d, err := iofs.New(schema.Files, ".")
 	if err != nil {
 		return nil, cleanup, err
 	}
@@ -38,7 +36,7 @@ func (c SqliteConfig) New(_ context.Context) (interfaces.Queries, func(ctx conte
 		return nil, cleanup, err
 	}
 
-	m, err := migrate.NewWithInstance("go-bindata", d, "sqlite", driver)
+	m, err := migrate.NewWithInstance("iofs", d, "sqlite", driver)
 	if err := m.Up(); err != nil && err != migrate.ErrNoChange {
 		return nil, cleanup, err
 	}

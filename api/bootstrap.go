@@ -2,6 +2,7 @@ package main
 
 import (
 	"context"
+	"embed"
 	"fmt"
 	"log/slog"
 	"os"
@@ -11,13 +12,16 @@ import (
 	"strings"
 )
 
+//go:embed bootstrap/docker-compose.prod.yml
+var bootstrapFiles embed.FS
+
 func bootstrap(ctx context.Context, s *app.ApplicationServices) error { // TODO: test
 	bd, err := os.MkdirTemp("/var/tmp", "buang-bootstrap-*")
 	if err != nil {
 		return err
 	}
 
-	data, err := Asset("bootstrap/docker-compose.prod.yml")
+	data, err := bootstrapFiles.ReadFile("bootstrap/docker-compose.prod.yml")
 	if err != nil {
 		return fmt.Errorf("unable to find bootstrap resources")
 	}
