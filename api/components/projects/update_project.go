@@ -22,7 +22,8 @@ type UpdateProjectResult struct {
 }
 
 func (p UpdateProjectParams) Exec(ctx context.Context, s *app.ApplicationServices) (*UpdateProjectResult, error) {
-	q := *s.Queries
+	q, ok := s.GetQueries()
+	assert.True(ok, "queries service not found")
 
 	result, err := q.UpdateProject(ctx, interfaces.UpdateProjectParams(p))
 	if err != nil {

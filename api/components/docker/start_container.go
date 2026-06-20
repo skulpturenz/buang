@@ -8,6 +8,7 @@ import (
 	"github.com/docker/docker/api/types/container"
 	"github.com/docker/docker/api/types/image"
 	"github.com/docker/go-connections/nat"
+	"github.com/negrel/assert"
 )
 
 type StartContainerParams struct {
@@ -26,7 +27,10 @@ type StartContainerResult struct {
 }
 
 func (c StartContainerParams) StartContainer(ctx context.Context, s *app.ApplicationServices) (*StartContainerResult, func(ctx context.Context), error) {
-	reader, err := s.Docker.ImagePull(ctx, c.Image, image.PullOptions{})
+	docker, ok := s.GetDocker()
+	assert.True(ok, "docker service not found")
+
+	reader, err := docker.ImagePull(ctx, c.Image, image.PullOptions{})
 	if err != nil {
 		return nil, nil, err
 	}
@@ -48,7 +52,7 @@ func (c StartContainerParams) StartContainer(ctx context.Context, s *app.Applica
 		PortBindings: c.PortBindings,
 	}
 
-	create, err := s.Docker.ContainerCreate(
+	create, err := docker.ContainerCreate(
 		ctx,
 		containerConfig,
 		hostConfig,
@@ -60,11 +64,11 @@ func (c StartContainerParams) StartContainer(ctx context.Context, s *app.Applica
 		return nil, nil, err
 	}
 
-	if err := s.Docker.ContainerStart(ctx, create.ID, container.StartOptions{}); err != nil {
+	if err := docker.ContainerStart(ctx, create.ID, container.StartOptions{}); err != nil {
 		return nil, nil, err
 	}
 
-	statusCh, errCh := s.Docker.ContainerWait(ctx, create.ID, container.WaitConditionNotRunning)
+	statusCh, errCh := docker.ContainerWait(ctx, create.ID, container.WaitConditionNotRunning)
 	select {
 	case err := <-errCh:
 		if err != nil {
@@ -73,7 +77,7 @@ func (c StartContainerParams) StartContainer(ctx context.Context, s *app.Applica
 	case <-statusCh:
 	}
 
-	out, err := s.Docker.ContainerLogs(ctx, create.ID, container.LogsOptions{ShowStdout: true, ShowStderr: true})
+	out, err := docker.ContainerLogs(ctx, create.ID, container.LogsOptions{ShowStdout: true, ShowStderr: true})
 	if err != nil {
 		return nil, nil, err
 	}

@@ -5,6 +5,8 @@ import (
 	"skulpture/buang/app"
 	"skulpture/buang/db/interfaces"
 	enumsdeploymentstatus "skulpture/buang/enums/deployment_status"
+
+	"github.com/negrel/assert"
 )
 
 type BuangDeploymentParams struct {
@@ -15,7 +17,8 @@ type BuangDeploymentParams struct {
 type BuangDeploymentResult struct{}
 
 func (d BuangDeploymentParams) Exec(ctx context.Context, s *app.ApplicationServices) (*BuangDeploymentResult, error) {
-	q := *s.Queries
+	q, ok := s.GetQueries()
+	assert.True(ok, "queries service not found")
 
 	_, err := q.UpdateDeploymentStatus(ctx, interfaces.UpdateDeploymentStatusParams{
 		ID:        d.ID,

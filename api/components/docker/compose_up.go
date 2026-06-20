@@ -13,6 +13,7 @@ import (
 	"github.com/docker/cli/cli/flags"
 	"github.com/docker/compose/v5/pkg/api"
 	"github.com/docker/compose/v5/pkg/compose"
+	"github.com/negrel/assert"
 )
 
 type ComposeUpParams struct {
@@ -49,8 +50,14 @@ func (c logConsumer) Status(containerName, message string) {
 
 func (c ComposeUpParams) Exec(ctx context.Context, s *app.ApplicationServices) (*ComposeUpResult, func(ctx context.Context), error) {
 	os.Setenv("DOCKER_BUILDKIT", "1")
+
+	docker, ok := s.GetDocker()
+	assert.True(ok, "docker service not found")
+	ports, ok := s.GetPorts()
+	assert.True(ok, "ports service not found")
+
 	cliOptions := []command.CLIOption{
-		command.WithAPIClient(s.Docker),
+		command.WithAPIClient(docker),
 	}
 	if c.Writer != nil {
 		cliOptions = append(cliOptions, command.WithCombinedStreams(c.Writer))
@@ -82,7 +89,7 @@ func (c ComposeUpParams) Exec(ctx context.Context, s *app.ApplicationServices) (
 		options = append(options, compose.WithEventProcessor(c.EventProcessor))
 	}
 
-	svc, err := s.Ports.DockerCompose().NewComposeService(cli, options...)
+	svc, err := ports.DockerCompose().NewComposeService(cli, options...)
 	if err != nil {
 		return nil, nil, err
 	}

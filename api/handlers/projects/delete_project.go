@@ -1,6 +1,7 @@
 package projects
 
 import (
+	"errors"
 	"log/slog"
 	"net/http"
 	"skulpture/buang/app"
@@ -42,6 +43,13 @@ func DeleteProject(s app.ApplicationServices) http.HandlerFunc {
 			return
 		}
 
+		workflows, ok := s.GetWorkflows()
+		if !ok {
+			slog.ErrorContext(r.Context(), "delete project", "err", "workflows not found")
+			http.Error(w, errors.New("workflows not found").Error(), http.StatusInternalServerError)
+			return
+		}
+
 		for _, dply := range activeDeployments.Deployments {
 			wp := workersinterfaces.BuangDeploymentParams{
 				ProjectId:    int64(projectId),
@@ -49,7 +57,7 @@ func DeleteProject(s app.ApplicationServices) http.HandlerFunc {
 				Block:        true,
 			}
 
-			err = s.Workflows.BuangDeployment(r.Context(), wp)
+			err = workflows.BuangDeployment(r.Context(), wp)
 			if err != nil {
 				slog.ErrorContext(r.Context(), "delete project", "err", err.Error())
 				http.Error(w, err.Error(), http.StatusInternalServerError)

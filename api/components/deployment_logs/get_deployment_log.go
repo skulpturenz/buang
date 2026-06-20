@@ -4,6 +4,8 @@ import (
 	"context"
 	"skulpture/buang/app"
 	"skulpture/buang/db/interfaces"
+
+	"github.com/negrel/assert"
 )
 
 type GetDeploymentLogParams struct {
@@ -16,7 +18,8 @@ type GetDeploymentLogResult struct {
 }
 
 func (p GetDeploymentLogParams) Exec(ctx context.Context, s *app.ApplicationServices) (*GetDeploymentLogResult, error) {
-	q := *s.Queries
+	q, ok := s.GetQueries()
+	assert.True(ok, "queries service not found")
 
 	res, err := q.SelectDeploymentLog(ctx, interfaces.SelectDeploymentLogParams{
 		ProjectID:    p.ProjectId,

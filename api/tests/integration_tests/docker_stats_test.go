@@ -7,6 +7,7 @@ import (
 	"io"
 	"net/http"
 	"skulpture/buang/handlers/diagnostics"
+	"skulpture/buang/services"
 	testutils "skulpture/buang/tests/utils"
 	"slices"
 	"sort"
@@ -15,6 +16,7 @@ import (
 
 	"github.com/docker/docker/api/types/container"
 	"github.com/docker/docker/api/types/image"
+	"github.com/docker/docker/client"
 	"github.com/stretchr/testify/require"
 	orderedmap "github.com/wk8/go-ordered-map/v2"
 )
@@ -57,31 +59,31 @@ func dockerStats(t *testing.T, config testutils.DurableExecutorConfiguration) {
 	testApp, cleanup := testutils.Setup(ctx, config, nil)
 	defer cleanup(ctx)
 
-	docker := testApp.GetHttpApplication().Services.Docker
+	docker, _ := services.Get[*client.Client](testApp.GetHttpApplication().Services, services.KeyDocker)
 
-	reader, err := docker.ImagePull(ctx, "alpine", image.PullOptions{})
+	reader, err := docker.Unwrap().ImagePull(ctx, "alpine", image.PullOptions{})
 	require.NoError(t, err)
 	io.Copy(io.Discard, reader)
 
-	busyContainer, err := docker.ContainerCreate(ctx, &container.Config{
+	busyContainer, err := docker.Unwrap().ContainerCreate(ctx, &container.Config{
 		Image: "alpine",
 		Cmd:   []string{"sh", "-c", "while true; do :; done"},
 	}, nil, nil, nil, "")
 	require.NoError(t, err)
 
-	idleContainer, err := docker.ContainerCreate(ctx, &container.Config{
+	idleContainer, err := docker.Unwrap().ContainerCreate(ctx, &container.Config{
 		Image: "alpine",
 		Cmd:   []string{"sleep", "300"},
 	}, nil, nil, nil, "")
 	require.NoError(t, err)
 
-	err = docker.ContainerStart(ctx, busyContainer.ID, container.StartOptions{})
+	err = docker.Unwrap().ContainerStart(ctx, busyContainer.ID, container.StartOptions{})
 	require.NoError(t, err)
-	defer docker.ContainerRemove(ctx, busyContainer.ID, container.RemoveOptions{Force: true})
+	defer docker.Unwrap().ContainerRemove(ctx, busyContainer.ID, container.RemoveOptions{Force: true})
 
-	err = docker.ContainerStart(ctx, idleContainer.ID, container.StartOptions{})
+	err = docker.Unwrap().ContainerStart(ctx, idleContainer.ID, container.StartOptions{})
 	require.NoError(t, err)
-	defer docker.ContainerRemove(ctx, idleContainer.ID, container.RemoveOptions{Force: true})
+	defer docker.Unwrap().ContainerRemove(ctx, idleContainer.ID, container.RemoveOptions{Force: true})
 
 	time.Sleep(5 * time.Second)
 

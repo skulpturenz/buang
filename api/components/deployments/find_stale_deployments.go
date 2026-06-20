@@ -4,6 +4,8 @@ import (
 	"context"
 	"skulpture/buang/app"
 	"skulpture/buang/db/interfaces"
+
+	"github.com/negrel/assert"
 )
 
 type FindStaleDeploymentsParams struct {
@@ -16,7 +18,8 @@ type FindStaleDeploymentsResult struct {
 }
 
 func (p FindStaleDeploymentsParams) Exec(ctx context.Context, s *app.ApplicationServices) (*FindStaleDeploymentsResult, error) {
-	q := *s.Queries
+	q, ok := s.GetQueries()
+	assert.True(ok, "queries service not found")
 
 	result, err := q.SelectStaleDeployments(ctx)
 	if err != nil {

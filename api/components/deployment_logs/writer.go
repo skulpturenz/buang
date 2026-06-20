@@ -7,6 +7,8 @@ import (
 	"io"
 	"skulpture/buang/app"
 	"skulpture/buang/db/interfaces"
+
+	"github.com/negrel/assert"
 )
 
 type DeploymentLogWriterParams struct {
@@ -20,7 +22,8 @@ type DeploymentLogWriteResult struct{}
 
 func (p *DeploymentLogWriterParams) Exec(ctx context.Context, s *app.ApplicationServices) (*DeploymentLogWriteResult, error) {
 	p.services = s
-	q := *s.Queries
+	q, ok := s.GetQueries()
+	assert.True(ok, "queries service not found")
 
 	_, err := q.UpsertDeploymentLog(ctx, interfaces.UpsertDeploymentLogParams{
 		ProjectID:    p.ProjectID,
@@ -36,7 +39,8 @@ func (p *DeploymentLogWriterParams) Exec(ctx context.Context, s *app.Application
 }
 
 func (p DeploymentLogWriterParams) Write(b []byte) (n int, err error) {
-	q := *p.services.Queries
+	q, ok := p.services.GetQueries()
+	assert.True(ok, "queries service not found")
 
 	log := string(b)
 	_, err = q.UpsertDeploymentLog(context.Background(), interfaces.UpsertDeploymentLogParams{

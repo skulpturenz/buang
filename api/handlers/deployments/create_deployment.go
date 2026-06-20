@@ -71,7 +71,14 @@ func CreateDeployment(s app.ApplicationServices) http.HandlerFunc {
 			return
 		}
 
-		err = s.GorillaSchemaDecoder.Decode(&req, r.URL.Query())
+		decoder, ok := s.GetGorillaSchemaDecoder()
+		if !ok {
+			slog.ErrorContext(r.Context(), "create deployment", "err", "decoder not found")
+			http.Error(w, errors.New("decoder not found").Error(), http.StatusInternalServerError)
+			return
+		}
+
+		err = decoder.Decode(&req, r.URL.Query())
 		if err != nil {
 			slog.ErrorContext(r.Context(), "create deployment", "err", err.Error())
 			http.Error(w, err.Error(), http.StatusBadRequest)
@@ -99,7 +106,14 @@ func CreateDeployment(s app.ApplicationServices) http.HandlerFunc {
 			Block:        req.WaitForDeployment,
 		}
 
-		err = s.Workflows.CreateDeployment(r.Context(), wp)
+		workflows, ok := s.GetWorkflows()
+		if !ok {
+			slog.ErrorContext(r.Context(), "create deployment", "err", "workflows not found")
+			http.Error(w, errors.New("workflows not found").Error(), http.StatusInternalServerError)
+			return
+		}
+
+		err = workflows.CreateDeployment(r.Context(), wp)
 		if err != nil {
 			slog.ErrorContext(r.Context(), "create deployment", "err", err.Error())
 			http.Error(w, err.Error(), http.StatusInternalServerError)

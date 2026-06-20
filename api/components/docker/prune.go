@@ -10,6 +10,7 @@ import (
 	"github.com/docker/docker/api/types/image"
 	"github.com/docker/docker/api/types/network"
 	"github.com/docker/docker/api/types/volume"
+	"github.com/negrel/assert"
 )
 
 type PruneParams struct {
@@ -24,27 +25,30 @@ type PruneResult struct {
 }
 
 func (c PruneParams) Prune(ctx context.Context, s *app.ApplicationServices) (*PruneResult, error) {
-	imagesPruneReport, err := s.Docker.ImagesPrune(ctx, filters.NewArgs())
+	docker, ok := s.GetDocker()
+	assert.True(ok, "docker service not found")
+
+	imagesPruneReport, err := docker.ImagesPrune(ctx, filters.NewArgs())
 	if err != nil {
 		return nil, err
 	}
 
-	containersPruneReport, err := s.Docker.ContainersPrune(ctx, filters.NewArgs())
+	containersPruneReport, err := docker.ContainersPrune(ctx, filters.NewArgs())
 	if err != nil {
 		return nil, err
 	}
 
-	volumesPruneReport, err := s.Docker.VolumesPrune(ctx, filters.NewArgs())
+	volumesPruneReport, err := docker.VolumesPrune(ctx, filters.NewArgs())
 	if err != nil {
 		return nil, err
 	}
 
-	buildCachePruneReport, err := s.Docker.BuildCachePrune(ctx, build.CachePruneOptions{All: true})
+	buildCachePruneReport, err := docker.BuildCachePrune(ctx, build.CachePruneOptions{All: true})
 	if err != nil {
 		return nil, err
 	}
 
-	networksPruneReport, err := s.Docker.NetworksPrune(ctx, filters.NewArgs())
+	networksPruneReport, err := docker.NetworksPrune(ctx, filters.NewArgs())
 	if err != nil {
 		return nil, err
 	}

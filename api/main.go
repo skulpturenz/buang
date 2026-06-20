@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"log/slog"
 	"os"
+	"skulpture/buang/services"
 	"skulpture/buang/app"
 	apploggerotel "skulpture/buang/app/logger"
 	"skulpture/buang/components/o11y"
@@ -159,12 +160,17 @@ func main() {
 	defer docker.Close()
 
 	p := ports.New()
+	svc := services.New()
+	services.Set(svc, services.KeyQueries, queries)
+	services.Set(svc, services.KeyDocker, docker)
+	decoder := schema.NewDecoder()
+	services.Set(svc, services.KeyGorillaSchemaDecoder, *decoder)
+	encoder := schema.NewEncoder()
+	services.Set(svc, services.KeyGorillaSchemaEncoder, *encoder)
+	services.Set(svc, services.KeyPorts, p)
+
 	ws := workersshared.WorkflowServices{
-		Queries:              &queries,
-		Docker:               docker,
-		GorillaSchemaDecoder: schema.NewDecoder(),
-		GorillaSchemaEncoder: schema.NewEncoder(),
-		Ports:                p,
+		Services: svc,
 	}
 	workflows, cleanup, err := createWorkflows(ctx, ws)
 	if err != nil {
@@ -173,13 +179,10 @@ func main() {
 	}
 	defer cleanup(ctx)
 
+	services.Set(svc, services.KeyWorkflows, workflows)
+
 	s := app.ApplicationServices{
-		Queries:              &queries,
-		Docker:               docker,
-		GorillaSchemaDecoder: schema.NewDecoder(),
-		GorillaSchemaEncoder: schema.NewEncoder(),
-		Workflows:            workflows,
-		Ports:                p,
+		Services: svc,
 	}
 
 	isExperimentalBootstrapEnabled, ok := constantsenvs.EXPERIMENTAL_BOOTSTRAP.Value()
@@ -198,7 +201,7 @@ func main() {
 
 	appConfig := app.ApplicationConfig{
 		HttpPort: ":80",
-		Services: s,
+		Services: s.Services,
 	}
 	app, err := appConfig.New(ctx, r)
 	if err != nil {

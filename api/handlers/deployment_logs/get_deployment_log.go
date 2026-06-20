@@ -62,7 +62,14 @@ func GetDeploymentLog(s app.ApplicationServices) http.HandlerFunc {
 		}
 		req.DeploymentId = int64(deploymentId)
 
-		err = s.GorillaSchemaDecoder.Decode(&req, r.URL.Query())
+		decoder, ok := s.GetGorillaSchemaDecoder()
+		if !ok {
+			slog.ErrorContext(r.Context(), "get deployment logs", "err", "decoder not found")
+			http.Error(w, errors.New("decoder not found").Error(), http.StatusInternalServerError)
+			return
+		}
+
+		err = decoder.Decode(&req, r.URL.Query())
 		if err != nil {
 			slog.ErrorContext(r.Context(), "get deployment logs", "err", err.Error())
 			http.Error(w, err.Error(), http.StatusBadRequest)
@@ -228,6 +235,12 @@ func watchForDeployment(ctx context.Context, cancelCtx context.CancelFunc, s app
 	ticker := time.NewTicker(HAS_DEPLOYED_POLL_INTERVAL)
 	defer ticker.Stop()
 
+	workflows, ok := s.GetWorkflows()
+	if !ok {
+		slog.ErrorContext(ctx, "watch for deployment", "err", "workflows not found")
+		return
+	}
+
 	for {
 		select {
 		case <-ctx.Done():
@@ -238,7 +251,7 @@ func watchForDeployment(ctx context.Context, cancelCtx context.CancelFunc, s app
 				DeploymentId: req.DeploymentId,
 			}
 
-			err := s.Workflows.HasDeployed(ctx, wp)
+			err := workflows.HasDeployed(ctx, wp)
 			if err == nil {
 				cancelCtx()
 				return
