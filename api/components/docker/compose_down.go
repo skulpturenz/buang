@@ -9,6 +9,7 @@ import (
 	"github.com/docker/cli/cli/command"
 	"github.com/docker/cli/cli/flags"
 	"github.com/docker/compose/v5/pkg/api"
+	"github.com/negrel/assert"
 )
 
 type ComposeDownParams struct {
@@ -20,8 +21,13 @@ type ComposeDownParams struct {
 type ComposeDownResult struct{}
 
 func (c ComposeDownParams) Exec(ctx context.Context, s *app.ApplicationServices) (*ComposeDownResult, error) {
+	docker, ok := s.GetDocker()
+	assert.True(ok, "docker service not found")
+	ports, ok := s.GetPorts()
+	assert.True(ok, "ports service not found")
+
 	cliOptions := []command.CLIOption{
-		command.WithAPIClient(s.Docker),
+		command.WithAPIClient(docker),
 	}
 	if c.Writer != nil {
 		cliOptions = append(cliOptions, command.WithCombinedStreams(c.Writer))
@@ -36,7 +42,7 @@ func (c ComposeDownParams) Exec(ctx context.Context, s *app.ApplicationServices)
 		return nil, err
 	}
 
-	svc, err := s.Ports.DockerCompose().NewComposeService(cli)
+	svc, err := ports.DockerCompose().NewComposeService(cli)
 	if err != nil {
 		return nil, err
 	}

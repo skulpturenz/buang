@@ -11,9 +11,11 @@ import (
 	"os"
 	"path/filepath"
 	"regexp"
+	"skulpture/buang/app"
 	deploymentscomponent "skulpture/buang/components/deployments"
 	projectscomponent "skulpture/buang/components/projects"
 	constantsenvs "skulpture/buang/constants/envs"
+	"skulpture/buang/services"
 	testutils "skulpture/buang/tests/utils"
 	"skulpture/buang/utils/compensations"
 	"slices"
@@ -34,6 +36,7 @@ import (
 	"github.com/docker/docker/api/types/image"
 	"github.com/docker/docker/api/types/mount"
 	"github.com/docker/docker/api/types/network"
+	"github.com/docker/docker/client"
 	"github.com/docker/go-connections/nat"
 	"github.com/stretchr/testify/require"
 )
@@ -82,7 +85,7 @@ func createNewProjectWithDeployment(t *testing.T, config testutils.DurableExecut
 	testApp, cleanup := testutils.Setup(ctx, config, nil)
 	compensations.AddCompensation(cleanup)
 
-	docker := testApp.GetHttpApplication().Services.Docker
+	docker, _ := services.Get[*client.Client](testApp.GetHttpApplication().Services, services.KeyDocker)
 
 	githubPat := os.Getenv("BUANG_TEST_GITHUB_PAT")
 	username := os.Getenv("BUANG_TEST_GITHUB_USER")
@@ -151,7 +154,7 @@ func createNewProjectWithDeployment(t *testing.T, config testutils.DurableExecut
 	}
 
 	createTraefik := func() (string, string) {
-		reader, err := docker.ImagePull(ctx, "traefik", image.PullOptions{})
+		reader, err := docker.Unwrap().ImagePull(ctx, "traefik", image.PullOptions{})
 		require.NoError(t, err)
 		io.Copy(io.Discard, reader)
 
@@ -188,16 +191,16 @@ func createNewProjectWithDeployment(t *testing.T, config testutils.DurableExecut
 		}
 
 		containerName := fmt.Sprintf("traefik_%v", time.Now().Nanosecond())
-		traefik, err := docker.ContainerCreate(ctx, &traefikConfig, &traefikHostConfig, nil, nil, containerName)
+		traefik, err := docker.Unwrap().ContainerCreate(ctx, &traefikConfig, &traefikHostConfig, nil, nil, containerName)
 		require.NoError(t, err)
 
-		err = docker.ContainerStart(ctx, traefik.ID, container.StartOptions{})
+		err = docker.Unwrap().ContainerStart(ctx, traefik.ID, container.StartOptions{})
 		require.NoError(t, err)
 		compensations.AddCompensation(func(ctx context.Context) {
-			docker.ContainerRemove(ctx, traefik.ID, container.RemoveOptions{Force: true})
+			docker.Unwrap().ContainerRemove(ctx, traefik.ID, container.RemoveOptions{Force: true})
 		})
 
-		inspect, err := docker.ContainerInspect(ctx, traefik.ID)
+		inspect, err := docker.Unwrap().ContainerInspect(ctx, traefik.ID)
 		require.NoError(t, err)
 		ports := inspect.NetworkSettings.Ports[web]
 		require.NotEmpty(t, ports)
@@ -238,7 +241,7 @@ func createNewProjectWithDeployment(t *testing.T, config testutils.DurableExecut
 		const EXPECTED_SERVICES = 1
 		var TRAEFIK_DYNAMIC_CONFIG = constantsenvs.BUANG_TRAEFIK_DYNAMIC_CONFIG_DIR.Value()
 
-		s := testApp.GetHttpApplication().Services.ToAppApplicationServices()
+		s := app.ApplicationServices{Services: testApp.GetHttpApplication().Services}
 
 		findDeploymentParams := deploymentscomponent.FindDeploymentByIdParams{
 			ID:        deploymentId,
@@ -275,7 +278,7 @@ func createNewProjectWithDeployment(t *testing.T, config testutils.DurableExecut
 		})
 		require.FileExists(t, deploymentConfigPath)
 
-		cli, err := command.NewDockerCli(command.WithAPIClient(docker))
+		cli, err := command.NewDockerCli(command.WithAPIClient(docker.Unwrap()))
 		require.NoError(t, err)
 		err = cli.Initialize(&flags.ClientOptions{})
 		require.NoError(t, err)
@@ -293,13 +296,13 @@ func createNewProjectWithDeployment(t *testing.T, config testutils.DurableExecut
 
 		filters := filters.NewArgs()
 		filters.Add("label", fmt.Sprintf("com.docker.compose.project=%s", projectName))
-		containers, err := docker.ContainerList(ctx, container.ListOptions{
+		containers, err := docker.Unwrap().ContainerList(ctx, container.ListOptions{
 			Filters: filters,
 		})
 		require.NoError(t, err)
 
 		for _, v := range containers {
-			i, err := docker.ContainerInspect(ctx, v.ID)
+			i, err := docker.Unwrap().ContainerInspect(ctx, v.ID)
 			require.NoError(t, err)
 
 			envs := types.NewMappingWithEquals(i.Config.Env)
@@ -327,7 +330,7 @@ func createNewProjectWithDeployment(t *testing.T, config testutils.DurableExecut
 	}
 
 	assertProxy := func(projectId int64, deploymentId int64, containerId string, port string) {
-		s := testApp.GetHttpApplication().Services.ToAppApplicationServices()
+		s := app.ApplicationServices{Services: testApp.GetHttpApplication().Services}
 
 		findDeploymentParams := deploymentscomponent.FindDeploymentByIdParams{
 			ID:        deploymentId,
@@ -362,7 +365,7 @@ func createNewProjectWithDeployment(t *testing.T, config testutils.DurableExecut
 		err = tw.Close()
 		require.NoError(t, err)
 
-		err = docker.CopyToContainer(ctx, containerId, "/app/deployments", &buf, container.CopyToContainerOptions{})
+		err = docker.Unwrap().CopyToContainer(ctx, containerId, "/app/deployments", &buf, container.CopyToContainerOptions{})
 		require.NoError(t, err)
 
 		projectName := deploymentscomponent.GetProjectName(deploymentscomponent.GetProjectNameParams{
@@ -374,7 +377,7 @@ func createNewProjectWithDeployment(t *testing.T, config testutils.DurableExecut
 		})
 		filters := filters.NewArgs()
 		filters.Add("label", fmt.Sprintf("com.docker.compose.project=%s", projectName))
-		testServiceContainers, err := docker.ContainerList(ctx, container.ListOptions{
+		testServiceContainers, err := docker.Unwrap().ContainerList(ctx, container.ListOptions{
 			Filters: filters,
 		})
 		require.NoError(t, err)
@@ -390,7 +393,7 @@ func createNewProjectWithDeployment(t *testing.T, config testutils.DurableExecut
 		}
 		require.NotEmpty(t, networkID)
 
-		err = docker.NetworkConnect(ctx, networkID, containerId, &network.EndpointSettings{})
+		err = docker.Unwrap().NetworkConnect(ctx, networkID, containerId, &network.EndpointSettings{})
 		require.NoError(t, err)
 
 		time.Sleep(3 * time.Second)

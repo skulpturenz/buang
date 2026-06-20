@@ -5,6 +5,8 @@ import (
 	"skulpture/buang/app"
 	"skulpture/buang/db/interfaces"
 	"time"
+
+	"github.com/negrel/assert"
 )
 
 type UpdateDeploymentParams struct {
@@ -21,7 +23,8 @@ type UpdateDeploymentResult struct {
 }
 
 func (d UpdateDeploymentParams) Exec(ctx context.Context, s *app.ApplicationServices) (*UpdateDeploymentResult, error) {
-	q := *s.Queries
+	q, ok := s.GetQueries()
+	assert.True(ok, "queries service not found")
 
 	result, err := q.UpdateDeployment(ctx, interfaces.UpdateDeploymentParams(d))
 	if err != nil {

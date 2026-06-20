@@ -12,9 +12,11 @@ import (
 	"os"
 	"os/exec"
 	"path/filepath"
+	"skulpture/buang/app"
 	deploymentscomponent "skulpture/buang/components/deployments"
 	deploymentshandlers "skulpture/buang/handlers/deployments"
 	projectshandlers "skulpture/buang/handlers/projects"
+	"skulpture/buang/services"
 	testutils "skulpture/buang/tests/utils"
 	"skulpture/buang/utils/compensations"
 	"strconv"
@@ -27,6 +29,7 @@ import (
 	"github.com/docker/docker/api/types/image"
 	"github.com/docker/docker/api/types/mount"
 	"github.com/docker/docker/api/types/network"
+	"github.com/docker/docker/client"
 	"github.com/docker/go-connections/nat"
 	"github.com/go-git/go-billy/v6/osfs"
 	httpbackend "github.com/go-git/go-git/v6/backend/http"
@@ -62,9 +65,9 @@ func TestDeploymentsFitness(t *testing.T) {
 	baseUrl := fmt.Sprintf("%v/api/v1", *testApp.Url)
 	var wg sync.WaitGroup
 
-	docker := testApp.GetHttpApplication().Services.Docker
+	docker, _ := services.Get[*client.Client](testApp.GetHttpApplication().Services, services.KeyDocker)
 	createTraefik := func() (string, string) {
-		reader, err := docker.ImagePull(ctx, "traefik", image.PullOptions{})
+		reader, err := docker.Unwrap().ImagePull(ctx, "traefik", image.PullOptions{})
 		require.NoError(t, err)
 		io.Copy(io.Discard, reader)
 
@@ -101,16 +104,16 @@ func TestDeploymentsFitness(t *testing.T) {
 		}
 
 		containerName := fmt.Sprintf("traefik_%v", time.Now().Nanosecond())
-		traefik, err := docker.ContainerCreate(ctx, &traefikConfig, &traefikHostConfig, nil, nil, containerName)
+		traefik, err := docker.Unwrap().ContainerCreate(ctx, &traefikConfig, &traefikHostConfig, nil, nil, containerName)
 		require.NoError(t, err)
 
-		err = docker.ContainerStart(ctx, traefik.ID, container.StartOptions{})
+		err = docker.Unwrap().ContainerStart(ctx, traefik.ID, container.StartOptions{})
 		require.NoError(t, err)
 		compensations.AddCompensation(func(ctx context.Context) {
-			docker.ContainerRemove(ctx, traefik.ID, container.RemoveOptions{Force: true})
+			docker.Unwrap().ContainerRemove(ctx, traefik.ID, container.RemoveOptions{Force: true})
 		})
 
-		inspect, err := docker.ContainerInspect(ctx, traefik.ID)
+		inspect, err := docker.Unwrap().ContainerInspect(ctx, traefik.ID)
 		require.NoError(t, err)
 		ports := inspect.NetworkSettings.Ports[web]
 		require.NotEmpty(t, ports)
@@ -178,7 +181,7 @@ func TestDeploymentsFitness(t *testing.T) {
 	}
 
 	assertProxy := func(projectId int64, deploymentId int64, containerId string, port string) {
-		s := testApp.GetHttpApplication().Services.ToAppApplicationServices()
+		s := app.ApplicationServices{Services: testApp.GetHttpApplication().Services}
 
 		findDeploymentParams := deploymentscomponent.FindDeploymentByIdParams{
 			ID:        deploymentId,
@@ -213,7 +216,7 @@ func TestDeploymentsFitness(t *testing.T) {
 		err = tw.Close()
 		require.NoError(t, err)
 
-		err = docker.CopyToContainer(ctx, containerId, "/app/deployments", &buf, container.CopyToContainerOptions{})
+		err = docker.Unwrap().CopyToContainer(ctx, containerId, "/app/deployments", &buf, container.CopyToContainerOptions{})
 		require.NoError(t, err)
 
 		projectName := deploymentscomponent.GetProjectName(deploymentscomponent.GetProjectNameParams{
@@ -225,7 +228,7 @@ func TestDeploymentsFitness(t *testing.T) {
 		})
 		filters := filters.NewArgs()
 		filters.Add("label", fmt.Sprintf("com.docker.compose.project=%s", projectName))
-		testServiceContainers, err := docker.ContainerList(ctx, container.ListOptions{
+		testServiceContainers, err := docker.Unwrap().ContainerList(ctx, container.ListOptions{
 			Filters: filters,
 		})
 		require.NoError(t, err)
@@ -241,7 +244,7 @@ func TestDeploymentsFitness(t *testing.T) {
 		}
 		require.NotEmpty(t, networkID)
 
-		err = docker.NetworkConnect(ctx, networkID, containerId, &network.EndpointSettings{})
+		err = docker.Unwrap().NetworkConnect(ctx, networkID, containerId, &network.EndpointSettings{})
 		if err != nil {
 			t.Logf("assert proxy err: %v", err)
 		}

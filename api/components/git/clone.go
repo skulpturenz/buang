@@ -30,6 +30,9 @@ type CloneResult struct {
 }
 
 func (c *CloneParams) Exec(ctx context.Context, s *app.ApplicationServices) (*CloneResult, func(ctx context.Context), error) {
+	ports, ok := s.GetPorts()
+	assert.True(ok, "ports service not found")
+
 	dir, err := os.MkdirTemp("/var/tmp", "buang-*")
 	cleanup := func(ctx context.Context) {
 		os.RemoveAll(dir)
@@ -56,7 +59,7 @@ func (c *CloneParams) Exec(ctx context.Context, s *app.ApplicationServices) (*Cl
 		}
 	}
 
-	r, err := s.Ports.Git().PlainCloneContext(ctx, dir, &opts)
+	r, err := ports.Git().PlainCloneContext(ctx, dir, &opts)
 	if err != nil {
 		return nil, cleanup, err
 	}

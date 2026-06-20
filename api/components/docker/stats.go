@@ -10,6 +10,7 @@ import (
 	"sync"
 
 	"github.com/docker/docker/api/types/container"
+	"github.com/negrel/assert"
 	orderedmap "github.com/wk8/go-ordered-map/v2"
 )
 
@@ -54,7 +55,10 @@ func (c StatsParams) Stats(ctx context.Context, s *app.ApplicationServices) (*St
 		opts.All = *c.All
 	}
 
-	ps, err := s.Docker.ContainerList(ctx, container.ListOptions{})
+	docker, ok := s.GetDocker()
+	assert.True(ok, "docker service not found")
+
+	ps, err := docker.ContainerList(ctx, container.ListOptions{})
 	if err != nil {
 		return nil, err
 	}
@@ -64,13 +68,13 @@ func (c StatsParams) Stats(ctx context.Context, s *app.ApplicationServices) (*St
 	getStats := func(ctx context.Context, wg *sync.WaitGroup, c container.Summary) {
 		defer wg.Done()
 
-		s, err := s.Docker.ContainerStats(ctx, c.ID, true)
+		dockerStats, err := docker.ContainerStats(ctx, c.ID, true)
 		if err != nil {
 			return
 		}
-		defer s.Body.Close()
+		defer dockerStats.Body.Close()
 
-		d := json.NewDecoder(s.Body)
+		d := json.NewDecoder(dockerStats.Body)
 
 		var x, y container.StatsResponse
 		if err := d.Decode(&x); err != nil {

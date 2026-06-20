@@ -17,7 +17,8 @@ type FindProjectByIdResult struct {
 }
 
 func (p FindProjectByIdParams) Exec(ctx context.Context, s *app.ApplicationServices) (*FindProjectByIdResult, error) {
-	q := *s.Queries
+	q, ok := s.GetQueries()
+	assert.True(ok, "queries service not found")
 
 	result, err := q.SelectProject(ctx, p.ID)
 	if err != nil {

@@ -7,6 +7,8 @@ import (
 	dberrors "skulpture/buang/db/db_errors"
 	"skulpture/buang/db/interfaces"
 	enumsdeploymentstatus "skulpture/buang/enums/deployment_status"
+
+	"github.com/negrel/assert"
 )
 
 type CreateDeploymentParams struct {
@@ -22,7 +24,8 @@ type CreateDeploymentResult struct {
 }
 
 func (d CreateDeploymentParams) Exec(ctx context.Context, s *app.ApplicationServices) (*CreateDeploymentResult, error) {
-	q := *s.Queries
+	q, ok := s.GetQueries()
+	assert.True(ok, "queries service not found")
 
 	result, err := q.CreateDeployment(ctx, interfaces.CreateDeploymentParams{
 		ProjectID:         d.ProjectID,

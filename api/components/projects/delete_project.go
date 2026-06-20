@@ -14,7 +14,8 @@ type DeleteProjectParams struct {
 type DeleteProjectResult struct{}
 
 func (p DeleteProjectParams) Exec(ctx context.Context, s *app.ApplicationServices) (*DeleteProjectResult, error) {
-	q := *s.Queries
+	q, ok := s.GetQueries()
+	assert.True(ok, "queries service not found")
 
 	result, err := q.DeleteProject(ctx, p.Id)
 	if err != nil {

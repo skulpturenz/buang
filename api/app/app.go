@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"log/slog"
 	"net/http"
+	"skulpture/buang/services"
 	constantsenvs "skulpture/buang/constants/envs"
 	"skulpture/buang/db/interfaces"
 	"skulpture/buang/ports"
@@ -18,7 +19,7 @@ import (
 
 type ApplicationConfig struct {
 	HttpPort string
-	Services ApplicationServices
+	Services *services.Services[any, any]
 }
 
 type Application struct {
@@ -28,16 +29,41 @@ type Application struct {
 
 type HttpApplication struct {
 	chi      *chi.Mux
-	Services ApplicationServices
+	Services *services.Services[any, any]
 }
 
 type ApplicationServices struct {
-	Queries              *interfaces.Queries
-	GorillaSchemaDecoder *schema.Decoder
-	GorillaSchemaEncoder *schema.Encoder
-	Docker               client.APIClient
-	Workflows            workersinterfaces.Workflows
-	Ports                ports.Ports
+	*services.Services[any, any]
+}
+
+func (a ApplicationServices) GetQueries() (interfaces.Queries, bool) {
+	svc, ok := services.Get[interfaces.Queries](a.Services, services.KeyQueries)
+	return svc.Unwrap(), ok
+}
+
+func (a ApplicationServices) GetGorillaSchemaDecoder() (schema.Decoder, bool) {
+	svc, ok := services.Get[schema.Decoder](a.Services, services.KeyGorillaSchemaDecoder)
+	return svc.Unwrap(), ok
+}
+
+func (a ApplicationServices) GetGorillaSchemaEncoder() (schema.Encoder, bool) {
+	svc, ok := services.Get[schema.Encoder](a.Services, services.KeyGorillaSchemaEncoder)
+	return svc.Unwrap(), ok
+}
+
+func (a ApplicationServices) GetDocker() (*client.Client, bool) {
+	svc, ok := services.Get[*client.Client](a.Services, services.KeyDocker)
+	return svc.Unwrap(), ok
+}
+
+func (a ApplicationServices) GetWorkflows() (workersinterfaces.Workflows, bool) {
+	svc, ok := services.Get[workersinterfaces.Workflows](a.Services, services.KeyWorkflows)
+	return svc.Unwrap(), ok
+}
+
+func (a ApplicationServices) GetPorts() (ports.Ports, bool) {
+	svc, ok := services.Get[ports.Ports](a.Services, services.KeyPorts)
+	return svc.Unwrap(), ok
 }
 
 func (a ApplicationConfig) New(ctx context.Context, chi *chi.Mux) (*Application, error) {
@@ -53,7 +79,9 @@ func (a ApplicationConfig) New(ctx context.Context, chi *chi.Mux) (*Application,
 	}
 
 	assert.True(app.http != HttpApplication{}, "app initialized incorrectly")
-	assert.True(app.http.Services.Workflows != nil, "workflows must be initialized")
+	appSvc := ApplicationServices{Services: app.http.Services}
+	_, ok := appSvc.GetWorkflows()
+	assert.True(ok, "workflows must be initialized")
 
 	return &app, nil
 }
@@ -86,7 +114,8 @@ type HttpRouter func(s ApplicationServices, r chi.Router)
 
 func (a *HttpApplication) AddRouters(r chi.Router, x ...HttpRouter) {
 	for _, y := range x {
-		y(a.Services, r)
+		appSvc := ApplicationServices{Services: a.Services}
+		y(appSvc, r)
 	}
 }
 

@@ -69,7 +69,14 @@ func BuangBranch(s app.ApplicationServices) http.HandlerFunc {
 			Branch:    req.Branch,
 		}
 
-		err = s.Workflows.BuangBranch(r.Context(), wp)
+		workflows, ok := s.GetWorkflows()
+		if !ok {
+			slog.ErrorContext(r.Context(), "buang branch", "err", "workflows not found")
+			http.Error(w, errors.New("workflows not found").Error(), http.StatusInternalServerError)
+			return
+		}
+
+		err = workflows.BuangBranch(r.Context(), wp)
 		if err != nil {
 			slog.ErrorContext(r.Context(), "buang branch", "err", err.Error())
 			http.Error(w, err.Error(), http.StatusInternalServerError)
