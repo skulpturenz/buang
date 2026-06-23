@@ -24,6 +24,12 @@ tasks:
       - go tool migrate create -ext sql -dir db/pg/schema -seq {{.CLI_ARGS}}
       - go tool migrate create -ext sql -dir db/sqlite/schema -seq {{.CLI_ARGS}}
 
+  create-seeder:
+    desc: Create a new seeder
+    cmds:
+      - go tool migrate create -ext sql -dir db/pg/seed -seq {{.CLI_ARGS}}
+      - go tool migrate create -ext sql -dir db/sqlite/seed -seq {{.CLI_ARGS}}
+
   create-query:
     desc: Create a new query
     cmds:

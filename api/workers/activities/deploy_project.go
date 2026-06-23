@@ -1,8 +1,11 @@
 package activities
 
 import (
+	"bytes"
 	"context"
+	"encoding/json"
 	"fmt"
+	"net/http"
 	"os"
 	"path/filepath"
 	"skulpture/buang/app"
@@ -10,8 +13,11 @@ import (
 	"skulpture/buang/components/deployments"
 	"skulpture/buang/components/docker"
 	"skulpture/buang/components/projects"
+	"skulpture/buang/db/interfaces"
 	enumsdeploymentstatus "skulpture/buang/enums/deployment_status"
+	enumswebhooktype "skulpture/buang/enums/webhook_type"
 	"skulpture/buang/utils/compensations"
+	webhooks "skulpture/buang/webhooks"
 	"strings"
 	"time"
 
@@ -211,6 +217,17 @@ func (dp *DeployProject) DeployProject(ctx context.Context, d DeployProjectParam
 
 	_, _, err = upParams.Exec(ctx, &s)
 	if err != nil {
+		logsResult, logsErr := deploymentlogs.GetDeploymentLogParams{
+			ProjectId:    p.Project.GetId(),
+			DeploymentId: dply.Deployment.GetId(),
+		}.Exec(ctx, &s)
+
+		var logs string
+		if logsErr == nil && logsResult.Logs != nil {
+			logs = *logsResult.Logs
+		}
+
+		notifyProjectWebhooks(ctx, &s, p.Project.GetId(), dply.Deployment.GetId(), true, logs, "")
 		compensations.Compensate(ctx)
 
 		return nil, err
@@ -230,5 +247,32 @@ func (dp *DeployProject) DeployProject(ctx context.Context, d DeployProjectParam
 		return nil, err
 	}
 
+	notifyProjectWebhooks(ctx, &s, p.Project.GetId(), dply.Deployment.GetId(), false, "", url)
+
 	return &DeployProjectResult{}, nil
+}
+
+func notifyProjectWebhooks(ctx context.Context, s *app.ApplicationServices, projectID int64, deploymentID int64, failed bool, logs string, deploymentURL string) {
+	webhooksParams := projects.GetProjectWebhooksParams{
+		ProjectID: projectID,
+	}
+
+	result, err := webhooksParams.Exec(ctx, s)
+	if err != nil || len(result.Webhooks) == 0 {
+		return
+	}
+
+	for _, webhook := range result.Webhooks {
+		go func(w interfaces.ProjectWebhook) {
+			var body string
+			if failed {
+				body = webhooks.RenderFailedDeployment(enumswebhooktype.WebhookType(w.GetWebhookType()), logs).Body
+			} else {
+				body = webhooks.RenderSuccessfulDeployment(enumswebhooktype.WebhookType(w.GetWebhookType()), deploymentURL).Body
+			}
+
+			jsonBody, _ := json.Marshal(map[string]string{"text": body})
+			http.Post(w.GetUrl(), "application/json", bytes.NewBuffer(jsonBody))
+		}(webhook)
+	}
 }

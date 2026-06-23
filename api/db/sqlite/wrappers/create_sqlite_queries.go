@@ -5,8 +5,9 @@ import (
 	"database/sql"
 
 	"skulpture/buang/db/interfaces"
-	schema "skulpture/buang/db/sqlite/schema"
 	sqlite "skulpture/buang/db/sqlite/out"
+	schema "skulpture/buang/db/sqlite/schema"
+	seed "skulpture/buang/db/sqlite/seed"
 
 	"github.com/golang-migrate/migrate/v4"
 	"github.com/golang-migrate/migrate/v4/database/sqlite3"
@@ -38,6 +39,16 @@ func (c SqliteConfig) New(_ context.Context) (interfaces.Queries, func(ctx conte
 
 	m, err := migrate.NewWithInstance("iofs", d, "sqlite", driver)
 	if err := m.Up(); err != nil && err != migrate.ErrNoChange {
+		return nil, cleanup, err
+	}
+
+	sd, err := iofs.New(seed.Files, ".")
+	if err != nil {
+		return nil, cleanup, err
+	}
+
+	sm, err := migrate.NewWithInstance("iofs", sd, "sqlite_seed", driver)
+	if err := sm.Up(); err != nil && err != migrate.ErrNoChange {
 		return nil, cleanup, err
 	}
 

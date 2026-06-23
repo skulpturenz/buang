@@ -6,6 +6,7 @@ import (
 	"skulpture/buang/db/interfaces"
 	pg "skulpture/buang/db/pg/out"
 	schema "skulpture/buang/db/pg/schema"
+	seed "skulpture/buang/db/pg/seed"
 
 	"github.com/golang-migrate/migrate/v4"
 	"github.com/golang-migrate/migrate/v4/database/pgx"
@@ -40,6 +41,16 @@ func (c PgConfig) New(ctx context.Context) (interfaces.Queries, func(ctx context
 
 	m, err := migrate.NewWithInstance("iofs", d, "pg", driver)
 	if err := m.Up(); err != nil && err != migrate.ErrNoChange {
+		return nil, cleanup, err
+	}
+
+	sd, err := iofs.New(seed.Files, ".")
+	if err != nil {
+		return nil, cleanup, err
+	}
+
+	sm, err := migrate.NewWithInstance("iofs", sd, "pg_seed", driver)
+	if err := sm.Up(); err != nil && err != migrate.ErrNoChange {
 		return nil, cleanup, err
 	}
 

@@ -1,0 +1,1 @@
+INSERT INTO webhooks (id, type, deleted) VALUES (0, 0, 0), (1, 1, 0);
