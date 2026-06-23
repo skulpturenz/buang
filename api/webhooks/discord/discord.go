@@ -1,9 +1,9 @@
 package discord
 
-func RenderFailedDeployment(logs string) string {
-	return "**Deployment Failed**\n```\n" + logs + "\n```"
+func RenderFailedDeployment(logs string) map[string]any {
+	return map[string]any{"content": "**Deployment Failed**\n```\n" + logs + "\n```"}
 }
 
-func RenderSuccessfulDeployment(url string) string {
-	return "**Deployment Successful**\nDeployed to: " + url
+func RenderSuccessfulDeployment(url string) map[string]any {
+	return map[string]any{"content": "**Deployment Successful**\nDeployed to: " + url}
 }

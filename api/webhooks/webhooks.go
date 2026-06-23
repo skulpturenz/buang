@@ -6,28 +6,26 @@ import (
 	"skulpture/buang/webhooks/slack"
 )
 
-type RenderResult struct {
-	Body string
-}
+type RenderResult map[string]any
 
 func RenderFailedDeployment(webhookType enumswebhooktype.WebhookType, logs string) RenderResult {
 	switch webhookType {
 	case enumswebhooktype.Slack:
-		return RenderResult{Body: slack.RenderFailedDeployment(logs)}
+		return slack.RenderFailedDeployment(logs)
 	case enumswebhooktype.Discord:
-		return RenderResult{Body: discord.RenderFailedDeployment(logs)}
+		return discord.RenderFailedDeployment(logs)
 	default:
-		return RenderResult{Body: ""}
+		return nil
 	}
 }
 
 func RenderSuccessfulDeployment(webhookType enumswebhooktype.WebhookType, url string) RenderResult {
 	switch webhookType {
 	case enumswebhooktype.Slack:
-		return RenderResult{Body: slack.RenderSuccessfulDeployment(url)}
+		return slack.RenderSuccessfulDeployment(url)
 	case enumswebhooktype.Discord:
-		return RenderResult{Body: discord.RenderSuccessfulDeployment(url)}
+		return discord.RenderSuccessfulDeployment(url)
 	default:
-		return RenderResult{Body: ""}
+		return nil
 	}
 }

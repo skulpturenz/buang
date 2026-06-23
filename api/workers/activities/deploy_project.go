@@ -262,17 +262,17 @@ func notifyProjectWebhooks(ctx context.Context, s *app.ApplicationServices, proj
 		return
 	}
 
-	for _, webhook := range result.Webhooks {
-		go func(w interfaces.ProjectWebhook) {
-			var body string
-			if failed {
-				body = webhooks.RenderFailedDeployment(enumswebhooktype.WebhookType(w.GetWebhookType()), logs).Body
-			} else {
-				body = webhooks.RenderSuccessfulDeployment(enumswebhooktype.WebhookType(w.GetWebhookType()), deploymentURL).Body
-			}
+for _, webhook := range result.Webhooks {
+			go func(w interfaces.ProjectWebhook) {
+				var body map[string]any
+				if failed {
+					body = webhooks.RenderFailedDeployment(enumswebhooktype.WebhookType(w.GetWebhookType()), logs)
+				} else {
+					body = webhooks.RenderSuccessfulDeployment(enumswebhooktype.WebhookType(w.GetWebhookType()), deploymentURL)
+				}
 
-			jsonBody, _ := json.Marshal(map[string]string{"text": body})
-			http.Post(w.GetUrl(), "application/json", bytes.NewBuffer(jsonBody))
-		}(webhook)
+				jsonBody, _ := json.Marshal(body)
+				http.Post(w.GetUrl(), "application/json", bytes.NewBuffer(jsonBody))
+			}(webhook)
 	}
 }
