@@ -1,1 +1,4 @@
-INSERT INTO webhooks (id, type, deleted) VALUES (0, 0, FALSE), (1, 1, FALSE);
+INSERT INTO webhooks (type) 
+VALUES
+    ("SLACK", FALSE),
+    ("DISCORD", FALSE);
