@@ -38,14 +38,14 @@ func TestGetNonExistentByType(t *testing.T) {
 	svc := New()
 	_, ok := Get[any](svc, reflect.TypeFor[mockService]())
 
-	require.True(t, ok, "expected not found for non-existent key")
+	require.False(t, ok, "expected not found for non-existent key")
 }
 
 func TestGetNonExistentByString(t *testing.T) {
 	svc := New()
 	_, ok := Get[any](svc, "non-existent")
 
-	require.True(t, ok, "expected not found for non-existent key")
+	require.False(t, ok, "expected not found for non-existent key")
 }
 
 func TestForRangeEntries(t *testing.T) {

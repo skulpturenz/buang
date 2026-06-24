@@ -1,8 +1,8 @@
 CREATE TABLE IF NOT EXISTS project_webhooks (
-	id BIGINT GENERATED ALWAYS AS IDENTITY UNIQUE,
+	id BIGINT GENERATED ALWAYS AS IDENTITY,
 	webhook_id INT NOT NULL REFERENCES webhooks(id),
 	url TEXT NOT NULL UNIQUE,
 	project_id BIGINT NOT NULL REFERENCES projects(id) ON DELETE CASCADE,
 	deleted BOOLEAN NOT NULL DEFAULT FALSE,
-	CONSTRAINT pk_project_webhooks PRIMARY KEY(id, webhook_id, project_id),
+	UNIQUE(webhook_id, project_id),
 );
