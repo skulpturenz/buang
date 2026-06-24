@@ -1,31 +1,44 @@
 package webhooks
 
 import (
+	"fmt"
+	"io"
+
 	enumswebhooktype "skulpture/buang/enums/webhook_type"
 	"skulpture/buang/webhooks/discord"
 	"skulpture/buang/webhooks/slack"
 )
 
-type RenderResult map[string]any
-
-func RenderFailedDeployment(webhookType enumswebhooktype.WebhookType, logs string) RenderResult {
+func NewSuccessfulDeployment(webhookType enumswebhooktype.WebhookType, webhookURL string, deploymentURL string) (io.Writer, fmt.Stringer) {
 	switch webhookType {
 	case enumswebhooktype.Slack:
-		return slack.RenderFailedDeployment(logs)
+		return slack.SuccessfulDeploymentDetails{
+			WebhookURL:     webhookURL,
+			DeploymentURL: deploymentURL,
+		}, nil
 	case enumswebhooktype.Discord:
-		return discord.RenderFailedDeployment(logs)
+		return discord.SuccessfulDeploymentDetails{
+			WebhookURL:     webhookURL,
+			DeploymentURL: deploymentURL,
+		}, nil
 	default:
-		return nil
+		return nil, nil
 	}
 }
 
-func RenderSuccessfulDeployment(webhookType enumswebhooktype.WebhookType, url string) RenderResult {
+func NewFailedDeployment(webhookType enumswebhooktype.WebhookType, webhookURL string, deploymentLogs string) (io.Writer, fmt.Stringer) {
 	switch webhookType {
 	case enumswebhooktype.Slack:
-		return slack.RenderSuccessfulDeployment(url)
+		return slack.FailedDeploymentDetails{
+			WebhookURL:     webhookURL,
+			DeploymentLogs: deploymentLogs,
+		}, nil
 	case enumswebhooktype.Discord:
-		return discord.RenderSuccessfulDeployment(url)
+		return discord.FailedDeploymentDetails{
+			WebhookURL:     webhookURL,
+			DeploymentLogs: deploymentLogs,
+		}, nil
 	default:
-		return nil
+		return nil, nil
 	}
 }

@@ -1,11 +1,9 @@
 package activities
 
 import (
-	"bytes"
 	"context"
-	"encoding/json"
 	"fmt"
-	"net/http"
+	"io"
 	"os"
 	"path/filepath"
 	"skulpture/buang/app"
@@ -262,17 +260,18 @@ func notifyProjectWebhooks(ctx context.Context, s *app.ApplicationServices, proj
 		return
 	}
 
-for _, webhook := range result.Webhooks {
-			go func(w interfaces.ProjectWebhook) {
-				var body map[string]any
-				if failed {
-					body = webhooks.RenderFailedDeployment(enumswebhooktype.WebhookType(w.GetWebhookType()), logs)
-				} else {
-					body = webhooks.RenderSuccessfulDeployment(enumswebhooktype.WebhookType(w.GetWebhookType()), deploymentURL)
-				}
-
-				jsonBody, _ := json.Marshal(body)
-				http.Post(w.GetUrl(), "application/json", bytes.NewBuffer(jsonBody))
-			}(webhook)
+	for _, webhook := range result.Webhooks {
+		go func(w interfaces.ProjectWebhook) {
+			webhookType := enumswebhooktype.WebhookType(w.GetWebhookType())
+			var details io.Writer
+			if failed {
+				details, _ = webhooks.NewFailedDeployment(webhookType, w.GetUrl(), logs)
+			} else {
+				details, _ = webhooks.NewSuccessfulDeployment(webhookType, w.GetUrl(), deploymentURL)
+			}
+			if details != nil {
+				details.Write([]byte(details.(fmt.Stringer).String()))
+			}
+		}(webhook)
 	}
 }
