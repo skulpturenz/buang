@@ -4,20 +4,20 @@ import (
 	"context"
 	"fmt"
 	"io"
+	"log/slog"
 	"os"
 	"path/filepath"
 	"skulpture/buang/app"
-	"sync"
 	deploymentlogs "skulpture/buang/components/deployment_logs"
 	"skulpture/buang/components/deployments"
 	"skulpture/buang/components/docker"
 	"skulpture/buang/components/projects"
-	"skulpture/buang/db/interfaces"
 	enumsdeploymentstatus "skulpture/buang/enums/deployment_status"
 	enumswebhooktype "skulpture/buang/enums/webhook_type"
 	"skulpture/buang/utils/compensations"
 	webhooks "skulpture/buang/webhooks"
 	"strings"
+	"sync"
 	"time"
 
 	dynamic "github.com/traefik/traefik/v3/pkg/config/dynamic"
@@ -263,20 +263,23 @@ func notifyProjectWebhooks(ctx context.Context, s *app.ApplicationServices, proj
 
 	var wg sync.WaitGroup
 	for _, webhook := range result.Webhooks {
-		wg.Add(1)
-		go func(w interfaces.ProjectWebhook) {
-			defer wg.Done()
-			webhookType := enumswebhooktype.WebhookType(w.GetWebhookType())
+		wg.Go(func() {
+			webhookType := enumswebhooktype.WebhookType(webhook.GetWebhookType())
 			var details io.Writer
 			if failed {
-				details, _ = webhooks.NewFailedDeployment(webhookType, w.GetUrl(), logs)
+				details, _ = webhooks.NewFailedDeployment(webhookType, webhook.GetUrl(), logs)
 			} else {
-				details, _ = webhooks.NewSuccessfulDeployment(webhookType, w.GetUrl(), deploymentURL)
+				details, _ = webhooks.NewSuccessfulDeployment(webhookType, webhook.GetUrl(), deploymentURL)
 			}
 			if details != nil {
-				details.Write([]byte(details.(fmt.Stringer).String()))
+				_, err := details.Write([]byte(details.(fmt.Stringer).String()))
+
+				if err != nil {
+					slog.ErrorContext(ctx, "notifyProjectWebhooks", "error", err.Error())
+				}
 			}
-		}(webhook)
+		})
 	}
+
 	wg.Wait()
 }

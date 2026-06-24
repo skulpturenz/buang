@@ -38,6 +38,7 @@ func TestGetNonExistentByType(t *testing.T) {
 	svc := New()
 	_, ok := Get[any](svc, reflect.TypeFor[mockService]())
 
+	// TODO: why was it passing?
 	require.False(t, ok, "expected not found for non-existent key")
 }
 
@@ -45,6 +46,7 @@ func TestGetNonExistentByString(t *testing.T) {
 	svc := New()
 	_, ok := Get[any](svc, "non-existent")
 
+	// TODO: why was it passing?
 	require.False(t, ok, "expected not found for non-existent key")
 }
 
