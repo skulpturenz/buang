@@ -7,6 +7,7 @@ import (
 	"os"
 	"path/filepath"
 	"skulpture/buang/app"
+	"sync"
 	deploymentlogs "skulpture/buang/components/deployment_logs"
 	"skulpture/buang/components/deployments"
 	"skulpture/buang/components/docker"
@@ -260,8 +261,11 @@ func notifyProjectWebhooks(ctx context.Context, s *app.ApplicationServices, proj
 		return
 	}
 
+	var wg sync.WaitGroup
 	for _, webhook := range result.Webhooks {
+		wg.Add(1)
 		go func(w interfaces.ProjectWebhook) {
+			defer wg.Done()
 			webhookType := enumswebhooktype.WebhookType(w.GetWebhookType())
 			var details io.Writer
 			if failed {
@@ -274,4 +278,5 @@ func notifyProjectWebhooks(ctx context.Context, s *app.ApplicationServices, proj
 			}
 		}(webhook)
 	}
+	wg.Wait()
 }
