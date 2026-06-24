@@ -1,0 +1,2 @@
+DELETE FROM webhooks 
+WHERE type IN ("SLACK", "DISCORD");

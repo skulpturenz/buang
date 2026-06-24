@@ -3,6 +3,8 @@ package activities
 import (
 	"context"
 	"fmt"
+	"io"
+	"log/slog"
 	"os"
 	"path/filepath"
 	"skulpture/buang/app"
@@ -11,8 +13,11 @@ import (
 	"skulpture/buang/components/docker"
 	"skulpture/buang/components/projects"
 	enumsdeploymentstatus "skulpture/buang/enums/deployment_status"
+	enumswebhooktype "skulpture/buang/enums/webhook_type"
 	"skulpture/buang/utils/compensations"
+	webhooks "skulpture/buang/webhooks"
 	"strings"
+	"sync"
 	"time"
 
 	dynamic "github.com/traefik/traefik/v3/pkg/config/dynamic"
@@ -211,6 +216,17 @@ func (dp *DeployProject) DeployProject(ctx context.Context, d DeployProjectParam
 
 	_, _, err = upParams.Exec(ctx, &s)
 	if err != nil {
+		logsResult, logsErr := deploymentlogs.GetDeploymentLogParams{
+			ProjectId:    p.Project.GetId(),
+			DeploymentId: dply.Deployment.GetId(),
+		}.Exec(ctx, &s)
+
+		var logs string
+		if logsErr == nil && logsResult.Logs != nil {
+			logs = *logsResult.Logs
+		}
+
+		notifyProjectWebhooks(ctx, &s, p.Project.GetId(), dply.Deployment.GetId(), true, logs, "")
 		compensations.Compensate(ctx)
 
 		return nil, err
@@ -230,5 +246,40 @@ func (dp *DeployProject) DeployProject(ctx context.Context, d DeployProjectParam
 		return nil, err
 	}
 
+	notifyProjectWebhooks(ctx, &s, p.Project.GetId(), dply.Deployment.GetId(), false, "", url)
+
 	return &DeployProjectResult{}, nil
+}
+
+func notifyProjectWebhooks(ctx context.Context, s *app.ApplicationServices, projectID int64, deploymentID int64, failed bool, logs string, deploymentURL string) {
+	webhooksParams := projects.GetProjectWebhooksParams{
+		ProjectID: projectID,
+	}
+
+	result, err := webhooksParams.Exec(ctx, s)
+	if err != nil || len(result.Webhooks) == 0 {
+		return
+	}
+
+	var wg sync.WaitGroup
+	for _, webhook := range result.Webhooks {
+		wg.Go(func() {
+			webhookType := enumswebhooktype.WebhookType(webhook.GetWebhookType())
+			var details io.Writer
+			if failed {
+				details, _ = webhooks.NewFailedDeployment(webhookType, webhook.GetUrl(), logs)
+			} else {
+				details, _ = webhooks.NewSuccessfulDeployment(webhookType, webhook.GetUrl(), deploymentURL)
+			}
+			if details != nil {
+				_, err := details.Write([]byte(details.(fmt.Stringer).String()))
+
+				if err != nil {
+					slog.ErrorContext(ctx, "notifyProjectWebhooks", "error", err.Error())
+				}
+			}
+		})
+	}
+
+	wg.Wait()
 }

@@ -45,3 +45,18 @@ type Project struct {
 	ComposePath   string    `json:"compose_path"`
 	Deleted       bool      `json:"deleted"`
 }
+
+type ProjectWebhook struct {
+	ID          int64  `json:"id"`
+	WebhookID   int64  `json:"webhook_id"`
+	WebhookType int16  `json:"webhook_type"`
+	Url         string `json:"url"`
+	ProjectID   int64  `json:"project_id"`
+	Deleted     bool   `json:"deleted"`
+}
+
+type Webhook struct {
+	ID      int64 `json:"id"`
+	Type    int16 `json:"type"`
+	Deleted bool  `json:"deleted"`
+}

@@ -1,0 +1,6 @@
+CREATE TABLE IF NOT EXISTS webhooks (
+	id INTEGER PRIMARY KEY,
+	type TEXT NOT NULL,
+	deleted INTEGER NOT NULL DEFAULT 0,
+	CONSTRAINT unique_webhooks UNIQUE(id, type)
+);
